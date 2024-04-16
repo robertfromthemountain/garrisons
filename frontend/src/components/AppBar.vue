@@ -1,18 +1,20 @@
 <script setup>
 import { RouterLink, RouterView } from "vue-router";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
 const navLinks = [
-  { name: "Home", path: "/" },
-  { name: "Booking", path: "/booking" },
-  { name: "References", path: "/references" },
-  { name: "Rules", path: "/rules" },
+  { name: t('link.home'), path: "/" },
+  { name: t('link.booking'), path: "/booking" },
+  { name: t('link.references'), path: "/references" },
+  { name: t('link.rules'), path: "/rules" },
 ];
 
 const navButtons = [
-  { name: "Login", path: "/login", icon: "mdi-login" },
-  { name: "Register", path: "/register", icon: "mdi-account-plus" },
+  { name: t('button.login'), path: "/login", icon: "mdi-login" },
+  { name: t('button.register'), path: "/register", icon: "mdi-account-plus" },
   {
-    name: "Dasaboard",
+    name: t('button.dashboard'),
     path: "/dashboard",
     icon: "mdi-view-dashboard-edit-outline",
   },
