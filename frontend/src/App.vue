@@ -1,5 +1,5 @@
 <script setup>
-import AppBar from "./components/AppBar.vue";
+import AppBar from "@/components/AppBar.vue";
 </script>
 
 <template>
@@ -10,11 +10,14 @@ import AppBar from "./components/AppBar.vue";
     <div class="container">
       <RouterView />
     </div>
+    <footer>
+      <VueFooter></VueFooter>
+    </footer>
   </main>
 </template>
 
 <style scoped>
-.container{
+.container {
   margin-left: 100px;
   margin-right: 100px;
 }

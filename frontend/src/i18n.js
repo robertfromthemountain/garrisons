@@ -8,10 +8,19 @@ const messages = {
             rules: "Rules",
             references: "References"
         },
-        button:{
+        button: {
             login: "Sign In",
             register: "Sign Up",
             dashboard: "Dashboard"
+        },
+        inputFields: {
+            name: "Name",
+            email: "Email",
+            repeatEmail: "Repeat Email",
+            phoneNumber: "Phone Number",
+            password: "Password",
+            repeatPassword: "Repeat Password",
+            submit: "Submit"
         }
     },
     hu: {
@@ -21,10 +30,19 @@ const messages = {
             rules: "Szabályzat",
             references: "Munkáim"
         },
-        button:{
+        button: {
             login: "Bejelentkezés",
             register: "Regisztráció",
             dashboard: "Dashboard"
+        },
+        inputFields: {
+            name: "Név",
+            email: "Email",
+            repeatEmail: "Email Újra",
+            phoneNumber: "Telefonszám",
+            password: "Jelszó",
+            repeatPassword: "Jelszó Újra",
+            submit: "Küldés"
         }
     }
 };
