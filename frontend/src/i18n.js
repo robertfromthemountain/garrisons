@@ -21,6 +21,18 @@ const messages = {
             password: "Password",
             repeatPassword: "Repeat Password",
             submit: "Submit"
+        },
+        messages: {
+            nameRequired: "Name is required!",
+            emailRequired: "Email is required!",
+            passwordRequired: "Password is required!",
+            phoneRequired: "Phone number is required!",
+            minLength: "Must be at least 8 characters!",
+            invalidEmail: "Email is invalid!",
+            emailMismatch: "Emails are not matching!",
+            passwordStrength: "The password must contain at least one number, one special character, one lowercase, and one uppercase character!",
+            passwordMismatch: "Passwords doesn't match!",
+            invalidPhoneNumber: "Phone number is invalid!"
         }
     },
     hu: {
@@ -43,6 +55,15 @@ const messages = {
             password: "Jelszó",
             repeatPassword: "Jelszó Újra",
             submit: "Küldés"
+        },
+        messages: {
+            required: "Kötelező",
+            minLength: "A jelszó legalább 8 karakterből kell álljon!",
+            invalidEmail: "Érvénytelen email cím!",
+            emailMismatch: "Az email cymek nem egyeznek!",
+            passwordStrength: "A jelszónak tartalmaznia kell legalább egy számot, egy speciális karaktert, egy kisbetűt és egy nagybetűt!",
+            passwordMismatch: "A jelszavak nem egyeznek!",
+            invalidPhoneNumber: "Érvénytelen telefonszám!"
         }
     }
 };

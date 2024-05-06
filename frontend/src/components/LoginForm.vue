@@ -3,11 +3,6 @@ import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
-const rules = [
-  (value) => !!value || "Required.",
-  (value) => (value && value.length >= 3) || "Min 3 characters",
-];
-
 const fields = [
   { label: t("inputFields.email") },
   { label: t("inputFields.password") },
@@ -16,14 +11,13 @@ const fields = [
 
 <template>
   <div class="mx-auto w-25">
-    <h1 class="text-center text-h3 font-weight-light text-uppercase mt-5">
+    <h1 class="text-center text-h4 font-weight-light text-uppercase mt-5">
       {{ t("button.login") }}
     </h1>
     <form @submit.prevent="login">
       <v-text-field
         v-for="field in fields"
         :key="field.label"
-        :rules="rules"
         hide-details="auto"
         :label="field.label"
         class="my-5"

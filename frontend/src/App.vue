@@ -1,5 +1,6 @@
 <script setup>
 import AppBar from "@/components/AppBar.vue";
+import GarrisonsFoot from "@/components/GarrisonsFoot.vue";
 </script>
 
 <template>
@@ -10,9 +11,6 @@ import AppBar from "@/components/AppBar.vue";
     <div class="container">
       <RouterView />
     </div>
-    <footer>
-      <VueFooter></VueFooter>
-    </footer>
   </main>
 </template>
 
