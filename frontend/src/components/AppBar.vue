@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink } from "vue-router";
 import { useI18n } from "vue-i18n";
+
 const { t } = useI18n();
 
 const navLinks = [
@@ -56,6 +57,7 @@ const navButtons = [
             >{{ navButton.name }}</v-btn
           ></RouterLink
         >
+        
       </div>
     </nav>
   </v-toolbar>

@@ -14,7 +14,8 @@ const messages = {
             dashboard: "Dashboard"
         },
         inputFields: {
-            name: "Name",
+            firstName: "First Name",
+            lastName: "Last Name",
             email: "Email",
             repeatEmail: "Repeat Email",
             phoneNumber: "Phone Number",
@@ -22,17 +23,25 @@ const messages = {
             repeatPassword: "Repeat Password",
             submit: "Submit"
         },
-        messages: {
-            nameRequired: "Name is required!",
-            emailRequired: "Email is required!",
-            passwordRequired: "Password is required!",
-            phoneRequired: "Phone number is required!",
-            minLength: "Must be at least 8 characters!",
-            invalidEmail: "Email is invalid!",
-            emailMismatch: "Emails are not matching!",
-            passwordStrength: "The password must contain at least one number, one special character, one lowercase, and one uppercase character!",
-            passwordMismatch: "Passwords doesn't match!",
-            invalidPhoneNumber: "Phone number is invalid!"
+        validation: {
+            firstNameReq: "First name is required!",
+            lastNameReq: "Last name is required!",
+            nameMustStartUppercase: "Name must start with an uppercase letter.",
+            minCharacters: "Min 3 characters",
+            emailRequired: "Email is required.",
+            invalidEmailFormat: "Invalid email format.",
+            repeatEmailRequired: "Repeat email is required.",
+            emailsMustMatch: "Emails must match.",
+            phoneRequired: "Phone number is required.",
+            phoneMinDigits: "Phone number is at least 9 digits!",
+            passwordRequired: "Password is required.",
+            passwordMinLength: "Password must be at least 8 characters.",
+            passwordMustIncludeNumber: "Password must include at least one number.",
+            passwordSpecialChar: "Password must include at least one special character.",
+            passwordUppercaseLetter: "Password must include at least one uppercase letter.",
+            passwordLowercaseLetter: "Password must include at least one lowercase letter.",
+            repeatPasswordRequired: "Repeat password is required.",
+            passwordMustMatch: "Passwords must match."
         }
     },
     hu: {
@@ -48,7 +57,8 @@ const messages = {
             dashboard: "Dashboard"
         },
         inputFields: {
-            name: "Név",
+            firstName: "Keresztnév",
+            lastName: "Vezetéknév",
             email: "Email",
             repeatEmail: "Email Újra",
             phoneNumber: "Telefonszám",
@@ -56,14 +66,26 @@ const messages = {
             repeatPassword: "Jelszó Újra",
             submit: "Küldés"
         },
-        messages: {
-            required: "Kötelező",
-            minLength: "A jelszó legalább 8 karakterből kell álljon!",
-            invalidEmail: "Érvénytelen email cím!",
-            emailMismatch: "Az email cymek nem egyeznek!",
-            passwordStrength: "A jelszónak tartalmaznia kell legalább egy számot, egy speciális karaktert, egy kisbetűt és egy nagybetűt!",
-            passwordMismatch: "A jelszavak nem egyeznek!",
-            invalidPhoneNumber: "Érvénytelen telefonszám!"
+        validation: {
+            firstNameReq: "Keresztnév megadása kötelező!",
+            lastNameReq: "Vezetéknév megadása kötelező!",
+            nameMustStartUppercase: "A névnek nagy kezdőbetűvel kell kezdődnie.",
+            minCharacters: "Minimum 3 karakter.",
+            emailRequired: "Az email cím megadása kötelező.",
+            invalidEmailFormat: "Érvénytelen email formátum.",
+            repeatEmailRequired: "Az email cím ismételt megadása kötelező.",
+            emailsMustMatch: "Az email címeknek egyezniük kell.",
+            phoneRequired: "A telefonszám megadása kötelező.",
+            phoneMinDigits: "A telefonszámnak legalább 9 számjegyből kell állnia!",
+            passwordRequired: "A jelszó megadása kötelező.",
+            passwordMinLength: "A jelszónak legalább 8 karakterből kell állnia.",
+            passwordMustIncludeNumber: "A jelszónak tartalmaznia kell legalább egy számot.",
+            passwordSpecialChar: "A jelszónak tartalmaznia kell legalább egy speciális karaktert.",
+            passwordUppercaseLetter: "A jelszónak tartalmaznia kell legalább egy nagybetűt.",
+            passwordLowercaseLetter: "A jelszónak tartalmaznia kell legalább egy kisbetűt.",
+            repeatPasswordRequired: "A jelszó megismétlése kötelező.",
+            passwordMustMatch: "A jelszavaknak egyezniük kell."
+
         }
     }
 };
