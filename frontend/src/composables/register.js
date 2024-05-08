@@ -1,5 +1,8 @@
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { reactive } from "vue";
 import { useI18n } from "vue-i18n";
+import axios from "axios";
 
 export function useRegisterForm() {
     const { t } = useI18n();
@@ -56,14 +59,27 @@ export function useRegisterForm() {
     ];
 
     const fields = [
-        { label: t("inputFields.firstName"), placeholder: "John", model: 'firstName', rules: firstNameRules },
-        { label: t("inputFields.lastName"), placeholder: "Doe", model: 'lastName', rules: lastNameRules },
-        { label: t("inputFields.email"), placeholder: "johndoe@mail.com", model: 'email', rules: emailRules },
-        { label: t("inputFields.repeatEmail"), model: 'repeatEmail', rules: repeatEmailRules },
-        { label: t("inputFields.phoneNumber"), placeholder: "06301231234", model: 'phoneNumber', rules: phoneRules },
-        { label: t("inputFields.password"), model: 'password', rules: passwordRules },
-        { label: t("inputFields.repeatPassword"), model: 'repeatPassword', rules: repeatPasswordRules },
+        { label: t("inputFields.firstName"), placeholder: "John", model: 'firstName', rules: firstNameRules, type: "text" },
+        { label: t("inputFields.lastName"), placeholder: "Doe", model: 'lastName', rules: lastNameRules, type: "text" },
+        { label: t("inputFields.email"), placeholder: "johndoe@mail.com", model: 'email', rules: emailRules, type: "email" },
+        { label: t("inputFields.repeatEmail"), model: 'repeatEmail', rules: repeatEmailRules, type: "email" },
+        { label: t("inputFields.phoneNumber"), placeholder: "06301231234", model: 'phoneNumber', rules: phoneRules, type: "number" },
+        { label: t("inputFields.password"), model: 'password', rules: passwordRules, type: "password" },
+        { label: t("inputFields.repeatPassword"), model: 'repeatPassword', rules: repeatPasswordRules, type: "password" },
     ];
 
-    return { form, fields, t };
+    const router = useRouter();
+
+    const register = async () => {
+        try {
+            await axios.post('http://localhost:5000/register', form);
+            alert('Registration successful!');
+            router.push('/login');
+        } catch (error) {
+            console.error('Registration failed:', error);
+            alert('Registration failed!');
+        }
+    };
+
+    return { form, fields, t, register };
 }

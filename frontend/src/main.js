@@ -1,7 +1,5 @@
+import { createApp, watch } from 'vue'
 import './assets/styles/main.css'
-
-import { createApp } from 'vue'
-import { createPinia } from 'pinia'
 
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
@@ -9,8 +7,16 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 
 import App from './App.vue'
+import axios from 'axios'
 import router from './router'
 import i18n from './i18n'
+import store from './stores/store'
+
+axios.interceptors.request.use(function (config) {
+    const token = localStorage.getItem('accessToken');
+    config.headers.Authorization = token ? `Bearer ${token}` : '';
+    return config;
+});
 
 const vuetify = createVuetify({
     components,
@@ -19,15 +25,20 @@ const vuetify = createVuetify({
         iconfont: 'mdi',
     },
     theme: {
-        defaultTheme: 'dark',
-    }
+        defaultTheme: 'light'
+      }
 })
 
 const app = createApp(App)
 
 app.use(vuetify)
-app.use(createPinia())
 app.use(router)
 app.use(i18n)
+app.use(store)
+
+watch(() => store.state.theme.theme, (newTheme) => {
+    console.log('Watcher triggered, new theme:', newTheme);
+    vuetify.theme.dark = newTheme === 'dark';
+  }, { immediate: true });
 
 app.mount('#app')

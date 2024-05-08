@@ -1,12 +1,7 @@
 <script setup>
-import { useI18n } from "vue-i18n";
+import { useLogin } from "@/composables/login.js";
 
-const { t } = useI18n();
-
-const fields = [
-  { label: t("inputFields.email") },
-  { label: t("inputFields.password") },
-];
+const { email, password, isLoading, loginUser, t } = useLogin();
 </script>
 
 <template>
@@ -14,21 +9,30 @@ const fields = [
     <h1 class="text-center text-h4 font-weight-light text-uppercase mt-5">
       {{ t("button.login") }}
     </h1>
-    <form @submit.prevent="login">
+    <form @submit.prevent="loginUser">
       <v-text-field
-        v-for="field in fields"
-        :key="field.label"
+        :label="t('inputFields.email')"
+        v-model="email"
+        type="email"
         hide-details="auto"
-        :label="field.label"
         class="my-5"
       ></v-text-field>
 
-      <v-btn density="default" block @click="login">{{
-        t("inputFields.submit")
-      }}</v-btn>
+      <v-text-field
+        :label="t('inputFields.password')"
+        v-model="password"
+        type="password"
+        :loading="isLoading"
+        hide-details="auto"
+        class="my-5"
+      ></v-text-field>
+
+      <v-btn :disabled="isLoading" density="default" block type="submit">
+        {{ t("inputFields.submit") }}
+      </v-btn>
     </form>
   </div>
 </template>
 
-<style>
+<style scoped>
 </style>

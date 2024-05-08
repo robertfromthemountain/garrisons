@@ -1,7 +1,7 @@
 <script setup>
 import { useRegisterForm } from "@/composables/register.js";
 
-const { form, fields, t } = useRegisterForm();
+const { form, fields, t, register } = useRegisterForm();
 </script>
 
 <template>
@@ -16,6 +16,7 @@ const { form, fields, t } = useRegisterForm();
         :key="field.label"
         :rules="field.rules"
         :placeholder="field.placeholder"
+        :type="field.type"
         v-model="form[field.model]"
         hide-details="auto"
         :label="field.label"

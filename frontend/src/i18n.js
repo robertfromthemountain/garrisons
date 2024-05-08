@@ -11,7 +11,8 @@ const messages = {
         button: {
             login: "Sign In",
             register: "Sign Up",
-            dashboard: "Dashboard"
+            dashboard: "Dashboard",
+            logout: "Logout"
         },
         inputFields: {
             firstName: "First Name",
