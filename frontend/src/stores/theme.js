@@ -1,11 +1,13 @@
 export default {
   namespaced: true,
   state: {
-    theme: 'light' // Default theme
+    theme: 'light'
   },
   mutations: {
     toggleTheme(state) {
       state.theme = state.theme === 'light' ? 'dark' : 'light';
+      console.log("Megkaptam a komponenstol");
+      console.log(state.theme);
     }
   },
   getters: {

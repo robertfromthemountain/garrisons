@@ -25,8 +25,8 @@ const vuetify = createVuetify({
         iconfont: 'mdi',
     },
     theme: {
-        defaultTheme: 'light'
-      }
+        defaultTheme: store.getters['theme/currentTheme'],
+    }
 })
 
 const app = createApp(App)
@@ -36,9 +36,9 @@ app.use(router)
 app.use(i18n)
 app.use(store)
 
-watch(() => store.state.theme.theme, (newTheme) => {
+watch(() => store.getters['theme/currentTheme'], (newTheme) => {
     console.log('Watcher triggered, new theme:', newTheme);
-    vuetify.theme.dark = newTheme === 'dark';
-  }, { immediate: true });
+    vuetify.theme.defaultTheme = newTheme === 'dark';
+}, { immediate: true });
 
 app.mount('#app')

@@ -11,17 +11,18 @@ const router = useRouter();
 const isLoggedIn = computed(() => store.getters.isLoggedIn);
 
 const currentTheme = computed(() => store.state.theme.theme);
-console.log(currentTheme);
 
 function toggleTheme() {
   store.commit("theme/toggleTheme");
+  console.log("elkuldtem storeba");
 }
 
 // Optional: Computed property to dynamically change the icon based on the theme
 const themeIcon = computed(() =>
-  currentTheme.value === 'light' ? 'mdi-weather-night' : 'mdi-white-balance-sunny'
+  currentTheme.value === "light"
+    ? "mdi-weather-night"
+    : "mdi-white-balance-sunny"
 );
-
 
 const navLinks = [
   { name: t("link.home"), path: "/", requiresAuth: false },
