@@ -1,5 +1,16 @@
 <script setup>
-import AppBar from "./components/AppBar.vue";
+import AppBar from "@/components/AppBar.vue";
+import GarrisonsFoot from "@/components/GarrisonsFoot.vue";
+import { computed } from 'vue';
+import { watchEffect } from 'vue';
+import { useStore } from 'vuex';
+
+const store = useStore();
+const currentTheme = computed(() => store.getters['theme/currentTheme']);
+
+watchEffect(() => {
+  console.log("Current theme has changed to:", currentTheme.value);
+});
 </script>
 
 <template>
@@ -14,7 +25,7 @@ import AppBar from "./components/AppBar.vue";
 </template>
 
 <style scoped>
-.container{
+.container {
   margin-left: 100px;
   margin-right: 100px;
 }
