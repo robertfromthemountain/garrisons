@@ -12,7 +12,12 @@ const messages = {
             login: "Sign In",
             register: "Sign Up",
             dashboard: "Dashboard",
-            logout: "Logout"
+            logout: "Logout",
+            needToRegBtn: "Sign Up",
+            alreadyHaveAccountBtn: "Sign In",
+            book: "Booking",
+            tel: "+36 (30) 999 3211",
+            email: "info@garrisons.hu"
         },
         inputFields: {
             firstName: "First Name",
@@ -43,6 +48,15 @@ const messages = {
             passwordLowercaseLetter: "Password must include at least one lowercase letter.",
             repeatPasswordRequired: "Repeat password is required.",
             passwordMustMatch: "Passwords must match."
+        },
+        text: {
+            needToRegister1: "Dont have an account?",
+            needToRegister2: "here.",
+            alreadyHaveAccount1: "Already have an account?",
+            alreadyHaveAccount2: "here."
+        },
+        hero: {
+            title: "Garrison's haircraft and barbershop"
         }
     },
     hu: {
@@ -55,7 +69,12 @@ const messages = {
         button: {
             login: "Bejelentkezés",
             register: "Regisztráció",
-            dashboard: "Dashboard"
+            dashboard: "Dashboard",
+            needToRegBtn: "Regisztrálj",
+            alreadyHaveAccountBtn: "Lépj be",
+            book: "Foglalás",
+            tel: "+36 (30) 999 3211",
+            email: "info@garrisons.hu"
         },
         inputFields: {
             firstName: "Keresztnév",
@@ -87,6 +106,15 @@ const messages = {
             repeatPasswordRequired: "A jelszó megismétlése kötelező.",
             passwordMustMatch: "A jelszavaknak egyezniük kell."
 
+        },
+        text: {
+            needToRegister1: "Még nincs fiókod?",
+            needToRegister2: "itt.",
+            alreadyHaveAccount1: "Már regisztráltál?",
+            alreadyHaveAccount2: "itt."
+        },
+        hero: {
+            title: "Garrison's haircraft and barbershop"
         }
     }
 };

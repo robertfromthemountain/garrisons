@@ -14,11 +14,11 @@ watchEffect(() => {
 </script>
 
 <template>
-  <main>
+  <main  class="garrisons-bg">
     <header>
       <AppBar></AppBar>
     </header>
-    <div class="container">
+    <div class="container ma-0 pa-0">
       <RouterView />
     </div>
   </main>
@@ -28,5 +28,9 @@ watchEffect(() => {
 .container {
   margin-left: 100px;
   margin-right: 100px;
+}
+.garrisons-bg{
+  background-color: #26211e;
+  height: 100vh;
 }
 </style>

@@ -26,6 +26,9 @@ const vuetify = createVuetify({
     },
     theme: {
         defaultTheme: store.getters['theme/currentTheme'],
+    },
+    typography: {
+        fontFamily: 'Bebas Neue, sans-serif',
     }
 })
 
