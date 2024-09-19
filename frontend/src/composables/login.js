@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
-import axios from 'axios';  // Import axios
+import axios from 'axios';
 
 export function useLogin() {
     const { t } = useI18n();
@@ -29,7 +29,23 @@ export function useLogin() {
             }
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
-            alert('Login failed!');
+            if (error.response) {
+                switch (error.response.status) {
+                    case 401:
+                        alert('Invalid credentials. Please check your email and password.');
+                        break;
+                    case 404:
+                        alert('User not found. Please check your email or register.');
+                        break;
+                    case 500:
+                        alert('Server error. Please try again later.');
+                        break;
+                    default:
+                        alert('Login failed! Please try again.');
+                }
+            } else {
+                alert('Login failed! Please check your network connection.');
+            }
         } finally {
             isLoading.value = false;
         }

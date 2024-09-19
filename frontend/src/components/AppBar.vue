@@ -48,18 +48,12 @@ function handleLogout() {
 </script>
 
 <template>
-  <v-toolbar :elevation="8" density="compact" class="position-relative">
-    <nav>
+  <v-toolbar
+    density="compact"
+    class="position-relative nav-color nav-elevation"
+  >
+    <nav class="align-center">
       <div class="d-flex justify-center">
-        <v-btn
-          density="compact"
-          class="mx-1"
-          rounded="xl"
-          icon
-          @click="toggleTheme"
-        >
-          <v-icon>{{ themeIcon }}</v-icon>
-        </v-btn>
         <RouterLink
           v-for="link in visibleNavLinks"
           :key="link.path"
@@ -68,21 +62,23 @@ function handleLogout() {
           v-slot="{ navigate, isActive }"
           class="clear"
           ><v-btn
-            variant="text"
+            variant=""
             density="compact"
             :class="{ 'active-link': isActive }"
+            class="btn-color clear"
             @click="navigate"
             >{{ link.name }}</v-btn
           ></RouterLink
         >
       </div>
+
       <div class="nav-buttons">
         <RouterLink v-if="!isLoggedIn" to="/login" class="clear"
           ><v-btn
             prepend-icon="mdi-login"
             density="compact"
             variant="tonal"
-            class="mx-1"
+            class="mx-1 sing-in-btn text-h6 text-button"
             rounded="xl"
             >{{ t("button.login") }}</v-btn
           ></RouterLink
@@ -92,7 +88,7 @@ function handleLogout() {
             prepend-icon="mdi-account-plus"
             density="compact"
             variant="tonal"
-            class="mx-1"
+            class="mx-1 sing-up-btn text-h6 text-button"
             rounded="xl"
             >{{ t("button.register") }}</v-btn
           ></RouterLink

@@ -44,6 +44,19 @@ function authenticateToken(req, res, next) {
 app.post('/register', async (req, res) => {
     const { firstName, lastName, email, phoneNumber, password } = req.body;
     try {
+        // Check if email already exists in the database:
+        const emailCheckQuery = 'SELECT * from users WHERE email = ?';
+        db.query(emailCheckQuery, [email], async (err, results) => {
+            if(err) {
+                console.error(err);
+                res.status(500).send('Database error');
+                return;
+            }
+            if (results.length > 0) {
+                res.status(400).send('Email was already registered to the database!');
+                return;
+            }
+        })
         const hashedPassword = await bcrypt.hash(password, 10); // salt rounds = 10
         const sqlInsert = `INSERT INTO users (firstName, lastName, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?)`;
         db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword], (err, results) => {

@@ -1,10 +1,11 @@
 <script setup>
+import Hero from "@/components/Hero.vue";
 </script>
 
 <template>
-  <div>
-    <h1>Home</h1>
-  </div>
+  <section>
+    <Hero></Hero>
+  </section>
 </template>
 
 <style>

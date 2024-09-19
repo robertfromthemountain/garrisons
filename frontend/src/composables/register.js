@@ -63,7 +63,7 @@ export function useRegisterForm() {
         { label: t("inputFields.lastName"), placeholder: "Doe", model: 'lastName', rules: lastNameRules, type: "text" },
         { label: t("inputFields.email"), placeholder: "johndoe@mail.com", model: 'email', rules: emailRules, type: "email" },
         { label: t("inputFields.repeatEmail"), model: 'repeatEmail', rules: repeatEmailRules, type: "email" },
-        { label: t("inputFields.phoneNumber"), placeholder: "06301231234", model: 'phoneNumber', rules: phoneRules, type: "number" },
+        { label: t("inputFields.phoneNumber"), placeholder: "06301231234", model: 'phoneNumber', rules: phoneRules, type: "tel" },
         { label: t("inputFields.password"), model: 'password', rules: passwordRules, type: "password" },
         { label: t("inputFields.repeatPassword"), model: 'repeatPassword', rules: repeatPasswordRules, type: "password" },
     ];

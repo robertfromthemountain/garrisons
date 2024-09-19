@@ -1,18 +1,44 @@
-.clear{
+.clear {
     text-decoration: none;
     color: inherit;
+    font-size: larger;
 }
-nav{
-    width: 100%;   
+
+nav {
+    width: 100%;
     display: flex;
     justify-content: center;
+    background-color: #201b18;
 }
-.nav-buttons{
+
+.nav-color {
+    background-color: #201b18;
+    border-bottom: 4px solid #6a4e35;
+}
+
+.nav-elevation {
+    box-shadow: 6px 6px 12px rgba(0, 0, 0, 0.6);
+}
+
+.nav-buttons {
     position: absolute;
     right: 0;
+    color: #d3d2cd;
 }
+
+.btn-color {
+    color: #d3d2cd;
+
+}
+
+.sing-in-btn {
+    background-color: #31261b;
+}
+
+.sing-up-btn {
+    background-color: #8f6a48;
+}
+
 .active-link {
-    box-shadow: 0 2px 4px -1px rgba(0,0,0,0.2),
-    0 4px 5px 0 rgba(0,0,0,0.14),
-    0 1px 10px 0 rgba(0,0,0,0.12);
-  }
+    border-bottom: 3px solid #d3d2cd;
+}
