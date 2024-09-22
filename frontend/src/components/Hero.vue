@@ -32,7 +32,7 @@ const { t } = useI18n();
           block
           size="x-large"
           rounded="lg"
-          class="hero-button elevation-4"
+          class="hero-button elevation-5"
           >{{ t("button.book") }}</v-btn
         ></RouterLink>
       </v-col>
