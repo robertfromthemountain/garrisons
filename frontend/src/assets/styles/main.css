@@ -1,3 +1,27 @@
 body{
     font-family: 'Bebas Neue', sans-serif;
 }
+
+.bg-garrisons{
+    background-color: #26211e;
+}
+
+.bg-dark-garrisons{
+    background-color: #201b18;
+}
+
+.btn-garrisons{
+    background-color: #8f6a48;
+}
+
+.btn-dark-garrisons{
+    background-color: #6a4e35;
+}
+
+.icon-color-garrisons{
+    background-color: #d3d2cd;
+}
+
+.text-garrisons{
+    color: #d3d2cd;
+}

@@ -47,7 +47,7 @@ app.post('/register', async (req, res) => {
         // Check if email already exists in the database:
         const emailCheckQuery = 'SELECT * from users WHERE email = ?';
         db.query(emailCheckQuery, [email], async (err, results) => {
-            if(err) {
+            if (err) {
                 console.error(err);
                 res.status(500).send('Database error');
                 return;
@@ -108,6 +108,32 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+// Get events
+app.get('/api/events', (req, res) => {
+    db.query('SELECT * FROM events', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// Get services
+app.get('/api/services', (req, res) => {
+    db.query('SELECT * FROM services', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// app.post('/api/events', (req, res) => {
+//     const { title, start, end } = req.body;
+//     db.query('INSERT INTO events (title, start, end) VALUES (?, ?, ?)', [title, start, end], (err, result) => {
+//         if (err) return res.status(500).send(err);
+//         res.status(201).json({ id: result.insertId, title, start, end });
+//     });
+// });
+
+
 
 
 // Start server
