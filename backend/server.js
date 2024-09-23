@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({}));
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -110,8 +110,8 @@ app.post('/login', async (req, res) => {
 });
 
 // Get events
-app.get('/api/events', (req, res) => {
-    db.query('SELECT * FROM events', (err, results) => {
+app.get('/api/getEvents', (req, res) => {
+    db.query('SELECT * FROM pending_events', (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
     });
@@ -128,32 +128,32 @@ app.get('/api/services', (req, res) => {
 // Protected route requiring authentication
 app.get('/api/user', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Access user ID from decoded token
-    const email = req.user.email; 
-    const firstName = req.user.firstName; 
-    const lastName = req.user.lastName; 
-    
+    const email = req.user.email;
+    const firstName = req.user.firstName;
+    const lastName = req.user.lastName;
+
     // Optional: Fetch user details from database based on userId
     // ...
-  
+
     res.json({ userId, email, firstName, lastName });
-  });
+});
 
 // Create an event
-app.post('/api/eventBooking', authenticateToken, (req, res) => {
-    const { title, date, start, end, user_id } = req.body;
+app.post('/api/requestEvent', authenticateToken, (req, res) => {
+    const { pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id } = req.body;
 
     // Check if required fields are provided
-    if (!title || !date || !start || !end || !user_id) {
+    if (!pending_service_title || !pending_date || !pending_start_of_event || !pending_end_of_event || !user_id) {
         return res.status(400).send('Missing required fields');
     }
 
-    const sqlInsert = `INSERT INTO events (title, date, start, end, user_id) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sqlInsert, [title, date, start, end, user_id], (err, result) => {
+    const sqlInsert = `INSERT INTO pending_events (pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id) VALUES (?, ?, ?, ?, ?)`;
+    db.query(sqlInsert, [pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
         }
-        res.status(201).json({ id: result.insertId, title, date, start, end, user_id });
+        res.status(201).json({ id: result.insertId, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id });
     });
 });
 

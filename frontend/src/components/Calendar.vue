@@ -124,6 +124,7 @@ export default {
         events: [],
       },
       showDialog: false,
+      showConfirmationDialog: false,
       selectedSlot: {},
       services: [],
       selectedService: null, // To store the selected service
@@ -131,17 +132,28 @@ export default {
       email: null,
       firstName: null,
       lastName: null,
-      showConfirmationDialog: false,
     };
   },
   mounted() {
+    this.fetchUserId();
     this.fetchEvents();
     this.fetchServices();
-    this.fetchUserId();
   },
   methods: {
     async fetchUserId() {
       if (!this.$store.getters.isLoggedIn) return; // Check if logged in
+      console.log("Access Token:", this.$store.getters.accessToken);
+      const token = this.$store.getters.accessToken;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      console.log("Token payload:", payload);
+
+      // Check expiration time
+      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+      if (payload.exp < currentTime) {
+        console.log("Token has expired");
+      } else {
+        console.log("Token is still valid");
+      }
 
       try {
         const response = await axios.get("http://localhost:5000/api/user", {
@@ -153,7 +165,7 @@ export default {
         this.email = response.data.email; // Store user ID in component data
         this.firstName = response.data.firstName; // Store user ID in component data
         this.lastName = response.data.lastName; // Store user ID in component data
-        // console.log("ITT A USERID:", this.userId);
+        console.log("ITT A USERID:", this.userId);
         // console.log("ITT A firstname:", this.firstName);
         // console.log("ITT A lastName:", this.lastName);
         // console.log("ITT A email:", this.email);
@@ -165,7 +177,7 @@ export default {
 
     async fetchEvents() {
       try {
-        const response = await axios.get("http://localhost:5000/api/events");
+        const response = await axios.get("http://localhost:5000/api/getEvents");
         this.calendarOptions.events = response.data;
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -188,8 +200,8 @@ export default {
       this.showDialog = true;
     },
     closeDialog() {
-      this.showDialog = false; // Close the initial booking dialog
       this.showConfirmationDialog = false; // Close confirmation dialog
+      this.showDialog = false; // Close the initial booking dialog
       this.selectedSlot = {}; // Reset selected slot
       this.selectedService = null; // Reset selected service
     },
@@ -223,15 +235,15 @@ export default {
       const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
 
       const newEvent = {
-        title: this.selectedService.title,
-        date: this.selectedSlot.date,
-        start: startTime.toISOString(),
-        end: endTime.toISOString(),
+        pending_service_title: this.selectedService.title,
+        pending_date: this.selectedSlot.date,
+        pending_start_of_event: startTime.toISOString(),
+        pending_end_of_event: endTime.toISOString(),
         user_id: this.userId,
       };
 
       try {
-        await axios.post("http://localhost:5000/api/eventBooking", newEvent, {
+        await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
           headers: {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
@@ -243,20 +255,8 @@ export default {
           `Appointment for ${this.selectedService.title} successfully booked!`
         );
 
-        // Close the confirmation dialog
-        
-        // Close the initial booking dialog and reset state
-        console.log(
-          "Before closing dialogs:",
-          this.showDialog,
-          this.showConfirmationDialog
-        );
         this.showConfirmationDialog = false;
-        console.log(
-          "After closing dialogs:",
-          this.showDialog,
-          this.showConfirmationDialog
-        );
+        // Close the confirmation dialog
       } catch (error) {
         console.error("Error booking appointment:", error);
         alert("There was an error booking your appointment. Please try again.");
