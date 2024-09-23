@@ -113,7 +113,18 @@ export default {
         timeZone: "local",
         slotDuration: "00:30:00",
         slotMinTime: "08:00:00",
-        slotMaxTime: "17:00:00",
+        slotMaxTime: "18:00:00",
+        nowIndicator: true,
+        headerToolbar: {
+          left:"",
+          center: "title",
+          right:""
+        },
+        footerToolbar: {
+          left: "prev",
+          center: "today",
+          right: "next",
+        },
         slotLabelFormat: {
           hour: "2-digit",
           minute: "2-digit",

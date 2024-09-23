@@ -1,27 +1,93 @@
-body{
+body {
     font-family: 'Bebas Neue', sans-serif;
 }
 
-.bg-garrisons{
+.bg-garrisons {
     background-color: #26211e;
 }
 
-.bg-dark-garrisons{
+.bg-dark-garrisons {
     background-color: #201b18;
 }
 
-.btn-garrisons{
+.btn-garrisons {
     background-color: #8f6a48;
 }
 
-.btn-dark-garrisons{
+.btn-dark-garrisons {
     background-color: #6a4e35;
 }
 
-.icon-color-garrisons{
+.icon-color-garrisons {
     background-color: #d3d2cd;
 }
 
-.text-garrisons{
+.text-garrisons {
     color: #d3d2cd;
+}
+
+.fc-event-main {
+    background-color: #26211e;
+    border-color: #26211e;
+    border-radius: 5px;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.fc-timegrid-event {
+    opacity: 100%;
+    /*Ezzel lehet allitani az eventek kartyajat*/
+    box-shadow: none;
+    border-color: #26211e;
+    margin: 0;
+    padding: 0;
+    border-radius: 5px;
+}
+
+.fc table {
+    background-color: #d3d2cd;
+    border-collapse: unset;
+    color: #26211e;
+}
+
+.fc th{
+    text-decoration: none;
+    font-weight: normal;
+    font-size: 1.2em;
+}
+
+.fc-toolbar-title{
+    font-weight: normal;
+    color: #d3d2cd;
+}
+
+:root {
+    --fc-page-bg-color: #d3d2cd;
+    --fc-neutral-bg-color: #d3d2cd;
+    --fc-neutral-text-color: #d3d2cd;
+    --fc-border-color: #424242;
+
+    --fc-event-bg-color: #26211e;
+    --fc-event-border-color: #26211e;
+    --fc-event-text-color: #d3d2cd;
+    --fc-event-selected-overlay-color: rgba(0, 0, 0, 0.25);
+
+    --fc-small-font-size: .85em;
+    --fc-button-text-color: #d3d2cd;
+    --fc-button-bg-color: #ffffff00;
+    --fc-button-border-color: #ffffff00;
+    --fc-button-hover-bg-color: #26211e54;
+    --fc-button-hover-border-color: #26211eb7;
+    --fc-button-active-bg-color: #26211e54;
+    --fc-button-active-border-color: #26211eb7;
+    --fc-more-link-bg-color: #d0d0d0;
+    --fc-more-link-text-color: inherit;
+    --fc-event-resizer-thickness: 8px;
+    --fc-event-resizer-dot-total-width: 8px;
+    --fc-event-resizer-dot-border-width: 1px;
+    --fc-non-business-color: hsla(0, 0%, 84%, .3);
+    --fc-bg-event-color: #8fdf82;
+    --fc-bg-event-opacity: 0.3;
+    --fc-highlight-color: rgba(188, 232, 241, .3);
+    --fc-today-bg-color: rgba(255, 220, 40, .15);
+    --fc-now-indicator-color: red;
 }

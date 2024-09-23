@@ -9,7 +9,7 @@
       <div
         v-for="service in services"
         :key="service.id"
-        class="btn-garrisons ma-1 mb-5 text-center elevation-5 rounded d-flex justify-space-between px-5 align-center"
+        class="btn-garrisons ma-1 mb-5 text-center elevation-5 rounded-pill d-flex justify-space-between px-5 align-center"
       >
         <h2 class="text-garrisons font-weight-regular">{{ service.title }}</h2>
         <h3 class="text-garrisons font-weight-light">{{ service.duration }} minutes</h3>

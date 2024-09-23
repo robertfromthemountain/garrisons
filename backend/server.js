@@ -125,24 +125,24 @@ app.post('/login', async (req, res) => {
 app.get('/api/getEvents', (req, res) => {
     const sqlQuery = 'SELECT * FROM confirmed_events';
     db.query(sqlQuery, (err, results) => {
-      if (err) {
-        console.error('Error fetching events:', err);
-        return res.status(500).send('Error fetching events');
-      }
-  
-      // Ensure results is an array before mapping
-      if (Array.isArray(results)) {
-        const fullCalendarEvents = results.map(event => ({
-          title: event.confirmed_event_title,
-          start: event.confirmed_event_start,
-          end: event.confirmed_event_end,
-        }));
-        return res.json(fullCalendarEvents);
-      } else {
-        return res.status(500).send('No events found');
-      }
+        if (err) {
+            console.error('Error fetching events:', err);
+            return res.status(500).send('Error fetching events');
+        }
+
+        // Ensure results is an array before mapping
+        if (Array.isArray(results)) {
+            const fullCalendarEvents = results.map(event => ({
+                title: event.confirmed_event_title,
+                start: event.confirmed_event_start,
+                end: event.confirmed_event_end,
+            }));
+            return res.json(fullCalendarEvents);
+        } else {
+            return res.status(500).send('No events found');
+        }
     });
-  });
+});
 
 // Get services
 app.get('/api/services', (req, res) => {
@@ -181,30 +181,45 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
             return res.status(500).send('Database error');
         }
 
-        // Send email to admin for confirmation
-        const mailOptions = {
-            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-            to: 'naboha7589@skrak.com', // Admin's email address
-            subject: 'New Appointment Request',
-            html: `
-                <p>A new appointment has been requested by user with ID: ${user_id}</p>
+        // Fetch user's full name
+        const sqlUserSelect = 'SELECT firstName, lastName FROM users WHERE id = ?';
+        db.query(sqlUserSelect, [user_id], (err, userResults) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            if (userResults.length > 0) {
+                const user = userResults[0];
+                const fullName = `${user.firstName} ${user.lastName}`;
+
+                // Send email to admin for confirmation
+                const mailOptions = {
+                    from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                    to: 'naboha7589@skrak.com', // Admin's email address
+                    subject: 'New Appointment Request',
+                    html: `
+                <p>A new appointment has been requested by user with ID: ${fullName}</p>
                 <p><strong>Service:</strong> ${pending_service_title}</p>
                 <p><strong>Date:</strong> ${pending_date}</p>
                 <p><strong>Start Time:</strong> ${pending_start_of_event}</p>
                 <p><strong>End Time:</strong> ${pending_end_of_event}</p>
                 <p>To confirm the appointment, click <a href="http://localhost:5000/api/confirmEvent/${result.insertId}">here</a>.</p>
             `
-        };
+                };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending email:', error);
-                return res.status(500).send('Error sending email');
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending email:', error);
+                        return res.status(500).send('Error sending email');
+                    }
+                    console.log('Email sent:', info.response);
+                });
+
+                res.status(201).json({ id: result.insertId, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id });
+            } else {
+                return res.status(404).send('User not found');
             }
-            console.log('Email sent:', info.response);
         });
-
-        res.status(201).json({ id: result.insertId, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id });
     });
 });
 
