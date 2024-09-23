@@ -140,7 +140,7 @@ app.get('/api/user', authenticateToken, (req, res) => {
 
 // Create an event
 app.post('/api/eventBooking', authenticateToken, (req, res) => {
-    const { title, start, end, user_id } = req.body;
+    const { title, date, start, end, user_id } = req.body;
 
     // Check if required fields are provided
     if (!title || !date || !start || !end || !user_id) {

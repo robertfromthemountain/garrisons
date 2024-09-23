@@ -224,6 +224,7 @@ export default {
 
       const newEvent = {
         title: this.selectedService.title,
+        date: this.selectedSlot.date,
         start: startTime.toISOString(),
         end: endTime.toISOString(),
         user_id: this.userId,
