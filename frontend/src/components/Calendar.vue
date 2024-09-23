@@ -33,18 +33,47 @@
               <strong>Duration:</strong> {{ selectedService.duration }} minutes
             </p>
             <p><strong>Price:</strong> {{ selectedService.price }}</p>
-            <p v-if="$store.getters.isLoggedIn"><strong>Logged in user ID:</strong> {{ userId }}</p>
-            <p v-if="$store.getters.isLoggedIn"><strong>Name:</strong> {{ firstName + ' ' + lastName }}</p>
-            <p v-if="$store.getters.isLoggedIn"><strong>Email:</strong> {{ email }}</p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>Logged in user ID:</strong> {{ userId }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>Name:</strong> {{ firstName + " " + lastName }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>Email:</strong> {{ email }}
+            </p>
           </div>
         </v-card-text>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="bookService(selectedService)"
-            >Book</v-btn
-          >
+          <v-btn color="primary" @click="checkOverlap">Next</v-btn>
           <v-btn color="secondary" @click="closeDialog">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Second Vuetify Dialog for confirmation -->
+    <v-dialog v-model="showConfirmationDialog" max-width="500">
+      <v-card>
+        <v-card-title>
+          <span class="headline">Confirm Your Appointment</span>
+        </v-card-title>
+        <v-card-text>
+          <p><strong>Name:</strong> {{ firstName + " " + lastName }}</p>
+          <p><strong>Email:</strong> {{ email }}</p>
+          <p><strong>Phone:</strong> {{ phone }}</p>
+          <p><strong>Service:</strong> {{ selectedService.title }}</p>
+          <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
+          <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
+          <p><strong>Price:</strong> {{ selectedService.price }}</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="finalizeBooking">Book</v-btn>
+          <v-btn color="secondary" @click="showConfirmationDialog = false"
+            >Cancel</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -102,6 +131,7 @@ export default {
       email: null,
       firstName: null,
       lastName: null,
+      showConfirmationDialog: false,
     };
   },
   mounted() {
@@ -123,10 +153,10 @@ export default {
         this.email = response.data.email; // Store user ID in component data
         this.firstName = response.data.firstName; // Store user ID in component data
         this.lastName = response.data.lastName; // Store user ID in component data
-        console.log("ITT A USERID:", this.userId);
-        console.log("ITT A firstname:", this.firstName);
-        console.log("ITT A lastName:", this.lastName);
-        console.log("ITT A email:", this.email);
+        // console.log("ITT A USERID:", this.userId);
+        // console.log("ITT A firstname:", this.firstName);
+        // console.log("ITT A lastName:", this.lastName);
+        // console.log("ITT A email:", this.email);
       } catch (error) {
         console.error("Error fetching user ID:", error);
         // Handle errors appropriately (e.g., logout if token is invalid)
@@ -158,45 +188,77 @@ export default {
       this.showDialog = true;
     },
     closeDialog() {
-      this.showDialog = false;
-      this.selectedSlot = {};
-      this.selectedService = null; // Reset selected service on dialog close
+      this.showDialog = false; // Close the initial booking dialog
+      this.showConfirmationDialog = false; // Close confirmation dialog
+      this.selectedSlot = {}; // Reset selected slot
+      this.selectedService = null; // Reset selected service
     },
-    bookService(service) {
-      if (!service) {
+
+    checkOverlap() {
+      if (!this.selectedService) {
         alert("Please select a service.");
         return;
       }
-
-      // Use the correct duration from the selected service
-      const durationInMinutes = parseInt(service.duration, 10);
+      const durationInMinutes = parseInt(this.selectedService.duration, 10);
       const startTime = new Date(this.selectedSlot.date);
-      const endTime = new Date(
-        new Date(this.selectedSlot.date).getTime() + durationInMinutes * 60000
-      );
-
+      const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
       // Check for overlapping events
       const hasOverlap = this.calendarOptions.events.some((event) => {
         const eventStart = new Date(event.start);
         const eventEnd = new Date(event.end);
-
         return startTime < eventEnd && endTime > eventStart; // Checking for overlap
       });
 
       if (hasOverlap) {
         alert("This time slot is already booked. Please choose another time.");
       } else {
-        // Proceed with booking since there's no overlap
-        const newEvent = {
-          title: service.title,
-          start: this.selectedSlot.date,
-          end: endTime,
-          user_id: this.userId,
-        };
+        this.showConfirmationDialog = true;
+        this.showDialog = false;
+      }
+    },
 
+    async finalizeBooking() {
+      const durationInMinutes = parseInt(this.selectedService.duration, 10);
+      const startTime = new Date(this.selectedSlot.date);
+      const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
+
+      const newEvent = {
+        title: this.selectedService.title,
+        start: startTime.toISOString(),
+        end: endTime.toISOString(),
+        user_id: this.userId,
+      };
+
+      try {
+        await axios.post("http://localhost:5000/api/eventBooking", newEvent, {
+          headers: {
+            Authorization: `Bearer ${this.$store.getters.accessToken}`,
+          },
+        });
+
+        // Update the events in the calendar
         this.calendarOptions.events.push(newEvent);
-        this.closeDialog();
-        alert(`Appointment for ${service.title} successfully booked!`);
+        alert(
+          `Appointment for ${this.selectedService.title} successfully booked!`
+        );
+
+        // Close the confirmation dialog
+        
+        // Close the initial booking dialog and reset state
+        console.log(
+          "Before closing dialogs:",
+          this.showDialog,
+          this.showConfirmationDialog
+        );
+        this.showConfirmationDialog = false;
+        console.log(
+          "After closing dialogs:",
+          this.showDialog,
+          this.showConfirmationDialog
+        );
+      } catch (error) {
+        console.error("Error booking appointment:", error);
+        alert("There was an error booking your appointment. Please try again.");
       }
     },
   },

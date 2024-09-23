@@ -143,17 +143,17 @@ app.post('/api/eventBooking', authenticateToken, (req, res) => {
     const { title, start, end, user_id } = req.body;
 
     // Check if required fields are provided
-    if (!title || !start || !end || !user_id) {
+    if (!title || !date || !start || !end || !user_id) {
         return res.status(400).send('Missing required fields');
     }
 
-    const sqlInsert = `INSERT INTO events (title, start, end, user_id) VALUES (?, ?, ?, ?)`;
-    db.query(sqlInsert, [title, start, end, user_id], (err, result) => {
+    const sqlInsert = `INSERT INTO events (title, date, start, end, user_id) VALUES (?, ?, ?, ?, ?)`;
+    db.query(sqlInsert, [title, date, start, end, user_id], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
         }
-        res.status(201).json({ id: result.insertId, title, start, end, user_id });
+        res.status(201).json({ id: result.insertId, title, date, start, end, user_id });
     });
 });
 
