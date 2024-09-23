@@ -17,6 +17,7 @@
     "@fullcalendar/vue3": "^6.1.15",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
+    "jwt-decode": "^4.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-i18n": "^9.9.0",

@@ -90,7 +90,7 @@ app.post('/login', async (req, res) => {
                 const validPassword = await bcrypt.compare(password, user.password);
                 if (validPassword) {
                     const token = jwt.sign(
-                        { userId: user.id, email: user.email },
+                        { userId: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName }, // ITT ADOM HOZZA A TOKENHEZ A DOLGOKAT
                         process.env.JWT_SECRET,
                         { expiresIn: '1h' }
                     );
@@ -125,16 +125,37 @@ app.get('/api/services', (req, res) => {
     });
 });
 
-// app.post('/api/events', (req, res) => {
-//     const { title, start, end } = req.body;
-//     db.query('INSERT INTO events (title, start, end) VALUES (?, ?, ?)', [title, start, end], (err, result) => {
-//         if (err) return res.status(500).send(err);
-//         res.status(201).json({ id: result.insertId, title, start, end });
-//     });
-// });
+// Protected route requiring authentication
+app.get('/api/user', authenticateToken, (req, res) => {
+    const userId = req.user.userId; // Access user ID from decoded token
+    const email = req.user.email; 
+    const firstName = req.user.firstName; 
+    const lastName = req.user.lastName; 
+    
+    // Optional: Fetch user details from database based on userId
+    // ...
+  
+    res.json({ userId, email, firstName, lastName });
+  });
 
+// Create an event
+app.post('/api/eventBooking', authenticateToken, (req, res) => {
+    const { title, start, end, user_id } = req.body;
 
+    // Check if required fields are provided
+    if (!title || !start || !end || !user_id) {
+        return res.status(400).send('Missing required fields');
+    }
 
+    const sqlInsert = `INSERT INTO events (title, start, end, user_id) VALUES (?, ?, ?, ?)`;
+    db.query(sqlInsert, [title, start, end, user_id], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+        res.status(201).json({ id: result.insertId, title, start, end, user_id });
+    });
+});
 
 // Start server
 app.listen(PORT, () => {

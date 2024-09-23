@@ -18,7 +18,7 @@
           <v-select
             v-model="selectedService"
             :items="services"
-            :item-value="service => service"
+            :item-value="(service) => service"
             item-text="title"
             label="Choose a service"
             outlined
@@ -29,14 +29,21 @@
           <!-- Show selected service details reactively -->
           <div v-if="selectedService">
             <p><strong>Service:</strong> {{ selectedService.title }}</p>
-            <p><strong>Duration:</strong> {{ selectedService.duration }} minutes</p>
+            <p>
+              <strong>Duration:</strong> {{ selectedService.duration }} minutes
+            </p>
             <p><strong>Price:</strong> {{ selectedService.price }}</p>
+            <p v-if="$store.getters.isLoggedIn"><strong>Logged in user ID:</strong> {{ userId }}</p>
+            <p v-if="$store.getters.isLoggedIn"><strong>Name:</strong> {{ firstName + ' ' + lastName }}</p>
+            <p v-if="$store.getters.isLoggedIn"><strong>Email:</strong> {{ email }}</p>
           </div>
         </v-card-text>
 
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="bookService(selectedService)">Book</v-btn>
+          <v-btn color="primary" @click="bookService(selectedService)"
+            >Book</v-btn
+          >
           <v-btn color="secondary" @click="closeDialog">Cancel</v-btn>
         </v-card-actions>
       </v-card>
@@ -91,13 +98,41 @@ export default {
       selectedSlot: {},
       services: [],
       selectedService: null, // To store the selected service
+      userId: null,
+      email: null,
+      firstName: null,
+      lastName: null,
     };
   },
   mounted() {
     this.fetchEvents();
     this.fetchServices();
+    this.fetchUserId();
   },
   methods: {
+    async fetchUserId() {
+      if (!this.$store.getters.isLoggedIn) return; // Check if logged in
+
+      try {
+        const response = await axios.get("http://localhost:5000/api/user", {
+          headers: {
+            Authorization: `Bearer ${this.$store.getters.accessToken}`,
+          },
+        });
+        this.userId = response.data.userId; // Store user ID in component data
+        this.email = response.data.email; // Store user ID in component data
+        this.firstName = response.data.firstName; // Store user ID in component data
+        this.lastName = response.data.lastName; // Store user ID in component data
+        console.log("ITT A USERID:", this.userId);
+        console.log("ITT A firstname:", this.firstName);
+        console.log("ITT A lastName:", this.lastName);
+        console.log("ITT A email:", this.email);
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+        // Handle errors appropriately (e.g., logout if token is invalid)
+      }
+    },
+
     async fetchEvents() {
       try {
         const response = await axios.get("http://localhost:5000/api/events");
@@ -156,6 +191,7 @@ export default {
           title: service.title,
           start: this.selectedSlot.date,
           end: endTime,
+          user_id: this.userId,
         };
 
         this.calendarOptions.events.push(newEvent);
