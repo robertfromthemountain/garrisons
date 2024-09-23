@@ -16,15 +16,20 @@
 
           <!-- Display all services using v-for -->
           <div v-if="services.length > 0">
-            <div v-for="service in services" :key="service.id" class="service-card">
+            <div
+              v-for="service in services"
+              :key="service.id"
+              class="service-card"
+            >
               <p><strong>Service:</strong> {{ service.title }}</p>
               <p><strong>Duration:</strong> {{ service.duration }} minutes</p>
               <p><strong>Price:</strong> {{ service.price }}</p>
-              <v-btn color="primary" @click="bookService(service)">Book this Service</v-btn>
+              <v-btn color="primary" @click="bookService(service)"
+                >Book this Service</v-btn
+              >
             </div>
           </div>
           <p v-else>No services available</p>
-
         </v-card-text>
 
         <v-card-actions>
@@ -120,20 +125,35 @@ export default {
     bookService(service) {
       // Use the correct duration from the selected service
       const durationInMinutes = parseInt(service.duration, 10);
+      const startTime = new Date(this.selectedSlot.date);
       const endTime = new Date(
         new Date(this.selectedSlot.date).getTime() + durationInMinutes * 60000
       );
 
-      // Insert the new event into FullCalendar
-      const newEvent = {
-        title: service.title,
-        start: this.selectedSlot.date,
-        end: endTime,
-      };
+      // Check for overlapping events
+      const hasOverlap = this.calendarOptions.events.some((event) => {
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
 
-      this.calendarOptions.events.push(newEvent);
-      this.closeDialog();
-      alert(`Appointment for ${service.title} successfully booked!`);
+        return (
+          startTime < eventEnd && endTime > eventStart // Checking for overlap
+        );
+      });
+
+      if (hasOverlap) {
+        alert("This time slot is already booked. Please choose another time.");
+      } else {
+        // Proceed with booking since there's no overlap
+        const newEvent = {
+          title: service.title,
+          start: this.selectedSlot.date,
+          end: endTime,
+        };
+
+        this.calendarOptions.events.push(newEvent);
+        this.closeDialog();
+        alert(`Appointment for ${service.title} successfully booked!`);
+      }
     },
   },
 };
