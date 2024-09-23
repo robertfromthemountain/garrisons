@@ -179,6 +179,7 @@ export default {
       try {
         const response = await axios.get("http://localhost:5000/api/getEvents");
         this.calendarOptions.events = response.data;
+        console.log("ERTERTERT", this.calendarOptions.events);
       } catch (error) {
         console.error("Error fetching events:", error);
       }

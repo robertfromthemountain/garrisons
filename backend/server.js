@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -39,6 +40,17 @@ function authenticateToken(req, res, next) {
         next();
     });
 }
+
+//Nodemailer
+const transporter = nodemailer.createTransport({
+    host: 'sandbox.smtp.mailtrap.io',
+    port: 2525,
+    auth: {
+        user: '2ffdd7c9108046', // Replace with Mailtrap username
+        pass: '378385174926c2'  // Replace with Mailtrap password
+    }
+});
+
 
 // Registration endpoint
 app.post('/register', async (req, res) => {
@@ -111,11 +123,26 @@ app.post('/login', async (req, res) => {
 
 // Get events
 app.get('/api/getEvents', (req, res) => {
-    db.query('SELECT * FROM pending_events', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
+    const sqlQuery = 'SELECT * FROM confirmed_events';
+    db.query(sqlQuery, (err, results) => {
+      if (err) {
+        console.error('Error fetching events:', err);
+        return res.status(500).send('Error fetching events');
+      }
+  
+      // Ensure results is an array before mapping
+      if (Array.isArray(results)) {
+        const fullCalendarEvents = results.map(event => ({
+          title: event.confirmed_event_title,
+          start: event.confirmed_event_start,
+          end: event.confirmed_event_end,
+        }));
+        return res.json(fullCalendarEvents);
+      } else {
+        return res.status(500).send('No events found');
+      }
     });
-});
+  });
 
 // Get services
 app.get('/api/services', (req, res) => {
@@ -153,9 +180,77 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
             console.error(err);
             return res.status(500).send('Database error');
         }
+
+        // Send email to admin for confirmation
+        const mailOptions = {
+            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+            to: 'naboha7589@skrak.com', // Admin's email address
+            subject: 'New Appointment Request',
+            html: `
+                <p>A new appointment has been requested by user with ID: ${user_id}</p>
+                <p><strong>Service:</strong> ${pending_service_title}</p>
+                <p><strong>Date:</strong> ${pending_date}</p>
+                <p><strong>Start Time:</strong> ${pending_start_of_event}</p>
+                <p><strong>End Time:</strong> ${pending_end_of_event}</p>
+                <p>To confirm the appointment, click <a href="http://localhost:5000/api/confirmEvent/${result.insertId}">here</a>.</p>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending email:', error);
+                return res.status(500).send('Error sending email');
+            }
+            console.log('Email sent:', info.response);
+        });
+
         res.status(201).json({ id: result.insertId, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id });
     });
 });
+
+app.get('/api/confirmEvent/:id', (req, res) => {
+    const pendingEventId = req.params.id;
+    console.log('Pending event id-je:', pendingEventId);
+
+    // Find the pending event by ID
+    const sqlSelect = 'SELECT * FROM pending_events WHERE pending_event_id = ?';
+    db.query(sqlSelect, [pendingEventId], (err, result) => {
+        if (err || result.length === 0) {
+            return res.status(404).send('Pending event not found');
+        }
+
+        const pendingEvent = result[0];
+
+        // Insert the event into the confirmed_events table
+        const sqlInsert = `
+            INSERT INTO confirmed_events 
+            (confirmed_event_title, confirmed_event_date, confirmed_event_start, confirmed_event_end, reserving_user_id, confirming_user_id) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        db.query(sqlInsert, [
+            pendingEvent.pending_service_title,
+            pendingEvent.pending_date,
+            pendingEvent.pending_start_of_event,
+            pendingEvent.pending_end_of_event,
+            pendingEvent.user_id,
+            1 // Assuming admin ID is 1, you can modify it as necessary
+        ], (err, result) => {
+            if (err) {
+                return res.status(500).send('Error confirming event');
+            }
+
+            // Delete the event from the pending_events table
+            const sqlDelete = 'DELETE FROM pending_events WHERE pending_event_id = ?';
+            db.query(sqlDelete, [pendingEventId], (err) => {
+                if (err) {
+                    return res.status(500).send('Error deleting pending event');
+                }
+                res.send('Event confirmed and moved to confirmed_events');
+            });
+        });
+    });
+});
+
 
 // Start server
 app.listen(PORT, () => {
