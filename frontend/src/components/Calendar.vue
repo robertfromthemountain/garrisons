@@ -14,26 +14,29 @@
           <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
           <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
 
-          <!-- Display all services using v-for -->
-          <div v-if="services.length > 0">
-            <div
-              v-for="service in services"
-              :key="service.id"
-              class="service-card"
-            >
-              <p><strong>Service:</strong> {{ service.title }}</p>
-              <p><strong>Duration:</strong> {{ service.duration }} minutes</p>
-              <p><strong>Price:</strong> {{ service.price }}</p>
-              <v-btn color="primary" @click="bookService(service)"
-                >Book this Service</v-btn
-              >
-            </div>
-          </div>
+          <!-- Vuetify Select for services -->
+          <v-select
+            v-model="selectedService"
+            :items="services"
+            :item-value="service => service"
+            item-text="title"
+            label="Choose a service"
+            outlined
+            v-if="services.length > 0"
+          ></v-select>
           <p v-else>No services available</p>
+
+          <!-- Show selected service details reactively -->
+          <div v-if="selectedService">
+            <p><strong>Service:</strong> {{ selectedService.title }}</p>
+            <p><strong>Duration:</strong> {{ selectedService.duration }} minutes</p>
+            <p><strong>Price:</strong> {{ selectedService.price }}</p>
+          </div>
         </v-card-text>
 
         <v-card-actions>
           <v-spacer></v-spacer>
+          <v-btn color="primary" @click="bookService(selectedService)">Book</v-btn>
           <v-btn color="secondary" @click="closeDialog">Cancel</v-btn>
         </v-card-actions>
       </v-card>
@@ -87,6 +90,7 @@ export default {
       showDialog: false,
       selectedSlot: {},
       services: [],
+      selectedService: null, // To store the selected service
     };
   },
   mounted() {
@@ -121,8 +125,14 @@ export default {
     closeDialog() {
       this.showDialog = false;
       this.selectedSlot = {};
+      this.selectedService = null; // Reset selected service on dialog close
     },
     bookService(service) {
+      if (!service) {
+        alert("Please select a service.");
+        return;
+      }
+
       // Use the correct duration from the selected service
       const durationInMinutes = parseInt(service.duration, 10);
       const startTime = new Date(this.selectedSlot.date);
@@ -135,9 +145,7 @@ export default {
         const eventStart = new Date(event.start);
         const eventEnd = new Date(event.end);
 
-        return (
-          startTime < eventEnd && endTime > eventStart // Checking for overlap
-        );
+        return startTime < eventEnd && endTime > eventStart; // Checking for overlap
       });
 
       if (hasOverlap) {
@@ -158,7 +166,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 .bg-dark-garrisons {
