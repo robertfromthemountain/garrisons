@@ -120,13 +120,11 @@ export default {
         plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
         slotEventOverlap: false,
         initialView: "timeGridWeek",
-        timeZone: "local",
         slotDuration: "00:15:00",
         slotMinTime: "08:00:00",
         slotMaxTime: "17:00:00",
         editable: false,
         eventDrop: this.handleEventDrop,
-        // scrollToTime: "08:00:00",
         aspectRatio: 2.5,
         nowIndicator: true,
         headerToolbar: {
@@ -267,17 +265,31 @@ export default {
         reserving_user_id: info.event.extendedProps.reserving_user_id,
       };
 
-      // Store modified events in an array
-      this.modifiedEvents.push({
-        ...originalEvent,
-        modifiedTitle: modifiedEvent.modifiedTitle,
-        modifiedEventDate: modifiedEvent.modifiedEventDate,
-        newStart: modifiedEvent.newStart,
-        newEnd: modifiedEvent.newEnd,
-        originalEventDate: originalEvent.originalEventDate,
-        originalStart: originalEvent.originalStart,
-        originalEnd: originalEvent.originalEnd,
-      });
+      // Check if the event already exists in modifiedEvents array
+      const existingEventIndex = this.modifiedEvents.findIndex(
+        (event) => event.id === info.event.id
+      );
+
+      if (existingEventIndex !== -1) {
+        // If the event already exists, update its modified fields
+        this.modifiedEvents[existingEventIndex].modifiedEventDate =
+          modifiedEvent.modifiedEventDate;
+        this.modifiedEvents[existingEventIndex].newStart =
+          modifiedEvent.newStart;
+        this.modifiedEvents[existingEventIndex].newEnd = modifiedEvent.newEnd;
+      } else {
+        // If the event doesn't exist, add it to the array
+        this.modifiedEvents.push({
+          ...originalEvent,
+          modifiedTitle: modifiedEvent.modifiedTitle,
+          modifiedEventDate: modifiedEvent.modifiedEventDate,
+          newStart: modifiedEvent.newStart,
+          newEnd: modifiedEvent.newEnd,
+          originalEventDate: originalEvent.originalEventDate,
+          originalStart: originalEvent.originalStart,
+          originalEnd: originalEvent.originalEnd,
+        });
+      }
 
       console.log("Event modified:", originalEvent, modifiedEvent);
     },
