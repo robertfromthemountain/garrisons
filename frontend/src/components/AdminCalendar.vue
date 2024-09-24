@@ -1,7 +1,16 @@
 <template>
-  <div class="bg-dark-garrisons pa-8 elevation-5 rounded">
+  <div class="pa-8">
     <!-- FullCalendar component -->
-    <FullCalendar :options="calendarOptions" />
+    <FullCalendar :options="calendarOptions" class="h-auto" />
+
+    <!-- Modify Events Button -->
+    <v-btn v-if="!modifying" @click="enableModification">Modify Events</v-btn>
+
+    <!-- Save and Cancel Buttons -->
+    <div v-if="modifying">
+      <v-btn color="primary" @click="saveModifications">Save</v-btn>
+      <v-btn color="secondary" @click="cancelModifications">Cancel</v-btn>
+    </div>
 
     <!-- Vuetify Dialog -->
     <v-dialog v-model="showDialog" max-width="500">
@@ -79,9 +88,9 @@
     </v-dialog>
   </div>
 </template>
-
-
-<script>
+  
+  
+  <script>
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -104,27 +113,31 @@ export default {
   data() {
     return {
       calendarOptions: {
-        timeZone: 'UTC',
+        timeZone: "UTC",
         weekends: false,
         locales: [huLocale, enLocale],
         locale: this.locale,
         plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
         slotEventOverlap: false,
-        initialView: "timeGridDay",
+        initialView: "timeGridWeek",
         timeZone: "local",
-        slotDuration: "00:30:00",
+        slotDuration: "00:15:00",
         slotMinTime: "08:00:00",
         slotMaxTime: "17:00:00",
+        editable: false,
+        eventDrop: this.handleEventDrop,
+        // scrollToTime: "08:00:00",
+        aspectRatio: 2.5,
         nowIndicator: true,
         headerToolbar: {
-          left:"",
+          left: "prev",
           center: "title",
-          right:""
+          right: "today,next",
         },
         footerToolbar: {
-          left: "prev",
-          center: "today",
-          right: "next",
+          left: "",
+          center: "",
+          right: "",
         },
         slotLabelFormat: {
           hour: "2-digit",
@@ -135,6 +148,8 @@ export default {
         allDaySlot: false,
         events: [],
       },
+      modifying: false, // To toggle between modifying mode
+      modifiedEvents: [], // To store modified events
       showDialog: false,
       showConfirmationDialog: false,
       selectedSlot: {},
@@ -152,6 +167,45 @@ export default {
     this.fetchServices();
   },
   methods: {
+    enableModification() {
+      this.calendarOptions.editable = true; // Enable drag and drop
+      this.modifying = true; // Show Save and Cancel buttons
+    },
+    saveModifications() {
+      // Logic for saving modified events
+      console.log("Saving modified events:", this.modifiedEvents);
+      this.calendarOptions.editable = false; // Disable drag and drop after saving
+      this.modifying = false;
+    },
+    cancelModifications() {
+      // Logic for canceling the modifications
+      this.modifiedEvents = []; // Clear modified events
+      this.calendarOptions.editable = false; // Disable drag and drop
+      this.modifying = false; // Hide Save and Cancel buttons
+    },
+    handleEventDrop(info) {
+      const originalEvent = {
+        id: info.event.id,
+        originalStart: info.oldEvent.start.toISOString(),
+        originalEnd: info.oldEvent.end.toISOString(),
+      };
+
+      const modifiedEvent = {
+        id: info.event.id,
+        newStart: info.event.start.toISOString(),
+        newEnd: info.event.end.toISOString(),
+      };
+
+      // Store modified events in an array
+      this.modifiedEvents.push({
+        ...originalEvent,
+        newStart: modifiedEvent.newStart,
+        newEnd: modifiedEvent.newEnd,
+      });
+
+      console.log("Event modified:", originalEvent, modifiedEvent);
+    },
+
     async fetchUserId() {
       if (!this.$store.getters.isLoggedIn) return; // Check if logged in
       console.log("Access Token:", this.$store.getters.accessToken);
@@ -278,8 +332,8 @@ export default {
   },
 };
 </script>
-
-<style scoped>
+  
+  <style scoped>
 .bg-dark-garrisons {
   background-color: #201b18;
 }
@@ -288,3 +342,4 @@ export default {
   z-index: 1000;
 }
 </style>
+  

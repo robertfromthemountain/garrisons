@@ -133,6 +133,7 @@ app.get('/api/getEvents', (req, res) => {
         // Ensure results is an array before mapping
         if (Array.isArray(results)) {
             const fullCalendarEvents = results.map(event => ({
+                id: event.confirmed_event_id,
                 title: event.confirmed_event_title,
                 start: event.confirmed_event_start,
                 end: event.confirmed_event_end,

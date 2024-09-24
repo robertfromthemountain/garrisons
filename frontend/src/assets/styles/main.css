@@ -27,7 +27,7 @@ body {
 }
 
 .fc-event-main {
-    background-color: #26211e;
+    background-color: #261e1e;
     border-color: #26211e;
     border-radius: 5px;
     box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
@@ -44,31 +44,43 @@ body {
 }
 
 .fc table {
-    background-color: #d3d2cd;
+    background-color: rgba(255, 255, 255, 0.356);
     border-collapse: unset;
     color: #26211e;
 }
 
-.fc th{
+.fc .fc-timegrid-col.fc-day-today {
+    background-color: rgba(53, 48, 23, 0.582);
+}
+
+.fc th {
     text-decoration: none;
     font-weight: normal;
     font-size: 1.2em;
 }
 
-.fc-toolbar-title{
+.fc .fc-toolbar.fc-header-toolbar {
+    margin-bottom: 1em;
+}
+
+fc-today-button{
+    width: 400px;
+}
+
+.fc-toolbar-title {
     font-weight: normal;
     color: #d3d2cd;
 }
 
 :root {
     --fc-page-bg-color: #d3d2cd;
-    --fc-neutral-bg-color: #d3d2cd;
-    --fc-neutral-text-color: #d3d2cd;
+    --fc-neutral-bg-color: #d3cdcd;
+    --fc-neutral-text-color: #d3cdcd;
     --fc-border-color: #424242;
 
     --fc-event-bg-color: #26211e;
     --fc-event-border-color: #26211e;
-    --fc-event-text-color: #d3d2cd;
+    --fc-event-text-color: #ffffff;
     --fc-event-selected-overlay-color: rgba(0, 0, 0, 0.25);
 
     --fc-small-font-size: .85em;
