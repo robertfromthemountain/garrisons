@@ -6,6 +6,10 @@ import RulesView from '@/views/RulesView.vue'
 import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
+import ManageEventsView from '@/views/ManageEventsView.vue'
+import ManageNewsView from '@/views/ManageNewsView.vue'
+import ManageServicesView from '@/views/ManageServicesView.vue'
+import ManageUsersView from '@/views/ManageUsersView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -43,7 +47,29 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: DashboardView
+      component: DashboardView,
+      children: [
+        {
+          path: 'manageServices',
+          name: 'dashboard-services',
+          component: ManageServicesView
+        },
+        {
+          path: 'manageEvents',
+          name: 'dashboard-events',
+          component: ManageEventsView
+        },
+        {
+          path: 'manageUsers',
+          name: 'dashboard-users',
+          component: ManageUsersView
+        },
+        {
+          path: 'manageNews',
+          name: 'dashboard-news',
+          component: ManageNewsView
+        }
+      ]
     }
   ]
 })

@@ -104,6 +104,7 @@ export default {
   data() {
     return {
       calendarOptions: {
+        timeZone: 'UTC',
         weekends: false,
         locales: [huLocale, enLocale],
         locale: this.locale,
@@ -156,7 +157,7 @@ export default {
       console.log("Access Token:", this.$store.getters.accessToken);
       const token = this.$store.getters.accessToken;
       const payload = JSON.parse(atob(token.split(".")[1]));
-      console.log("Token payload:", payload);
+      console.log("TOKEEEEEEEEEEEEN:", payload);
 
       // Check expiration time
       const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
