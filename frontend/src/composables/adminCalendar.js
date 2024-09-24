@@ -28,6 +28,7 @@ export default {
         slotMaxTime: "17:00:00",
         editable: false,
         eventDrop: this.handleEventDrop,
+        eventClick: this.handleEventClick,
         aspectRatio: 2.5,
         nowIndicator: true,
         headerToolbar: {
@@ -49,18 +50,20 @@ export default {
         allDaySlot: false,
         events: [],
       },
-      modifying: false, 
-      modifiedEvents: [], 
-      originalEvents: [], 
-      showDialog: false,
+      modifying: false,
+      modifiedEvents: [],
+      originalEvents: [],
+      showFirstDialog: false,
       showConfirmationDialog: false,
       selectedSlot: {},
       services: [],
-      selectedService: null, 
+      selectedService: null,
       userId: null,
       email: null,
       firstName: null,
       lastName: null,
+      showEventDialog: false,  // New property for event dialog
+      selectedEvent: {},
     };
   },
   mounted() {
@@ -69,12 +72,49 @@ export default {
     this.fetchServices();
   },
   methods: {
+    handleEventClick(info) {
+      // Set the selected event details
+      console.log("ITT VAGYOOOOOK")
+      this.selectedEvent = info.event;
+
+      // Show the event details dialog
+      this.showEventDialog = true;
+    },
+    closeEventDialog() {
+      this.showEventDialog = false;
+      this.selectedEvent = {};  // Reset selected event when closing
+    },
+    async deleteEvent() {
+      if (confirm("Are you sure you want to delete this event?")) {
+        try {
+          console.log("EZ A KIVALASZTOTT EVENT IDJE AMIT TOTOLNI KELL:", this.selectedEvent.id)
+          const response = await axios.delete(`http://localhost:5000/api/deleteEvent/${this.selectedEvent.id}`, {
+            headers: {
+              Authorization: `Bearer ${this.$store.getters.accessToken}`,
+            },
+          });
+
+          if (response.status !== 200) {
+            throw new Error('Failed to delete event');
+          }
+
+          // Emit an event to refresh the events list or remove the event from local state
+          this.closeEventDialog();
+          alert('Event deleted successfully');
+          window.location.reload();
+        } catch (error) {
+          console.error('Error deleting event:', error);
+          alert('Error deleting event: ' + error.message);
+        }
+      }
+    },
+
     enableModification() {
       this.originalEvents = JSON.parse(
         JSON.stringify(this.calendarOptions.events)
-      ); 
-      this.calendarOptions.editable = true; 
-      this.modifying = true; 
+      );
+      this.calendarOptions.editable = true;
+      this.modifying = true;
     },
     async saveModifications() {
       const modifiedEventsData = this.modifiedEvents.map((event) => {
@@ -82,14 +122,14 @@ export default {
 
         return {
           modified_event_id: event.id,
-          modified_service_title: event.modifiedTitle, 
-          original_event_date: event.originalEventDate, 
+          modified_service_title: event.modifiedTitle,
+          original_event_date: event.originalEventDate,
           modified_event_date: event.newStart,
           original_event_start: event.originalStart,
           modified_event_start: event.newStart,
           original_event_end: event.originalEnd,
           modified_event_end: event.newEnd,
-          modified_reserving_user_id: reservingUserId, 
+          modified_reserving_user_id: reservingUserId,
         };
       });
 
@@ -105,10 +145,10 @@ export default {
         );
 
         alert("Modified events saved successfully!");
-        this.calendarOptions.editable = false; 
-        this.modifying = false; 
-        this.modifiedEvents = []; 
-        this.fetchEvents(); 
+        this.calendarOptions.editable = false;
+        this.modifying = false;
+        this.modifiedEvents = [];
+        this.fetchEvents();
       } catch (error) {
         console.error("Error saving modified events:", error);
         alert(
@@ -118,9 +158,9 @@ export default {
     },
     cancelModifications() {
       this.calendarOptions.events = this.originalEvents;
-      this.modifiedEvents = []; 
+      this.modifiedEvents = [];
       this.calendarOptions.editable = false;
-      this.modifying = false; 
+      this.modifying = false;
     },
     handleEventDrop(info) {
       const originalEvent = {
@@ -166,7 +206,7 @@ export default {
     },
 
     async fetchUserId() {
-      if (!this.$store.getters.isLoggedIn) return; 
+      if (!this.$store.getters.isLoggedIn) return;
       const token = this.$store.getters.accessToken;
       const payload = JSON.parse(atob(token.split(".")[1]));
 
@@ -181,10 +221,10 @@ export default {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
         });
-        this.userId = response.data.userId; 
-        this.email = response.data.email; 
-        this.firstName = response.data.firstName; 
-        this.lastName = response.data.lastName; 
+        this.userId = response.data.userId;
+        this.email = response.data.email;
+        this.firstName = response.data.firstName;
+        this.lastName = response.data.lastName;
       } catch (error) {
         console.error("Error fetching user ID:", error);
       }
@@ -211,11 +251,11 @@ export default {
         date: arg.dateStr,
         time: arg.date.toLocaleTimeString(),
       };
-      this.showDialog = true;
+      this.showFirstDialog = true;
     },
     closeDialog() {
       this.showConfirmationDialog = false;
-      this.showDialog = false;
+      this.showFirstDialog = false;
       this.selectedSlot = {};
       this.selectedService = null;
     },
@@ -237,7 +277,7 @@ export default {
         alert("This time slot is already booked. Please choose another time.");
       } else {
         this.showConfirmationDialog = true;
-        this.showDialog = false;
+        this.showFirstDialog = false;
       }
     },
 

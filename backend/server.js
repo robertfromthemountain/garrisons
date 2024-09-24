@@ -201,13 +201,21 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                     to: 'naboha7589@skrak.com', // Admin's email address
                     subject: 'New Appointment Request',
                     html: `
-                <p>A new appointment has been requested by user with ID: ${fullName}</p>
-                <p><strong>Service:</strong> ${pending_service_title}</p>
-                <p><strong>Date:</strong> ${pending_date}</p>
-                <p><strong>Start Time:</strong> ${pending_start_of_event}</p>
-                <p><strong>End Time:</strong> ${pending_end_of_event}</p>
-                <p>To confirm the appointment, click <a href="http://localhost:5000/api/confirmEvent/${result.insertId}">here</a>.</p>
-            `
+                    <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                        <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                            <h2 style="color: #8f6a48;">New Appointment Request</h2>
+                            <p>A new appointment has been requested by <strong>${fullName}</strong></p>
+                            <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
+
+                            <p style="color: #0c0a09;"><strong>Service:</strong> ${pending_service_title}</p>
+                            <p style="color: #0c0a09;"><strong>Date:</strong> ${pending_date}</p>
+                            <p style="color: #0c0a09;"><strong>Start Time:</strong> ${pending_start_of_event}</p>
+                            <p style="color: #0c0a09;"><strong>End Time:</strong> ${pending_end_of_event}</p>
+                            <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
+                            <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
+                        </div>
+                    </div>
+                    `
                 };
 
                 transporter.sendMail(mailOptions, (error, info) => {
@@ -321,6 +329,24 @@ app.post('/api/saveModifiedEvents', authenticateToken, (req, res) => {
     });
 });
 
+// Delete confirmed event
+app.delete('/api/deleteEvent/:id', (req, res) => {
+    const confirmedEventId = req.params.id;
+
+    const sqlDelete = 'DELETE FROM confirmed_events WHERE confirmed_event_id = ?';
+    db.query(sqlDelete, [confirmedEventId], (err, result) => {
+        if (err) {
+            console.error('Error deleting event:', err);
+            return res.status(500).send('Error deleting event');
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).send('Event not found');
+        }
+
+        res.status(200).send('Event deleted successfully');
+    });
+});
 
 
 // Start server
