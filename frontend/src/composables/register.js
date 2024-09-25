@@ -1,12 +1,13 @@
-import { ref } from 'vue';
+import { ref, reactive, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { reactive } from "vue";
-import { useI18n } from "vue-i18n";
-import axios from "axios";
+import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 
 export function useRegisterForm() {
     const { t } = useI18n();
+    const router = useRouter();
 
+    // Form state
     const form = reactive({
         firstName: '',
         lastName: '',
@@ -17,6 +18,7 @@ export function useRegisterForm() {
         repeatPassword: ''
     });
 
+    // Validation rules
     const firstNameRules = [
         (value) => !!value || t("validation.firstNameReq"),
         (value) => /^[A-Z][a-z]*/.test(value) || t("validation.nameMustStartUppercase"),
@@ -68,11 +70,25 @@ export function useRegisterForm() {
         { label: t("inputFields.repeatPassword"), model: 'repeatPassword', rules: repeatPasswordRules, type: "password" },
     ];
 
-    const router = useRouter();
+    // reCAPTCHA Site Key
+    const siteKey = '6LeDcU4qAAAAAFqWAMd3XDr76kfTcoqoj_S0yxXV'; // Replace with actual site key
 
-    const register = async () => {
+    // Submit form and validate reCAPTCHA
+    const submitForm = () => {
+        const recaptchaResponse = grecaptcha.getResponse(); // Fetch reCAPTCHA response token
+        if (recaptchaResponse) {
+            // Send the form and reCAPTCHA token to the backend
+            register(recaptchaResponse);
+        } else {
+            alert("Please complete the reCAPTCHA");
+        }
+    };
+
+    // Register function that handles form submission
+    const register = async (recaptchaToken) => {
         try {
-            await axios.post('http://localhost:5000/register', form);
+            const payload = { ...form, recaptchaToken }; // Add reCAPTCHA token to the payload
+            await axios.post('http://localhost:5000/register', payload);
             alert('Registration successful!');
             router.push('/login');
         } catch (error) {
@@ -81,5 +97,26 @@ export function useRegisterForm() {
         }
     };
 
-    return { form, fields, t, register };
+    // Lifecycle hook to render reCAPTCHA after DOM update
+    onMounted(async () => {
+        await nextTick(); // Ensure DOM is updated
+        if (window.grecaptcha) {
+            window.grecaptcha.render('recaptcha-container', {
+                sitekey: siteKey,
+                callback: (response) => {
+                    console.log("reCAPTCHA verified:", response);
+                },
+                'expired-callback': () => {
+                    console.log("reCAPTCHA expired");
+                },
+            });
+        }
+    });
+
+    return {
+        form,
+        fields,
+        t,
+        submitForm,
+    };
 }

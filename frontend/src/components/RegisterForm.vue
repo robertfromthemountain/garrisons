@@ -1,16 +1,10 @@
-<script setup>
-import { useRegisterForm } from "@/composables/register.js";
-
-const { form, fields, t, register } = useRegisterForm();
-</script>
-
 <template>
   <div class="mx-auto w-25">
     <h1 class="text-center text-h4 font-weight-light text-uppercase mt-5 text-color">
       {{ t("button.register") }}
     </h1>
 
-    <form @submit.prevent="register">
+    <form @submit.prevent="submitForm">
       <v-text-field
         density="compact"
         clearable
@@ -25,9 +19,12 @@ const { form, fields, t, register } = useRegisterForm();
         class="my-5"
       ></v-text-field>
 
-      <v-btn density="default" block @click="register" class="login-btn-color">{{
-        t("inputFields.submit")
-      }}</v-btn>
+      <!-- Add reCAPTCHA container with explicit id -->
+      <div id="recaptcha-container" class="rounded mb-5 d-flex justify-center"></div>
+
+      <v-btn density="default" block @click="submitForm" class="login-btn-color">
+        {{ t("inputFields.submit") }}
+      </v-btn>
 
       <p class="mt-10">
         {{ t("text.alreadyHaveAccount1") }}
@@ -40,5 +37,9 @@ const { form, fields, t, register } = useRegisterForm();
   </div>
 </template>
 
-<style>
-</style>
+<script setup>
+import { useRegisterForm } from "@/composables/register.js";
+
+// Destructure the returned values from useRegisterForm
+const { form, fields, t, submitForm } = useRegisterForm();
+</script>
