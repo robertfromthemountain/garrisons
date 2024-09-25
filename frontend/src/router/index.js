@@ -7,7 +7,8 @@ import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ManageEventsView from '@/views/ManageEventsView.vue'
-import ManageNewsView from '@/views/ManageNewsView.vue'
+import ManagePendingView from '@/views/ManagePendingView.vue'
+import ManageModifiedView from '@/views/ManageModifiedView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
 
@@ -65,9 +66,14 @@ const router = createRouter({
           component: ManageUsersView
         },
         {
-          path: 'manageNews',
-          name: 'dashboard-news',
-          component: ManageNewsView
+          path: 'pendingEvents',
+          name: 'dashboard-pendings',
+          component: ManagePendingView
+        },
+        {
+          path: 'modifiedEvents',
+          name: 'dashboard-modified',
+          component: ManageModifiedView
         }
       ]
     }

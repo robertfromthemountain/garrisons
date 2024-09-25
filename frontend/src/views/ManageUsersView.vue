@@ -1,13 +1,18 @@
 <template>
     <div>
       <h1>Manage Users</h1>
-      <!-- Add your form and service management logic here -->
+      <v-divider></v-divider>
+      <AdminUsers></AdminUsers>
     </div>
   </template>
   
   <script>
+  import AdminUsers from '@/components/AdminUsers.vue';
   export default {
-    name: 'ManageUsersView'
+    name: 'ManageUsersView',
+    components:{
+      AdminUsers,
+    }
   }
   </script>
   

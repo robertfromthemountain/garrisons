@@ -1,13 +1,18 @@
 <template>
-    <div>
-      <h1>Manage Services</h1>
-      <!-- Add your form and service management logic here -->
-    </div>
-  </template>
+  <div>
+    <h1>Manage Services</h1>
+    <v-divider></v-divider>
+    <AdminServices></AdminServices>
+  </div>
+</template>
   
   <script>
-  export default {
-    name: 'ManageServicesView'
-  }
-  </script>
+import AdminServices from "@/components/AdminServices.vue";
+export default {
+  name: "ManageServicesView",
+  components: {
+    AdminServices,
+  },
+};
+</script>
   

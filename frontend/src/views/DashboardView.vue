@@ -12,6 +12,16 @@
         ></v-list-item>
         <v-list-item
           link
+          title="Pending Events"
+          to="/dashboard/pendingEvents"
+        ></v-list-item>
+        <v-list-item
+          link
+          title="Modified Events"
+          to="/dashboard/modifiedEvents"
+        ></v-list-item>
+        <v-list-item
+          link
           title="Services"
           to="/dashboard/manageServices"
         ></v-list-item>
@@ -20,7 +30,6 @@
           title="Users"
           to="/dashboard/manageUsers"
         ></v-list-item>
-        <v-list-item link title="News" to="/dashboard/manageNews"></v-list-item>
       </v-list>
     </v-navigation-drawer>
 

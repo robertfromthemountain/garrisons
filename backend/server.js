@@ -5,7 +5,6 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { RecaptchaEnterpriseServiceClient } = require('@google-cloud/recaptcha-enterprise');
 require('dotenv').config();
 
 const app = express();
@@ -155,6 +154,37 @@ app.get('/api/services', (req, res) => {
     });
 });
 
+// CREATE a new service
+app.post('/api/services', (req, res) => {
+    const { title, price, duration } = req.body;
+    const sql = 'INSERT INTO services (title, price, duration) VALUES (?, ?, ?)';
+    db.query(sql, [title, price, duration], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.status(201).json({ id: result.insertId, title, price, duration });
+    });
+});
+
+// UPDATE a service
+app.put('/api/services/:id', (req, res) => {
+    const { id } = req.params;
+    const { title, price, duration } = req.body;
+    const sql = 'UPDATE services SET title = ?, price = ?, duration = ? WHERE id = ?';
+    db.query(sql, [title, price, duration, id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Service updated successfully' });
+    });
+});
+
+// DELETE a service
+app.delete('/api/services/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM services WHERE id = ?';
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Service deleted successfully' });
+    });
+});
+
 // Protected route requiring authentication
 app.get('/api/user', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Access user ID from decoded token
@@ -234,6 +264,15 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
     });
 });
 
+// GET all pending events
+app.get('/api/getPendingEvents', (req, res) => {
+    db.query('SELECT * FROM pending_events', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// Confirm a pending event:
 app.get('/api/confirmEvent/:id', (req, res) => {
     const pendingEventId = req.params.id;
     console.log('Pending event id-je:', pendingEventId);
@@ -274,6 +313,16 @@ app.get('/api/confirmEvent/:id', (req, res) => {
                 res.send('Event confirmed and moved to confirmed_events');
             });
         });
+    });
+});
+
+// Deny (delete) a pending event
+app.delete('/api/deletePendingEvent/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM pending_events WHERE pending_event_id = ?';
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Event denied and deleted' });
     });
 });
 
@@ -348,6 +397,45 @@ app.delete('/api/deleteEvent/:id', (req, res) => {
     });
 });
 
+
+// GET all users
+app.get('/api/users', (req, res) => {
+    db.query('SELECT * FROM users', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// CREATE a new user
+app.post('/api/users', (req, res) => {
+    const { firstName, lastName, role, email, phone, password } = req.body;
+    const sql = 'INSERT INTO users (firstName, lastName, role, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?, ?)';
+    db.query(sql, [firstName, lastName, role, email, phone, password], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.status(201).json({ id: result.insertId, firstName, lastName, role, email, phone });
+    });
+});
+
+// UPDATE a user
+app.put('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { firstName, lastName, role, email, phone, password } = req.body;
+    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ?, password = ? WHERE id = ?';
+    db.query(sql, [firstName, lastName, role, email, phone, password, id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'User updated successfully' });
+    });
+});
+
+// DELETE a user
+app.delete('/api/users/:id', (req, res) => {
+    const { id } = req.params;
+    const sql = 'DELETE FROM users WHERE id = ?';
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'User deleted successfully' });
+    });
+});
 
 // Start server
 app.listen(PORT, () => {
