@@ -5,6 +5,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const { RecaptchaEnterpriseServiceClient } = require('@google-cloud/recaptcha-enterprise');
 require('dotenv').config();
 
 const app = express();
@@ -50,7 +51,6 @@ const transporter = nodemailer.createTransport({
         pass: '378385174926c2'  // Replace with Mailtrap password
     }
 });
-
 
 // Registration endpoint
 app.post('/register', async (req, res) => {

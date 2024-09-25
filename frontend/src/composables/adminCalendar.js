@@ -93,7 +93,8 @@ export default {
       }
       return new Intl.DateTimeFormat('hu-HU', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'UTC'
       }).format(new Date(date));
     },
     handleEventClick(info) {
@@ -258,6 +259,7 @@ export default {
       try {
         const response = await axios.get("http://localhost:5000/api/getEvents");
         this.calendarOptions.events = response.data;
+        console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:",this.calendarOptions.events);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
@@ -277,11 +279,12 @@ export default {
         usableDate: this.formatDate(arg.dateStr),
         usableTime: this.formatTime(arg.dateStr),
       };
+      this.selectedService = null;
       this.showFirstDialog = true;
     },
     closeDialog() {
-      this.showConfirmationDialog = false;
       this.showFirstDialog = false;
+      this.showConfirmationDialog = false;
       this.selectedSlot = {};
       this.selectedService = null;
     },
@@ -308,7 +311,6 @@ export default {
     },
     confirmationDialogCancel() {
       this.showConfirmationDialog = false;
-      this.selectedService = null;
     },
 
     async finalizeBooking() {
@@ -336,7 +338,6 @@ export default {
           `Appointment for ${this.selectedService.title} successfully booked!`
         );
 
-        this.selectedService = null;
         this.showConfirmationDialog = false;
       } catch (error) {
         console.error("Error booking appointment:", error);
