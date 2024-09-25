@@ -3,77 +3,121 @@
     <!-- FullCalendar component -->
     <FullCalendar :options="calendarOptions" />
 
-    <!-- Vuetify Dialog -->
-    <v-dialog v-model="showDialog" max-width="500">
-      <v-card>
+    <v-dialog v-model="showFirstDialog" max-width="500">
+      <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <span class="headline">Book an Appointment</span>
+          <h2 class="headline title-garrisons">
+            {{ t("dialog.bookDialog.title1") }}
+          </h2>
         </v-card-title>
-
+        <v-divider class="mx-3"></v-divider>
         <v-card-text>
-          <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
-          <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
-
-          <!-- Vuetify Select for services -->
           <v-select
+            class=""
             v-model="selectedService"
             :items="services"
             :item-value="(service) => service"
             item-text="title"
-            label="Choose a service"
-            outlined
+            :label="t('dialog.bookDialog.selectTitle')"
+            density="compact"
+            clearable
             v-if="services.length > 0"
           ></v-select>
-          <p v-else>No services available</p>
-
-          <!-- Show selected service details reactively -->
+          <p v-else>{{ t("dialog.bookDialog.noServices") }}</p>
+          <p>
+            <strong>{{ t("dialog.date") }}</strong>
+            {{ selectedSlot.usableDate }}
+          </p>
+          <p class="pb-2">
+            <strong>{{ t("dialog.time") }}</strong>
+            {{ selectedSlot.usableTime }}
+          </p>
           <div v-if="selectedService">
-            <p><strong>Service:</strong> {{ selectedService.title }}</p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>Logged in user ID (ONLY FOR DEBUG):</strong> {{ userId }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>{{ t("dialog.userName") }}</strong>
+              {{ firstName + " " + lastName }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn" class="pb-2">
+              <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+            </p>
             <p>
-              <strong>Duration:</strong> {{ selectedService.duration }} minutes
+              <strong>{{ t("dialog.service") }}</strong>
+              {{ selectedService.title }}
             </p>
-            <p><strong>Price:</strong> {{ selectedService.price }}</p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Logged in user ID:</strong> {{ userId }}
+            <p>
+              <strong>{{ t("dialog.duration") }}</strong>
+              {{ selectedService.duration }} {{ t("dialog.duration2") }}
             </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Name:</strong> {{ firstName + " " + lastName }}
-            </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Email:</strong> {{ email }}
+            <p>
+              <strong>{{ t("dialog.price") }}</strong>
+              {{ selectedService.price }} {{ t("dialog.price2") }}
             </p>
           </div>
         </v-card-text>
-
-        <v-card-actions>
+        <v-divider class="mx-3"></v-divider>
+        <v-card-actions class="ma-2">
+          <v-btn class="text-garrisons" variant="tonal" @click="closeDialog">{{
+            t("dialog.button.cancel")
+          }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="checkOverlap">Next</v-btn>
-          <v-btn color="secondary" @click="closeDialog">Cancel</v-btn>
+          <v-btn class="text-garrisons bg-green" @click="checkOverlap">{{
+            t("dialog.button.next")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- Second Vuetify Dialog for confirmation -->
     <v-dialog v-model="showConfirmationDialog" max-width="500">
-      <v-card>
+      <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <span class="headline">Confirm Your Appointment</span>
+          <h2 class="headline title-garrisons">
+            {{ t("dialog.bookDialog.title1") }}
+          </h2>
         </v-card-title>
+        <v-divider class="mx-3"></v-divider>
         <v-card-text>
-          <p><strong>Name:</strong> {{ firstName + " " + lastName }}</p>
-          <p><strong>Email:</strong> {{ email }}</p>
-          <p><strong>Phone:</strong> {{ phone }}</p>
-          <p><strong>Service:</strong> {{ selectedService.title }}</p>
-          <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
-          <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
-          <p><strong>Price:</strong> {{ selectedService.price }}</p>
+          <p>
+            <strong>{{ t("dialog.userName") }}</strong>
+            {{ firstName + " " + lastName }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.userPhone") }}</strong> {{ phone }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.service") }}</strong>
+            {{ selectedService.title }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.date") }}</strong>
+            {{ selectedSlot.usableDate }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.time") }}</strong>
+            {{ selectedSlot.usableTime }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.price") }}</strong>
+            {{ selectedService.price }} {{ t("dialog.price2") }}
+          </p>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="finalizeBooking">Book</v-btn>
-          <v-btn color="secondary" @click="showConfirmationDialog = false"
-            >Cancel</v-btn
+        <v-divider class="mx-3"></v-divider>
+        <v-card-actions class="ma-2">
+          <v-btn
+            class="text-garrisons"
+            variant="tonal"
+            @click="confirmationDialogCancel"
+            >{{ t("dialog.button.cancel") }}</v-btn
           >
+          <v-spacer></v-spacer>
+          <v-btn class="text-garrisons bg-green" @click="finalizeBooking">{{
+            t("dialog.button.requestBook")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -96,15 +140,16 @@ export default {
     FullCalendar,
   },
   setup() {
-    const { locale } = useI18n();
+    const { locale, t } = useI18n();
     return {
       locale,
+      t,
     };
   },
   data() {
     return {
       calendarOptions: {
-        timeZone: 'UTC',
+        timeZone: "UTC",
         weekends: false,
         locales: [huLocale, enLocale],
         locale: this.locale,
@@ -116,9 +161,9 @@ export default {
         slotMaxTime: "17:00:00",
         nowIndicator: true,
         headerToolbar: {
-          left:"",
+          left: "",
           center: "title",
-          right:""
+          right: "",
         },
         footerToolbar: {
           left: "prev",
@@ -134,7 +179,7 @@ export default {
         allDaySlot: false,
         events: [],
       },
-      showDialog: false,
+      showFirstDialog: false,
       showConfirmationDialog: false,
       selectedSlot: {},
       services: [],
@@ -151,19 +196,41 @@ export default {
     this.fetchServices();
   },
   methods: {
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error('Invalid date provided:', dateString);
+        return ''; // or return a fallback value
+      }
+      return new Intl.DateTimeFormat('hu-HU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date(date));
+    },
+    formatTime(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error('Invalid date provided:', dateString);
+        return ''; // or return a fallback value
+      }
+      return new Intl.DateTimeFormat('hu-HU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC'
+      }).format(new Date(date));
+    },
     async fetchUserId() {
       if (!this.$store.getters.isLoggedIn) return; // Check if logged in
       console.log("Access Token:", this.$store.getters.accessToken);
       const token = this.$store.getters.accessToken;
       const payload = JSON.parse(atob(token.split(".")[1]));
-      console.log("TOKEEEEEEEEEEEEN:", payload);
 
       // Check expiration time
       const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
       if (payload.exp < currentTime) {
         console.log("Token has expired");
-      } else {
-        console.log("Token is still valid");
+        return;
       }
 
       try {
@@ -176,10 +243,6 @@ export default {
         this.email = response.data.email; // Store user ID in component data
         this.firstName = response.data.firstName; // Store user ID in component data
         this.lastName = response.data.lastName; // Store user ID in component data
-        console.log("ITT A USERID:", this.userId);
-        // console.log("ITT A firstname:", this.firstName);
-        // console.log("ITT A lastName:", this.lastName);
-        // console.log("ITT A email:", this.email);
       } catch (error) {
         console.error("Error fetching user ID:", error);
         // Handle errors appropriately (e.g., logout if token is invalid)
@@ -207,13 +270,16 @@ export default {
     handleDateClick(arg) {
       this.selectedSlot = {
         date: arg.dateStr,
-        time: arg.date.toLocaleTimeString(),
+        time: arg.dateStr,
+        usableDate: this.formatDate(arg.dateStr),
+        usableTime: this.formatTime(arg.dateStr),
       };
-      this.showDialog = true;
+      this.selectedService = null;
+      this.showFirstDialog = true;
     },
     closeDialog() {
       this.showConfirmationDialog = false; // Close confirmation dialog
-      this.showDialog = false; // Close the initial booking dialog
+      this.showFirstDialog = false; // Close the initial booking dialog
       this.selectedSlot = {}; // Reset selected slot
       this.selectedService = null; // Reset selected service
     },
@@ -239,6 +305,10 @@ export default {
         this.showConfirmationDialog = true;
         this.showDialog = false;
       }
+    },
+
+    confirmationDialogCancel() {
+      this.showConfirmationDialog = false;
     },
 
     async finalizeBooking() {
