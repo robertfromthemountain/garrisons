@@ -21,28 +21,69 @@ export default {
 
 <template>
   <div class="pa-8">
+    <!-- Modification controls -->
     <div v-if="!modifying" class="d-flex align-center justify-start">
       <v-btn
         @click="enableModification"
         class="elevation-8 btn-garrisons text-white"
-        >{{ t("button.calendarEdit") }}</v-btn
       >
+        {{ t("button.calendarEdit") }}
+      </v-btn>
     </div>
-
     <div v-if="modifying" class="d-flex align-center justify-start">
       <v-btn
         class="elevation-8 bg-red-darken-1 text-garrisons"
-        @click="cancelModifications"
-        >{{ t("dialog.button.cancel") }}</v-btn
+        @click="resetModifications"
       >
+        {{ t("dialog.button.cancel") }}
+      </v-btn>
       <div class="mx-2"></div>
       <v-btn
         class="elevation-8 bg-green text-garrisons"
-        @click="saveModifications"
-        >{{ t("dialog.button.save") }}</v-btn
+        @click="showModificationModal"
       >
+        {{ t("dialog.button.save") }}
+      </v-btn>
     </div>
+
     <FullCalendar :options="calendarOptions" class="h-auto" />
+
+    <!-- Modal for Confirming Modifications -->
+    <v-dialog v-model="showModificationDialog" max-width="600">
+      <v-card class="bg-garrisons text-garrisons">
+        <v-card-title>
+          <h2 class="headline title-garrisons">
+            {{ t("dialog.confirmChanges") }}
+          </h2>
+        </v-card-title>
+        <v-divider></v-divider>
+        <v-card-text>
+          <h3>{{ t("dialog.modifiedEvents") }}</h3>
+          <ul>
+            <li v-for="event in modifiedEvents" :key="event.id">
+              <strong>{{ event.modifiedTitle }}</strong
+              ><br />
+              Original: {{ event.originalEventDate }}
+              {{ event.originalStart }} - {{ event.originalEnd }}<br />
+              Modified: {{ event.modifiedEventDate }} {{ event.newStart }} -
+              {{ event.newEnd }}
+            </li>
+          </ul>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-btn @click="discardModifications">{{
+            t("dialog.button.discard")
+          }}</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn
+            class="bg-green text-garrisons"
+            @click="confirmModifications"
+            >{{ t("dialog.button.modify") }}</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-dialog v-model="showFirstDialog" max-width="500">
       <v-card class="bg-garrisons text-garrisons">

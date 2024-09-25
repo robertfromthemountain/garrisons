@@ -326,56 +326,27 @@ app.delete('/api/deletePendingEvent/:id', (req, res) => {
     });
 });
 
-// Save modified events
-app.post('/api/saveModifiedEvents', authenticateToken, (req, res) => {
+app.post('/api/updateConfirmedEvents', (req, res) => {
     const modifiedEvents = req.body;
 
-    // Check if modifiedEvents is an array
-    if (!Array.isArray(modifiedEvents) || modifiedEvents.length === 0) {
-        return res.status(400).send('No modified events data provided');
-    }
+    modifiedEvents.forEach(event => {
+        const sql = `
+        UPDATE confirmed_events 
+        SET confirmed_event_date = ?, confirmed_event_start = ?, confirmed_event_end = ?
+        WHERE confirmed_event_id = ?
+      `;
 
-    // Prepare the SQL insert query
-    const sqlInsert = `
-        INSERT INTO modified_events (
-            modified_event_id, 
-            modified_service_title, 
-            original_event_date, 
-            modified_event_date, 
-            original_event_start, 
-            modified_event_start, 
-            original_event_end, 
-            modified_event_end, 
-            modified_reserving_user_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    // Process each modified event
-    modifiedEvents.forEach((event, index) => {
-        const params = [
-            event.modified_event_id,
-            event.modified_service_title,
-            event.original_event_date,
-            event.modified_event_date,
-            event.original_event_start,
-            event.modified_event_start,
-            event.original_event_end,
-            event.modified_event_end,
-            event.modified_reserving_user_id,
-        ];
-
-        db.query(sqlInsert, params, (err, result) => {
-            if (err) {
-                console.error(`Error saving modified event at index ${index}:`, err);
-                return res.status(500).send('Error saving modified events');
-            }
-
-            // If it's the last event in the loop, send a success response
-            if (index === modifiedEvents.length - 1) {
-                res.status(200).json({ message: 'Modified events saved successfully' });
-            }
+        db.query(sql, [
+            event.modifiedEventDate,
+            event.newStart,
+            event.newEnd,
+            event.id
+        ], (err, result) => {
+            if (err) return res.status(500).send(err);
         });
     });
+
+    res.send('Events updated successfully');
 });
 
 // Delete confirmed event

@@ -51,9 +51,11 @@ export default {
         allDaySlot: false,
         events: [],
       },
-      modifying: false,
-      modifiedEvents: [],
+      calendarEvents: [],
       originalEvents: [],
+      modifiedEvents: [],
+      modifying: false,
+      showModificationDialog: false,
       showFirstDialog: false,
       showConfirmationDialog: false,
       selectedSlot: {},
@@ -141,52 +143,73 @@ export default {
       this.calendarOptions.editable = true;
       this.modifying = true;
     },
-    async saveModifications() {
-      const modifiedEventsData = this.modifiedEvents.map((event) => {
-        const reservingUserId = event.reserving_user_id;
 
-        return {
-          modified_event_id: event.id,
-          modified_service_title: event.modifiedTitle,
-          original_event_date: event.originalEventDate,
-          modified_event_date: event.newStart,
-          original_event_start: event.originalStart,
-          modified_event_start: event.newStart,
-          original_event_end: event.originalEnd,
-          modified_event_end: event.newEnd,
-          modified_reserving_user_id: reservingUserId,
-        };
-      });
-
-      try {
-        await axios.post(
-          "http://localhost:5000/api/saveModifiedEvents",
-          modifiedEventsData,
-          {
-            headers: {
-              Authorization: `Bearer ${this.$store.getters.accessToken}`,
-            },
-          }
-        );
-
-        alert("Modified events saved successfully!");
-        this.calendarOptions.editable = false;
-        this.modifying = false;
-        this.modifiedEvents = [];
-        this.fetchEvents();
-      } catch (error) {
-        console.error("Error saving modified events:", error);
-        alert(
-          "There was an error saving the modified events. Please try again."
-        );
+    // Show the modification dialog with modified events details
+    showModificationModal() {
+      if (this.modifiedEvents.length > 0) {
+        this.showModificationDialog = true;
+      } else {
+        alert("No events have been modified.");
       }
     },
-    cancelModifications() {
-      this.calendarOptions.events = this.originalEvents;
+
+    // Confirm modifications and update the confirmed_events table
+    async confirmModifications() {
+      try {
+        await axios.post("http://localhost:5000/api/updateConfirmedEvents", this.modifiedEvents);
+        alert("Modifications saved successfully!");
+
+        this.resetModifications();
+      } catch (error) {
+        console.error("Error saving modifications:", error);
+        alert("There was an error saving the modifications. Please try again.");
+      }
+    },
+
+    // Discard modifications and reset calendar to original state
+    discardModifications() {
+      this.calendarOptions.events = JSON.parse(JSON.stringify(this.originalEvents));
+      this.resetModifications();
+    },
+
+    // Handle drag-and-drop modifications
+    handleEventDrop(info) {
+      const originalEvent = this.findOriginalEvent(info.event.id);
+      const modifiedEvent = {
+        id: info.event.id,
+        modifiedTitle: info.event.title,
+        originalEventDate: originalEvent.start.toISOString(),
+        modifiedEventDate: info.event.start.toISOString(),
+        originalStart: originalEvent.start.toISOString(),
+        newStart: info.event.start.toISOString(),
+        originalEnd: originalEvent.end.toISOString(),
+        newEnd: info.event.end.toISOString(),
+        reserving_user_id: info.event.extendedProps.reserving_user_id,
+      };
+
+      // Check if the event has already been modified
+      const index = this.modifiedEvents.findIndex((event) => event.id === info.event.id);
+      if (index !== -1) {
+        this.modifiedEvents[index] = modifiedEvent;
+      } else {
+        this.modifiedEvents.push(modifiedEvent);
+      }
+    },
+
+    // Find the original event by ID (before modifications)
+    findOriginalEvent(eventId) {
+      return this.originalEvents.find(event => event.id === eventId);
+    },
+
+    // Reset modification state after confirming or discarding
+    resetModifications() {
+      this.showModificationDialog = false;
       this.modifiedEvents = [];
       this.calendarOptions.editable = false;
       this.modifying = false;
+      this.fetchEvents(); // Reload events from the server
     },
+
     handleEventDrop(info) {
       const originalEvent = {
         id: info.event.id,
@@ -232,12 +255,14 @@ export default {
 
     async fetchUserId() {
       if (!this.$store.getters.isLoggedIn) return;
+
       const token = this.$store.getters.accessToken;
       const payload = JSON.parse(atob(token.split(".")[1]));
 
       const currentTime = Math.floor(Date.now() / 1000);
       if (payload.exp < currentTime) {
         console.log("Token has expired");
+        return;
       }
 
       try {
@@ -246,6 +271,7 @@ export default {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
         });
+
         this.userId = response.data.userId;
         this.email = response.data.email;
         this.firstName = response.data.firstName;
@@ -259,7 +285,7 @@ export default {
       try {
         const response = await axios.get("http://localhost:5000/api/getEvents");
         this.calendarOptions.events = response.data;
-        console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:",this.calendarOptions.events);
+        // console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
