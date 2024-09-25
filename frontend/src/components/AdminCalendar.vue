@@ -1,78 +1,164 @@
+<script>
+import FullCalendar from "@fullcalendar/vue3";
+import adminCalendar from "@/composables/adminCalendar.js";
+
+export default {
+  components: {
+    FullCalendar,
+  },
+  mixins: [adminCalendar],
+  // Importing JS logic as a mixin
+  setup(props, context) {
+    // Since we're using the setup function, let's get t directly from the mixin
+    const { t } = adminCalendar.setup();
+
+    return {
+      t,
+    };
+  },
+};
+</script>
+
 <template>
   <div class="pa-8">
-    <FullCalendar :options="calendarOptions" class="h-auto" />
-
-    <v-btn v-if="!modifying" @click="enableModification">Modify Events</v-btn>
-
-    <div v-if="modifying">
-      <v-btn color="primary" @click="saveModifications">Save</v-btn>
-      <v-btn color="secondary" @click="cancelModifications">Cancel</v-btn>
+    <div v-if="!modifying" class="d-flex align-center justify-start">
+      <v-btn
+        @click="enableModification"
+        class="elevation-8 btn-garrisons text-white"
+        >{{ t("button.calendarEdit") }}</v-btn
+      >
     </div>
 
+    <div v-if="modifying" class="d-flex align-center justify-start">
+      <v-btn
+        class="elevation-8 bg-red-darken-1 text-garrisons"
+        @click="cancelModifications"
+        >{{ t("dialog.button.cancel") }}</v-btn
+      >
+      <div class="mx-2"></div>
+      <v-btn
+        class="elevation-8 bg-green text-garrisons"
+        @click="saveModifications"
+        >{{ t("dialog.button.save") }}</v-btn
+      >
+    </div>
+    <FullCalendar :options="calendarOptions" class="h-auto" />
+
     <v-dialog v-model="showFirstDialog" max-width="500">
-      <v-card>
+      <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <span class="headline">Book an Appointment</span>
+          <h2 class="headline title-garrisons">
+            {{ t("dialog.bookDialog.title1") }}
+          </h2>
         </v-card-title>
+        <v-divider class="mx-3"></v-divider>
         <v-card-text>
-          <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
-          <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
           <v-select
+            class=""
             v-model="selectedService"
             :items="services"
             :item-value="(service) => service"
             item-text="title"
-            label="Choose a service"
-            outlined
+            :label="t('dialog.bookDialog.selectTitle')"
+            density="compact"
+            clearable
             v-if="services.length > 0"
           ></v-select>
-          <p v-else>No services available</p>
-
+          <p v-else>{{ t("dialog.bookDialog.noServices") }}</p>
+          <p>
+            <strong>{{ t("dialog.date") }}</strong>
+            {{ selectedSlot.usableDate }}
+          </p>
+          <p class="pb-2">
+            <strong>{{ t("dialog.time") }}</strong>
+            {{ selectedSlot.usableTime }}
+          </p>
           <div v-if="selectedService">
-            <p><strong>Service:</strong> {{ selectedService.title }}</p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>Logged in user ID (ONLY FOR DEBUG):</strong> {{ userId }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn">
+              <strong>{{ t("dialog.userName") }}</strong>
+              {{ firstName + " " + lastName }}
+            </p>
+            <p v-if="$store.getters.isLoggedIn" class="pb-2">
+              <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+            </p>
             <p>
-              <strong>Duration:</strong> {{ selectedService.duration }} minutes
+              <strong>{{ t("dialog.service") }}</strong>
+              {{ selectedService.title }}
             </p>
-            <p><strong>Price:</strong> {{ selectedService.price }}</p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Logged in user ID:</strong> {{ userId }}
+            <p>
+              <strong>{{ t("dialog.duration") }}</strong>
+              {{ selectedService.duration }} {{ t("dialog.duration2") }}
             </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Name:</strong> {{ firstName + " " + lastName }}
-            </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Email:</strong> {{ email }}
+            <p>
+              <strong>{{ t("dialog.price") }}</strong>
+              {{ selectedService.price }} {{ t("dialog.price2") }}
             </p>
           </div>
         </v-card-text>
-        <v-card-actions>
+        <v-divider class="mx-3"></v-divider>
+        <v-card-actions class="ma-2">
+          <v-btn class="text-garrisons" variant="tonal" @click="closeDialog">{{
+            t("dialog.button.cancel")
+          }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="checkOverlap">Next</v-btn>
-          <v-btn color="secondary" @click="closeDialog">Cancel</v-btn>
+          <v-btn class="text-garrisons bg-green" @click="checkOverlap">{{
+            t("dialog.button.next")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
     <v-dialog v-model="showConfirmationDialog" max-width="500">
-      <v-card>
+      <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <span class="headline">Confirm Your Appointment</span>
+          <h2 class="headline title-garrisons">
+            {{ t("dialog.bookDialog.title1") }}
+          </h2>
         </v-card-title>
+        <v-divider class="mx-3"></v-divider>
         <v-card-text>
-          <p><strong>Name:</strong> {{ firstName + " " + lastName }}</p>
-          <p><strong>Email:</strong> {{ email }}</p>
-          <p><strong>Phone:</strong> {{ phone }}</p>
-          <p><strong>Service:</strong> {{ selectedService.title }}</p>
-          <p><strong>Date:</strong> {{ selectedSlot.date }}</p>
-          <p><strong>Time:</strong> {{ selectedSlot.time }}</p>
-          <p><strong>Price:</strong> {{ selectedService.price }}</p>
+          <p>
+            <strong>{{ t("dialog.userName") }}</strong>
+            {{ firstName + " " + lastName }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.userPhone") }}</strong> {{ phone }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.service") }}</strong>
+            {{ selectedService.title }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.date") }}</strong>
+            {{ selectedSlot.usableDate }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.time") }}</strong>
+            {{ selectedSlot.usableTime }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.price") }}</strong>
+            {{ selectedService.price }} {{ t("dialog.price2") }}
+          </p>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="primary" @click="finalizeBooking">Book</v-btn>
-          <v-btn color="secondary" @click="showConfirmationDialog = false"
-            >Cancel</v-btn
+        <v-divider class="mx-3"></v-divider>
+        <v-card-actions class="ma-2">
+          <v-btn
+            class="text-garrisons"
+            variant="tonal"
+            @click="confirmationDialogCancel"
+            >{{ t("dialog.button.cancel") }}</v-btn
           >
+          <v-spacer></v-spacer>
+          <v-btn class="text-garrisons bg-green" @click="finalizeBooking">{{
+            t("dialog.button.requestBook")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -105,24 +191,23 @@
   </div>
 </template>
   
-  <script>
-import FullCalendar from "@fullcalendar/vue3";
-import adminCalendar from "@/composables/adminCalendar.js";
-
-export default {
-  components: {
-    FullCalendar,
-  },
-  mixins: [adminCalendar], // Importing JS logic as a mixin
-};
-</script>
   
-  <style scoped>
-.bg-dark-garrisons {
-  background-color: #201b18;
-}
+  
+<style>
 .v-dialog {
   z-index: 1000;
+}
+
+.text-garrisons {
+  color: #d3d2cd;
+}
+
+.btn-garrisons {
+  background-color: #8f6a48;
+}
+
+.bg-garrisons {
+  background-color: #26211e;
 }
 </style>
   

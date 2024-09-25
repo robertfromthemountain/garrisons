@@ -17,7 +17,9 @@ const messages = {
             alreadyHaveAccountBtn: "Sign In",
             book: "Booking",
             tel: "+36 (30) 999 3211",
-            email: "info@garrisons.hu"
+            email: "info@garrisons.hu",
+            calendarEdit: "Edit calendar"
+
         },
         inputFields: {
             firstName: "First Name",
@@ -57,6 +59,30 @@ const messages = {
         },
         hero: {
             title: "Garrison's haircraft and barbershop"
+        },
+        dialog: {
+            date: "Date:",
+            time: "Time",
+            service: "Service:",
+            duration: "Duration:",
+            duration2: "minutes",
+            price: "Price:",
+            price2: "HUF",
+            userName: "Booking name:",
+            userEmail: "Email:",
+            userPhone: "Phone number:",
+            bookDialog: {
+                title1: "Book an Appointment",
+                title2: "Confirm Your Appointment",
+                selectTitle: "Choose a Service",
+                noServices: "No services available at the moment."
+            },
+            button: {
+                save: "Save",
+                cancel: "Cancel",
+                next: "Next",
+                requestBook: "Request Appointment"
+            }
         }
     },
     hu: {

@@ -250,19 +250,19 @@ app.get('/api/confirmEvent/:id', (req, res) => {
         // Insert the event into the confirmed_events table
         const sqlInsert = `
             INSERT INTO confirmed_events 
-            (confirmed_event_title, confirmed_event_date, confirmed_event_start, confirmed_event_end, reserving_user_id, confirming_user_id) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            (confirmed_event_title, confirmed_event_date, confirmed_event_start, confirmed_event_end, reserving_user_id) 
+            VALUES (?, ?, ?, ?, ?)
         `;
         db.query(sqlInsert, [
             pendingEvent.pending_service_title,
             pendingEvent.pending_date,
             pendingEvent.pending_start_of_event,
             pendingEvent.pending_end_of_event,
-            pendingEvent.user_id,
-            1 // Assuming admin ID is 1, you can modify it as necessary
+            pendingEvent.user_id
         ], (err, result) => {
             if (err) {
-                return res.status(500).send('Error confirming event');
+                console.error('Error confirming event:', err.message);
+                return res.status(500).send('Error confirming event', err.message);
             }
 
             // Delete the event from the pending_events table

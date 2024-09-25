@@ -8,9 +8,10 @@ import huLocale from "@fullcalendar/core/locales/hu";
 
 export default {
   setup() {
-    const { locale } = useI18n();
+    const { locale, t } = useI18n();
     return {
       locale,
+      t,
     };
   },
   data() {
@@ -19,7 +20,7 @@ export default {
         timeZone: "UTC",
         weekends: false,
         locales: [huLocale, enLocale],
-        locale: this.locale,
+        locale: this.$i18n.locale,
         plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
         slotEventOverlap: false,
         initialView: "timeGridWeek",
@@ -72,6 +73,29 @@ export default {
     this.fetchServices();
   },
   methods: {
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error('Invalid date provided:', dateString);
+        return ''; // or return a fallback value
+      }
+      return new Intl.DateTimeFormat('hu-HU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date(date));
+    },
+    formatTime(dateString) {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error('Invalid date provided:', dateString);
+        return ''; // or return a fallback value
+      }
+      return new Intl.DateTimeFormat('hu-HU', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(date));
+    },
     handleEventClick(info) {
       // Set the selected event details
       console.log("ITT VAGYOOOOOK")
@@ -249,7 +273,9 @@ export default {
     handleDateClick(arg) {
       this.selectedSlot = {
         date: arg.dateStr,
-        time: arg.date.toLocaleTimeString(),
+        time: arg.dateStr,
+        usableDate: this.formatDate(arg.dateStr),
+        usableTime: this.formatTime(arg.dateStr),
       };
       this.showFirstDialog = true;
     },
@@ -280,6 +306,10 @@ export default {
         this.showFirstDialog = false;
       }
     },
+    confirmationDialogCancel() {
+      this.showConfirmationDialog = false;
+      this.selectedService = null;
+    },
 
     async finalizeBooking() {
       const durationInMinutes = parseInt(this.selectedService.duration, 10);
@@ -306,6 +336,7 @@ export default {
           `Appointment for ${this.selectedService.title} successfully booked!`
         );
 
+        this.selectedService = null;
         this.showConfirmationDialog = false;
       } catch (error) {
         console.error("Error booking appointment:", error);
