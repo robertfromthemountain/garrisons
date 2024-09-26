@@ -2,23 +2,18 @@
   <v-app>
     <v-navigation-drawer app>
       <v-list>
-        <v-list-item title="Admin Dashboard" />
+        <v-list-item class="title-garrisons" :title="t('dashboard.title')" />
         <v-divider></v-divider>
 
         <v-list-item
           link
-          title="Events"
+          :title="t('dashboard.manageEvents.title')"
           to="/dashboard/manageEvents"
         ></v-list-item>
         <v-list-item
           link
           title="Pending Events"
           to="/dashboard/pendingEvents"
-        ></v-list-item>
-        <v-list-item
-          link
-          title="Modified Events"
-          to="/dashboard/modifiedEvents"
         ></v-list-item>
         <v-list-item
           link
@@ -29,6 +24,11 @@
           link
           title="Users"
           to="/dashboard/manageUsers"
+        ></v-list-item>
+        <v-list-item
+          link
+          title="Modified Events"
+          to="/dashboard/modifiedEvents"
         ></v-list-item>
       </v-list>
     </v-navigation-drawer>
@@ -41,10 +41,17 @@
 </template>
 
 <script>
+import { useI18n } from 'vue-i18n';
 export default {
   name: "DashboardView",
   created() {
     this.$router.push("/dashboard/manageEvents");
+  },
+  setup(){
+    const { t } = useI18n();
+    return{
+      t,
+    }
   },
 };
 </script>

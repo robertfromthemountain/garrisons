@@ -1,7 +1,7 @@
 <template>
     <div>
-      <h2>Service Management</h2>
-  
+      <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">{{ t("dashboard.manageServices.subtitle") }}</h2>
+  <v-divider></v-divider>
       <!-- Display Services Table -->
       <v-table height="100vh" fixed-header class="bg-garrisons">
         <thead class="bg-garrisons">
@@ -54,11 +54,13 @@
   </template>
   
   <script>
+  import { useI18n } from "vue-i18n";
   import axios from "axios";
   import { reactive, ref, onMounted } from "vue";
   
   export default {
     setup() {
+      const { t } = useI18n();
       const services = ref([]);
       const isEditing = reactive({}); // Track which row is being edited
       const editServiceData = reactive({
@@ -142,6 +144,7 @@
       onMounted(fetchServices);
   
       return {
+        t,
         services,
         isEditing,
         editServiceData,
@@ -157,19 +160,6 @@
   </script>
   
   <style scoped>
-  /* Add any styles you need here */
-  th,
-  td {
-    font-size: large;
-  }
-  
-  input {
-    width: 100%;
-  }
-  
-  form {
-    font-size: large;
-    margin-bottom: 20px;
-  }
+  @import "@/assets/styles/dashboard.css";
   </style>
   

@@ -1,12 +1,12 @@
 <script setup>
 import AppBar from "@/components/AppBar.vue";
 import GarrisonsFoot from "@/components/GarrisonsFoot.vue";
-import { computed } from 'vue';
-import { watchEffect } from 'vue';
-import { useStore } from 'vuex';
+import { computed } from "vue";
+import { watchEffect } from "vue";
+import { useStore } from "vuex";
 
 const store = useStore();
-const currentTheme = computed(() => store.getters['theme/currentTheme']);
+const currentTheme = computed(() => store.getters["theme/currentTheme"]);
 
 watchEffect(() => {
   console.log("Current theme has changed to:", currentTheme.value);
@@ -14,23 +14,18 @@ watchEffect(() => {
 </script>
 
 <template>
-  <main  class="garrisons-bg">
+  <v-app class="bg-garrisons">
     <header>
       <AppBar></AppBar>
     </header>
-    <div class="container ma-0 pa-0">
+    <v-main>
       <RouterView />
-    </div>
-  </main>
+    </v-main>
+    <footer>
+      <GarrisonsFoot></GarrisonsFoot>
+    </footer>
+  </v-app>
 </template>
 
-<style scoped>
-.container {
-  margin-left: 100px;
-  margin-right: 100px;
-}
-.garrisons-bg{
-  background-color: #26211e;
-  height: 100vh;
-}
+<style src="@/assets/styles/main.css">
 </style>

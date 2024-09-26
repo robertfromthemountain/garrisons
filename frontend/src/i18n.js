@@ -83,6 +83,28 @@ const messages = {
                 next: "Next",
                 requestBook: "Request Appointment"
             }
+        },
+        dashboard: {
+            title: "Dashboard",
+            manageEvents: {
+                title: "Manage Reservations",
+
+            },
+            managePendingEvents: {
+                title: "Manage Pending Reservations",
+                subtitle: "Here you can accept or deny the pending appointment booking requests."
+            },
+            manageServices: {
+                title: "Manage Services",
+                subtitle: "Here you can add, delete or modify services."
+            },
+            manageUsers: {
+                title: "Manage User Accounts",
+                subtitle: "Here you can manage the registered users."
+            },
+            titles: {
+
+            }
         }
     },
     hu: {

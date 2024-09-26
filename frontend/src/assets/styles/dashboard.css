@@ -1,0 +1,21 @@
+th {
+    font-size: large;
+    background-color: #26211e !important;
+  }
+  
+  td {
+    font-size: large;
+  }
+  
+  button {
+    margin-right: 8px;
+  }
+  
+  form {
+    font-size: large;
+    margin-bottom: 20px;
+  }
+
+  .subtitle-garrisons{
+    color: #9e7f61;
+}

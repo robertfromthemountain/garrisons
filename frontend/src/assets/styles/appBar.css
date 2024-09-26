@@ -13,7 +13,7 @@ nav {
 
 .nav-color {
     background-color: #201b18;
-    border-bottom: 4px solid #6a4e35;
+    border-bottom: 2px solid #6a4e35;
 }
 
 .nav-elevation {
@@ -40,5 +40,5 @@ nav {
 }
 
 .active-link {
-    border-bottom: 3px solid #d3d2cd;
+    border-bottom: 1px solid #d3d2cd;
 }

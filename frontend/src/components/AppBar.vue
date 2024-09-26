@@ -48,9 +48,9 @@ function handleLogout() {
 </script>
 
 <template>
-  <v-toolbar
+  <v-app-bar
     density="compact"
-    class="position-relative nav-color nav-elevation"
+    class="nav-color"
   >
     <nav class="align-center">
       <div class="d-flex justify-center">
@@ -119,7 +119,7 @@ function handleLogout() {
         >
       </div>
     </nav>
-  </v-toolbar>
+  </v-app-bar>
 </template>
 
 <style src="@/assets/styles/appBar.css" scoped>

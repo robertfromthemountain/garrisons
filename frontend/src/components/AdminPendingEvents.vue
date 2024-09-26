@@ -1,10 +1,10 @@
 <template>
   <div>
-    <h2>Pending Events Management</h2>
-
+    <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">{{ t("dashboard.managePendingEvents.subtitle") }}</h2>
+<v-divider></v-divider>
     <!-- Display Pending Events Table -->
-    <v-table height="300px" fixed-header class="bg-garrisons">
-      <thead class="bg-garrisons">
+    <v-table height="100vh" fixed-header class="bg-garrisons">
+      <thead class="">
         <tr>
           <th>ID</th>
           <th>Service Title</th>
@@ -43,9 +43,12 @@
 <script>
 import axios from "axios";
 import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 
 export default {
   setup() {
+    const { t } = useI18n();
+
     const pendingEvents = ref([]);
 
     // Fetch all pending events from the backend
@@ -90,6 +93,7 @@ export default {
     onMounted(fetchPendingEvents);
 
     return {
+      t,
       pendingEvents,
       confirmPendingEvent,
       denyPendingEvent,
@@ -98,20 +102,7 @@ export default {
 };
 </script>
   
-  <style scoped>
-/* Add any styles you need here */
-th,
-td {
-  font-size: large;
-}
-
-button {
-  margin-right: 8px;
-}
-
-form {
-  font-size: large;
-  margin-bottom: 20px;
-}
+<style scoped>
+@import "@/assets/styles/dashboard.css";
 </style>
   

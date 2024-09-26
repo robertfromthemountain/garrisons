@@ -1,5 +1,5 @@
 import { createApp, watch } from 'vue';
-import './assets/styles/main.css';
+import '@/assets/styles/main.css';
 
 import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
