@@ -49,7 +49,7 @@ export default {
     <FullCalendar :options="calendarOptions" class="h-auto" />
 
     <!-- Modal for Confirming Modifications -->
-    <v-dialog v-model="showModificationDialog" max-width="600">
+    <v-dialog v-model="showModificationDialog" max-width="600" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
@@ -152,7 +152,7 @@ export default {
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showConfirmationDialog" max-width="500">
+    <v-dialog v-model="showConfirmationDialog" max-width="500" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
@@ -250,5 +250,7 @@ export default {
 .bg-garrisons {
   background-color: #26211e;
 }
+
+
 </style>
   

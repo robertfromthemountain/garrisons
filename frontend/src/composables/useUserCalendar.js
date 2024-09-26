@@ -24,7 +24,7 @@ export default {
                 plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
                 slotEventOverlap: false,
                 initialView: "timeGridDay",
-                slotDuration: "00:30:00",
+                slotDuration: "00:15:00",
                 slotMinTime: "08:00:00",
                 slotMaxTime: "17:00:00",
                 nowIndicator: true,

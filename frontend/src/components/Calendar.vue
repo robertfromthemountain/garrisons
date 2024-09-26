@@ -74,7 +74,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showConfirmationDialog" max-width="500">
+    <v-dialog v-model="showConfirmationDialog" max-width="500" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
@@ -161,4 +161,6 @@ export default {
 .v-dialog {
   z-index: 1000;
 }
+
+
 </style>

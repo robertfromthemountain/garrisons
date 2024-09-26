@@ -311,6 +311,49 @@ app.get('/api/getPendingEvents', (req, res) => {
     });
 });
 
+// Get pending events TEST ONLY FOR THE BG!!!!!!
+app.get('/api/getPendingEvents2', (req, res) => {
+    const sqlQuery = `
+        SELECT 
+            pending_events.pending_event_id, 
+            pending_events.pending_date, 
+            pending_events.pending_start_of_event, 
+            pending_events.pending_end_of_event, 
+            pending_events.user_id, 
+            pending_events.created_at, 
+            pending_events.pending_event_classes,
+            services.title AS service_title
+        FROM 
+            pending_events
+        JOIN 
+            services
+        ON 
+            pending_events.pending_service_id = services.id;
+    `;
+
+    db.query(sqlQuery, (err, results) => {
+        if (err) {
+            console.error('Error fetching events:', err);
+            return res.status(500).send('Error fetching events');
+        }
+
+        // Ensure results is an array before mapping
+        if (Array.isArray(results)) {
+            const fullCalendarEvents = results.map(event => ({
+                id: event.pending_event_id,
+                title: event.service_title,  // Use service title instead of event title
+                start: event.pending_start_of_event,
+                end: event.pending_end_of_event,
+                reserving_user_id: event.reserving_user_id,
+                classNames: event.pending_event_classes,
+            }));
+            return res.json(fullCalendarEvents);
+        } else {
+            return res.status(500).send('No events found');
+        }
+    });
+});
+
 // Confirm a pending event:
 app.get('/api/confirmEvent/:id', (req, res) => {
     const pendingEventId = req.params.id;
