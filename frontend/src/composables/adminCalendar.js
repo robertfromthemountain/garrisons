@@ -346,6 +346,7 @@ export default {
 
       const newEvent = {
         pending_service_title: this.selectedService.title,
+        pending_service_id: this.selectedService.id,
         pending_date: this.selectedSlot.date,
         pending_start_of_event: startTime.toISOString(),
         pending_end_of_event: endTime.toISOString(),
