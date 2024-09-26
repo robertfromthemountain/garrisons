@@ -1,6 +1,18 @@
 <template>
   <div>
-    <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">{{ t("dashboard.manageUsers.subtitle") }}</h2>
+    <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
+      {{ t("dashboard.manageUsers.subtitle") }}
+    </h2>
+
+    <!-- Search Input -->
+    <v-text-field
+      v-model="searchQuery"
+      label="Search Users"
+      class="mb-4"
+      clearable
+      placeholder="Search by first name, last name, email, etc."
+    ></v-text-field>
+
     <!-- Display Users Table -->
     <v-divider></v-divider>
     <v-table height="100vh" fixed-header class="bg-garrisons">
@@ -16,8 +28,8 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Loop through existing users -->
-        <tr v-for="(user, index) in users" :key="user.id">
+        <!-- Loop through filtered users -->
+        <tr v-for="(user, index) in filteredUsers" :key="user.id">
           <td>{{ user.id }}</td>
 
           <td v-if="!isEditing[index]">{{ user.firstName }}</td>
@@ -48,44 +60,23 @@
             </div>
           </td>
         </tr>
-
-        <!-- Editable row for adding a new user -->
-        <tr>
-          <td>New</td>
-          <td>
-            <input v-model="newUser.firstName" placeholder="First Name" />
-          </td>
-          <td><input v-model="newUser.lastName" placeholder="Last Name" /></td>
-          <td><input v-model="newUser.role" placeholder="Role" /></td>
-          <td>
-            <input v-model="newUser.email" type="email" placeholder="Email" />
-          </td>
-          <td>
-            <input
-              v-model="newUser.phoneNumber"
-              type="tel"
-              placeholder="Phone"
-            />
-          </td>
-          <td>
-            <button @click="addUser">Add</button>
-          </td>
-        </tr>
       </tbody>
     </v-table>
   </div>
 </template>
-  
-  <script>
-  import { useI18n } from "vue-i18n";
+
+
+<script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, computed, onMounted } from "vue";
 
 export default {
   setup() {
     const { t } = useI18n();
 
     const users = ref([]);
+    const searchQuery = ref(""); // Add search query
     const isEditing = reactive({}); // Track which row is being edited
     const editUserData = reactive({
       id: null,
@@ -95,34 +86,37 @@ export default {
       email: "",
       phoneNumber: "",
     });
-    const newUser = reactive({
-      firstName: "",
-      lastName: "",
-      role: "",
-      email: "",
-      phoneNumber: "",
-      password: "",
-    });
 
     // Fetch all users from backend
     const fetchUsers = async () => {
       try {
         const response = await axios.get("http://localhost:5000/api/users");
-        users.value = response.data; // Populate users with data from API
+        users.value = response.data;
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
 
+    // Computed property to filter users based on search query
+    const filteredUsers = computed(() => {
+      if (!searchQuery.value) return users.value;
+      const query = searchQuery.value.toLowerCase();
+      return users.value.filter((user) =>
+        ["firstName", "lastName", "email", "role", "phoneNumber"].some((key) =>
+          String(user[key]).toLowerCase().includes(query)
+        )
+      );
+    });
+
     // Start editing a specific user row
     const startEdit = (index, user) => {
-      isEditing[index] = true; // Set this row to be in edit mode
+      isEditing[index] = true;
       Object.assign(editUserData, user);
     };
 
     // Cancel editing for a specific row
     const cancelEdit = (index) => {
-      isEditing[index] = false; // Exit edit mode for this row
+      isEditing[index] = false;
     };
 
     // Save changes for the edited user
@@ -132,42 +126,10 @@ export default {
           `http://localhost:5000/api/users/${editUserData.id}`,
           editUserData
         );
-        users.value[index] = { ...editUserData }; // Update the row with new data
-        isEditing[index] = false; // Exit edit mode
+        users.value[index] = { ...editUserData };
+        isEditing[index] = false;
       } catch (error) {
         console.error("Error updating user:", error);
-      }
-    };
-
-    // Add a new user
-    const addUser = async () => {
-      try {
-        if (
-          !newUser.firstName ||
-          !newUser.lastName ||
-          !newUser.email ||
-          !newUser.phone ||
-          !newUser.password
-        ) {
-          alert("All fields are required");
-          return;
-        }
-        const response = await axios.post(
-          "http://localhost:5000/api/users",
-          newUser
-        );
-        users.value.push(response.data); // Add new user to the list
-        // Clear the new user form
-        Object.assign(newUser, {
-          firstName: "",
-          lastName: "",
-          role: "",
-          email: "",
-          phoneNumber: "",
-          password: "",
-        });
-      } catch (error) {
-        console.error("Error adding user:", error);
       }
     };
 
@@ -176,26 +138,25 @@ export default {
       try {
         if (confirm("Are you sure you want to delete this user?")) {
           await axios.delete(`http://localhost:5000/api/users/${id}`);
-          users.value = users.value.filter((u) => u.id !== id); // Remove from list
+          users.value = users.value.filter((u) => u.id !== id);
         }
       } catch (error) {
         console.error("Error deleting user:", error);
       }
     };
 
-    // Fetch users when the component is mounted
     onMounted(fetchUsers);
 
     return {
       t,
       users,
+      searchQuery, // Return search query
+      filteredUsers, // Return filtered users
       isEditing,
       editUserData,
-      newUser,
       startEdit,
       cancelEdit,
       saveEdit,
-      addUser,
       deleteUser,
     };
   },
@@ -203,6 +164,6 @@ export default {
 </script>
   
 <style scoped>
-  @import "@/assets/styles/dashboard.css";
+@import "@/assets/styles/dashboard.css";
 </style>
   

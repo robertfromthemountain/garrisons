@@ -377,22 +377,22 @@ app.get('/api/users', (req, res) => {
     });
 });
 
-// CREATE a new user
-app.post('/api/users', (req, res) => {
-    const { firstName, lastName, role, email, phone, password } = req.body;
-    const sql = 'INSERT INTO users (firstName, lastName, role, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?, ?)';
-    db.query(sql, [firstName, lastName, role, email, phone, password], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.status(201).json({ id: result.insertId, firstName, lastName, role, email, phone });
-    });
-});
+// // CREATE a new user
+// app.post('/api/users', (req, res) => {
+//     const { firstName, lastName, role, email, phone, password } = req.body;
+//     const sql = 'INSERT INTO users (firstName, lastName, role, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?, ?)';
+//     db.query(sql, [firstName, lastName, role, email, phone, password], (err, result) => {
+//         if (err) return res.status(500).send(err);
+//         res.status(201).json({ id: result.insertId, firstName, lastName, role, email, phone });
+//     });
+// });
 
 // UPDATE a user
 app.put('/api/users/:id', (req, res) => {
     const { id } = req.params;
-    const { firstName, lastName, role, email, phone, password } = req.body;
-    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ?, password = ? WHERE id = ?';
-    db.query(sql, [firstName, lastName, role, email, phone, password, id], (err, result) => {
+    const { firstName, lastName, role, email, phoneNumber } = req.body; // Remove password from the body
+    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ? WHERE id = ?'; // No password update
+    db.query(sql, [firstName, lastName, role, email, phoneNumber, id], (err, result) => {
         if (err) return res.status(500).send(err);
         res.json({ message: 'User updated successfully' });
     });
