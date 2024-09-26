@@ -38,6 +38,10 @@ body {
     color: #9e7f61;
 }
 
+.bg-data-table-card{
+    background-color: red;
+}
+
 .fc-event-main {
     background-color: #261e1e;
     border-color: #26211e;

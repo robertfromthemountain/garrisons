@@ -200,15 +200,15 @@ app.get('/api/user', authenticateToken, (req, res) => {
 
 // Create an event
 app.post('/api/requestEvent', authenticateToken, (req, res) => {
-    const { pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id } = req.body;
+    const { pending_service_id, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id } = req.body;
 
     // Check if required fields are provided
     if (!pending_service_title || !pending_date || !pending_start_of_event || !pending_end_of_event || !user_id) {
         return res.status(400).send('Missing required fields');
     }
 
-    const sqlInsert = `INSERT INTO pending_events (pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sqlInsert, [pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id], (err, result) => {
+    const sqlInsert = `INSERT INTO pending_events (pending_service_id, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id) VALUES (?, ?, ?, ?, ?, ?)`;
+    db.query(sqlInsert, [pending_service_id, pending_service_title, pending_date, pending_start_of_event, pending_end_of_event, user_id], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
@@ -238,6 +238,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                             <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
 
                             <p style="color: #0c0a09;"><strong>Service:</strong> ${pending_service_title}</p>
+                            <p style="color: #0c0a09;"><strong>Service ID:</strong> ${pending_service_id}</p>
                             <p style="color: #0c0a09;"><strong>Date:</strong> ${pending_date}</p>
                             <p style="color: #0c0a09;"><strong>Start Time:</strong> ${pending_start_of_event}</p>
                             <p style="color: #0c0a09;"><strong>End Time:</strong> ${pending_end_of_event}</p>

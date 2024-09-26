@@ -129,6 +129,7 @@ export default {
             try {
                 const response = await axios.get("http://localhost:5000/api/services");
                 this.services = response.data;
+                console.log("ITT VANNJAK A SERVICEK:", this.services);
             } catch (error) {
                 console.error("Error fetching services:", error);
             }
@@ -180,6 +181,7 @@ export default {
             const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
 
             const newEvent = {
+                pending_service_id: this.selectedService.id,
                 pending_service_title: this.selectedService.title,
                 pending_date: this.selectedSlot.date,
                 pending_start_of_event: startTime.toISOString(),
@@ -196,7 +198,7 @@ export default {
 
                 this.calendarOptions.events.push(newEvent);
                 alert(
-                    `Appointment for ${this.selectedService.title} successfully booked!`
+                    `Appointment for ${this.selectedService.title}, with the ID: ${this.selectedService.id} successfully booked!`
                 );
 
                 this.showConfirmationDialog = false;

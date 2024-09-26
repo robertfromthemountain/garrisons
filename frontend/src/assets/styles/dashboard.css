@@ -19,3 +19,11 @@ th {
   .subtitle-garrisons{
     color: #9e7f61;
 }
+
+.bg-data-table-card{
+  background-color: #26211e;
+}
+
+.bg-data-table{
+  background-color: rgba(38, 33, 30, 0.479);
+}

@@ -7,6 +7,7 @@
       <thead class="">
         <tr>
           <th>ID</th>
+          <th>Service ID</th>
           <th>Service Title</th>
           <th>Date</th>
           <th>Start Time</th>
@@ -20,6 +21,7 @@
         <tr v-for="event in pendingEvents" :key="event.pending_event_id">
           <td>{{ event.pending_event_id }}</td>
 
+          <td>{{ event.pending_service_id }}</td>
           <td>{{ event.pending_service_title }}</td>
           <td>{{ event.pending_date }}</td>
           <td>{{ event.pending_start_of_event }}</td>

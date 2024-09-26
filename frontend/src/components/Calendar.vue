@@ -48,6 +48,10 @@
               {{ selectedService.title }}
             </p>
             <p>
+              <strong>{{ t("dialog.service") }}</strong>
+              {{ selectedService.id }}
+            </p>
+            <p>
               <strong>{{ t("dialog.duration") }}</strong>
               {{ selectedService.duration }} {{ t("dialog.duration2") }}
             </p>
@@ -92,6 +96,10 @@
           <p>
             <strong>{{ t("dialog.service") }}</strong>
             {{ selectedService.title }}
+          </p>
+          <p>
+            <strong>{{ t("dialog.service") }}</strong>
+            {{ selectedService.id }}
           </p>
           <p>
             <strong>{{ t("dialog.date") }}</strong>
