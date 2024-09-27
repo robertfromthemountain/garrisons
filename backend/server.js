@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,38 +52,159 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Registration endpoint
+// Registration with email verification:
 app.post('/register', async (req, res) => {
     const { firstName, lastName, email, phoneNumber, password } = req.body;
+
+    if (!firstName || !lastName || !email || !phoneNumber || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
+
     try {
-        // Check if email already exists in the database:
+        // Check if email already exists in the `users` table
         const emailCheckQuery = 'SELECT * from users WHERE email = ?';
         db.query(emailCheckQuery, [email], async (err, results) => {
             if (err) {
                 console.error(err);
-                res.status(500).send('Database error');
-                return;
+                return res.status(500).json({ message: 'Database error' });
             }
+
             if (results.length > 0) {
-                res.status(400).send('Email was already registered to the database!');
-                return;
+                return res.status(400).json({ message: 'Email is already registered in the system' });
             }
-        })
-        const hashedPassword = await bcrypt.hash(password, 10); // salt rounds = 10
-        const sqlInsert = `INSERT INTO users (firstName, lastName, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?)`;
-        db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword], (err, results) => {
-            if (err) {
-                console.error(err);
-                res.status(500).send('Database error');
-                return;
-            }
-            res.status(201).send('User registered');
+
+            // Check if email is already pending verification
+            const pendingEmailCheckQuery = 'SELECT * from pending_users WHERE pending_email = ?';
+            db.query(pendingEmailCheckQuery, [email], async (err, pendingResults) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ message: 'Database error' });
+                }
+
+                if (pendingResults.length > 0) {
+                    return res.status(400).json({ message: 'Email is already pending verification.' });
+                }
+
+                // Hash the password
+                const hashedPassword = await bcrypt.hash(password, 10);
+
+                // Generate verification token
+                const verificationToken = crypto.randomBytes(32).toString('hex');
+
+                // Insert the user into the `pending_users` table
+                const sqlInsert = `INSERT INTO pending_users (pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password, verification_token) VALUES (?, ?, ?, ?, ?, ?)`;
+                db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword, verificationToken], (err, insertResult) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({ message: 'Database error during registration' });
+                    }
+
+                    // Send the verification email
+                    const verificationLink = `http://localhost:5000/verify-email?token=${verificationToken}`;
+                    const fullName = firstName + " " + lastName;
+                    const mailOptions = {
+                        from: 'noreply@yourapp.com',
+                        to: email,
+                        subject: 'Please verify your email',
+                        // html: `<p>Hello ${firstName},</p><p>Please verify your email by clicking the following link: <a href="${verificationLink}">Verify Email</a></p>`
+                        html: `
+                            <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+    <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #8f6a48;">Welcome to Garrison's Haircraft & Barbershop! Please Verify Your Email</h2>
+        <p>Hi <strong>${fullName}</strong>,</p>
+        <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
+        <p style="color: #0c0a09;">Welcome to <strong>Garrison's Haircraft & Barbershop</strong> – we’re thrilled to have you with us!</p>
+        <br>
+        <p style="color: #0c0a09;">Before you get started, we just need to verify your email address to activate your account and ensure the security of your details.</p>
+        <br>
+        <p style="color: #0c0a09;">To complete your registration, simply click the link below:</p>
+        <a href="${verificationLink}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Verify My Email</a>
+        <br><br>
+        <p style="color: #0c0a09;">If the above button doesn't work, copy and paste the following URL into your browser:</p>
+        <p style="color: #0c0a09;"><a href="${verificationLink}" style="color: #8f6a48; text-decoration: none;">${verificationLink}</a></p>
+        <br>
+        <p style="color: #0c0a09;">Once your email is verified, you'll have access to:</p>
+        <ul style="color: #0c0a09;">
+            <li>Exclusive offers and promotions</li>
+            <li>Easy booking for your favorite services</li>
+            <li>Personalized recommendations just for you</li>
+        </ul>
+        <p style="color: #0c0a09;">If you didn’t create an account with us, please ignore this email.</p>
+        <br>
+        <p style="color: #0c0a09;">Thank you for choosing <strong>Garrison's Haircraft</strong>. We look forward to giving you an exceptional experience!</p>
+        <br>
+        <p style="color: #0c0a09;">Best regards,</p>
+        <p style="color: #0c0a09;">The Garrison's Haircraft Team</p>
+        <p style="color: #0c0a09;"><strong>noreply@garrisons.com</strong></p>
+    </div>
+</div>
+
+                            `
+                    };
+
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending verification email:', error);
+                            return res.status(500).json({ message: 'Error sending verification email' });
+                        }
+
+                        res.status(201).json({ message: 'Verification email sent' });
+                    });
+                });
+            });
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Server error');
+        console.error('Error in registration:', error);
+        return res.status(500).json({ message: 'Server error' });
     }
 });
+
+
+// Email verification
+app.get('/verify-email', (req, res) => {
+    const { token } = req.query;
+
+    if (!token) {
+        return res.status(400).send('Invalid verification link');
+    }
+
+    // Find the user with the verification token
+    const findPendingUserQuery = 'SELECT * FROM pending_users WHERE verification_token = ?';
+    db.query(findPendingUserQuery, [token], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Database error');
+        }
+
+        if (results.length === 0) {
+            return res.status(400).send('Invalid or expired token');
+        }
+
+        const { pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password } = results[0];
+
+        // Move the user from `pending_users` to `users` table
+        const insertUserQuery = 'INSERT INTO users (firstName, lastName, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?)';
+        db.query(insertUserQuery, [pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password], (err, insertResult) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).send('Database error during account activation');
+            }
+
+            // Remove the user from `pending_users` after successful verification
+            const deletePendingUserQuery = 'DELETE FROM pending_users WHERE verification_token = ?';
+            db.query(deletePendingUserQuery, [token], (err, deleteResult) => {
+                if (err) {
+                    console.error('Database error:', err);
+                    return res.status(500).send('Database error');
+                }
+
+                res.status(200).send('Email successfully verified. Your account is now active.');
+            });
+        });
+    });
+});
+
+
 
 // Login endpoint
 app.post('/login', async (req, res) => {
@@ -257,10 +379,10 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
 
                         // Send email to admin for confirmation
                         const mailOptions = {
-                                from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-                                to: 'naboha7589@skrak.com', // Admin's email address
-                                subject: 'New Appointment Request',
-                                html: `
+                            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                            to: 'naboha7589@skrak.com', // Admin's email address
+                            subject: 'New Appointment Request',
+                            html: `
                             <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
                                 <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
                                     <h2 style="color: #8f6a48;">New Appointment Request</h2>
@@ -279,7 +401,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                 </div>
                             </div>
                             `
-                            };
+                        };
 
                         transporter.sendMail(mailOptions, (error, info) => {
                             if (error) {

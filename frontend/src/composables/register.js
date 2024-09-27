@@ -11,6 +11,7 @@ export function useRegisterForm() {
     const passwordVisible = ref(false);
     const repeatPasswordVisible = ref(false);
 
+
     const form = reactive({
         firstName: '',
         lastName: '',
@@ -93,11 +94,25 @@ export function useRegisterForm() {
 
         try {
             // Proceed with registration if all required fields are filled
-            await axios.post('http://localhost:5000/register', form);
-            toast.success(t("registration.toasts.success"));
-            router.push('/login');
+            const response = await axios.post('http://localhost:5000/register', form);
+
+            // Handle success response
+            if (response.status === 201) {
+                toast.success('Verification email sent! Please check your email.');
+                router.push('/login');
+            }
         } catch (error) {
-            toast.error(t("registration.toasts.error"), error.message);
+            // Catching backend errors and displaying the message using toast
+            if (error.response) {
+                // The request was made, and the server responded with a status code outside the 2xx range
+                toast.error('Registration failed: ' + error.response.data.message);  // Show the backend message
+            } else if (error.request) {
+                // The request was made, but no response was received
+                toast.error('No response from server. Please try again later.');
+            } else {
+                // Something happened in setting up the request
+                toast.error('Error occurred during registration. Please try again.');
+            }
         }
     };
 

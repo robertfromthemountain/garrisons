@@ -10,7 +10,8 @@ const messages = {
         registration: {
             toasts: {
                 success: "Registration successful!",
-                error: "Registration failed!"
+                error: "Registration failed!",
+                verificationEmailSent:"A verification email has been sent to your email address. Please check your inbox."
             }
         },
         login: {

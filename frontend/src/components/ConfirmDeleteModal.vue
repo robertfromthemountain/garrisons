@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { defineEmits, defineProps } from "vue";
+import { defineEmits } from "vue";
 
 // Props to control modal visibility, selected ID, and dynamic text
 const props = defineProps({
