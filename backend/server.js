@@ -256,38 +256,38 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                         const service = serviceResults[0];
 
                         // Send email to admin for confirmation
-                        const mailOptions = {
-                            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-                            to: 'naboha7589@skrak.com', // Admin's email address
-                            subject: 'New Appointment Request',
-                            html: `
-                            <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
-                                <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-                                    <h2 style="color: #8f6a48;">New Appointment Request</h2>
-                                    <p>A new appointment has been requested by <strong>${fullName}</strong></p>
-                                    <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
+                        // const mailOptions = {
+                        //     from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                        //     to: 'naboha7589@skrak.com', // Admin's email address
+                        //     subject: 'New Appointment Request',
+                        //     html: `
+                        //     <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                        //         <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                        //             <h2 style="color: #8f6a48;">New Appointment Request</h2>
+                        //             <p>A new appointment has been requested by <strong>${fullName}</strong></p>
+                        //             <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
 
-                                    <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
-                                    <p style="color: #0c0a09;"><strong>Service ID:</strong> ${service.id}</p>
-                                    <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
-                                    <p style="color: #0c0a09;"><strong>Price:</strong> $${service.price}</p>
-                                    <p style="color: #0c0a09;"><strong>Date:</strong> ${pending_date}</p>
-                                    <p style="color: #0c0a09;"><strong>Start Time:</strong> ${pending_start_of_event}</p>
-                                    <p style="color: #0c0a09;"><strong>End Time:</strong> ${pending_end_of_event}</p>
-                                    <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
-                                    <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
-                                </div>
-                            </div>
-                            `
-                        };
+                        //             <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
+                        //             <p style="color: #0c0a09;"><strong>Service ID:</strong> ${service.id}</p>
+                        //             <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
+                        //             <p style="color: #0c0a09;"><strong>Price:</strong> $${service.price}</p>
+                        //             <p style="color: #0c0a09;"><strong>Date:</strong> ${pending_date}</p>
+                        //             <p style="color: #0c0a09;"><strong>Start Time:</strong> ${pending_start_of_event}</p>
+                        //             <p style="color: #0c0a09;"><strong>End Time:</strong> ${pending_end_of_event}</p>
+                        //             <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
+                        //             <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
+                        //         </div>
+                        //     </div>
+                        //     `
+                        // };
 
-                        transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.error('Error sending email:', error);
-                                return res.status(500).send('Error sending email');
-                            }
-                            console.log('Email sent:', info.response);
-                        });
+                        // transporter.sendMail(mailOptions, (error, info) => {
+                        //     if (error) {
+                        //         console.error('Error sending email:', error);
+                        //         return res.status(500).send('Error sending email');
+                        //     }
+                        //     console.log('Email sent:', info.response);
+                        // });
 
                         // Respond with the event data
                         res.status(201).json({ id: result.insertId, pending_service_id, pending_date, pending_start_of_event, pending_end_of_event, user_id });

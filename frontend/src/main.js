@@ -11,6 +11,8 @@ import axios from 'axios';
 import router from './router';
 import i18n from './i18n';
 import store from './stores/store';
+import Toast, { POSITION } from 'vue-toastification';
+import 'vue-toastification/dist/index.css'; // Import the CSS for the toast
 
 // // FullCalendar styles
 // import '@fullcalendar/core/index.css';
@@ -44,6 +46,13 @@ app.use(vuetify);
 app.use(router);
 app.use(i18n);
 app.use(store);
+app.use(Toast, {
+  position: POSITION.BOTTOM_LEFT,
+  timeout: 5000,
+  transition: "Vue-Toastification__fade",
+  maxToasts: 5,
+  newestOnTop: true
+});
 
 watch(
   () => store.getters['theme/currentTheme'],

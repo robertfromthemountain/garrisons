@@ -1,5 +1,5 @@
 <script>
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, reactive, computed } from "vue";
 import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
 import axios from "axios";
@@ -9,6 +9,7 @@ import interactionPlugin from "@fullcalendar/interaction";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
+import { useToast } from "vue-toastification";
 
 export default {
   components: {
@@ -17,9 +18,22 @@ export default {
   setup() {
     // i18n
     const { locale, t } = useI18n();
+    const toast = useToast();
 
     // Access the store using useStore()
     const store = useStore(); // Use Vuex store
+
+    // Example usage in the rest of your code:
+    const showToast = (message, type = "success") => {
+      if (type === "success") toast.success(message);
+      else if (type === "error") toast.error(message);
+      else if (type === "warning") toast.warning(message);
+      else if (type === "info") toast.info(message);
+    };
+
+    const handleError = (customMessage) => {
+      showToast(customMessage, "error");
+    };
 
     const handleEventDrop = (info) => {
       const modifiedEvent = {
@@ -46,8 +60,6 @@ export default {
       selectedSlot.value = {
         date: arg.dateStr,
         time: arg.dateStr,
-        usableDate: formatDate(arg.dateStr),
-        usableTime: formatTime(arg.dateStr),
       };
       selectedService.value = null;
       showFirstDialog.value = true;
@@ -62,6 +74,29 @@ export default {
       showEventDialog.value = false;
       selectedEvent.value = {};
     };
+
+    const formattedDate = computed(() => {
+      return selectedSlot.value.date
+        ? new Intl.DateTimeFormat("hu-HU", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            timeZone: "UTC",
+          }).format(new Date(selectedSlot.value.date))
+        : "";
+    });
+
+    const formattedTime = computed(() => {
+      return selectedSlot.value.time
+        ? new Intl.DateTimeFormat("hu-HU", {
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZone: "UTC",
+          }).format(new Date(selectedSlot.value.time))
+        : "";
+    });
+
+    const calendarEvents = ref([]);
 
     // Reactive state
     const calendarOptions = reactive({
@@ -97,18 +132,22 @@ export default {
       },
       dateClick: handleDateClick,
       allDaySlot: false,
-      events: [],
+      events: calendarEvents,
     });
 
     // Other reactive state
-    const calendarEvents = ref([]);
+
     const originalEvents = ref([]);
     const modifiedEvents = ref([]);
     const modifying = ref(false);
     const showModificationDialog = ref(false);
     const showFirstDialog = ref(false);
     const showConfirmationDialog = ref(false);
-    const selectedSlot = ref({});
+    // Selected Slot retains raw date for backend
+    const selectedSlot = ref({
+      date: "", // Raw ISO string or Date object
+      time: "", // This will store the time, possibly as an ISO string or timestamp
+    });
     const services = ref([]);
     const selectedService = ref(null);
     const userId = ref(null);
@@ -131,6 +170,7 @@ export default {
       const date = new Date(dateString);
       if (isNaN(date)) {
         console.error("Invalid date provided:", dateString);
+        // handleError("Invalid date provided: ", dateString)
         return "";
       }
       return new Intl.DateTimeFormat("hu-HU", {
@@ -167,12 +207,20 @@ export default {
           if (response.status !== 200) {
             throw new Error("Failed to delete event");
           }
+
+          // Update the local events array to remove the deleted event
+          const updatedEvents = calendarEvents.value.filter(
+            (event) => event.id !== selectedEvent.value.id
+          );
+
+          // Trigger reactivity by assigning a new array
+          calendarEvents.value = [...updatedEvents];
+
+          // Close the event dialog and show success message
           closeEventDialog();
-          alert("Event deleted successfully");
-          window.location.reload();
+          showToast("Event deleted successfully");
         } catch (error) {
-          console.error("Error deleting event:", error);
-          alert("Error deleting event: " + error.message);
+          handleError("Error deleting event: " + error.message);
         }
       }
     };
@@ -187,7 +235,7 @@ export default {
       if (modifiedEvents.value.length > 0) {
         showModificationDialog.value = true;
       } else {
-        alert("No events have been modified.");
+        showToast("No events have been modified.", "info");
       }
     };
 
@@ -197,11 +245,14 @@ export default {
           "http://localhost:5000/api/updateConfirmedEvents",
           modifiedEvents.value
         );
-        alert("Modifications saved successfully!");
+        showToast("Modifications saved successfully!");
         resetModifications();
       } catch (error) {
-        console.error("Error saving modifications:", error);
-        alert("There was an error saving the modifications. Please try again.");
+        // console.error("Error saving modifications:", error);
+        handleError(
+          "There was an error saving the modifications. Please try again." +
+            error.message
+        );
       }
     };
 
@@ -215,26 +266,27 @@ export default {
 
       const token = store.getters.accessToken;
       const payload = JSON.parse(atob(token.split(".")[1]));
-
       const currentTime = Math.floor(Date.now() / 1000);
+
       if (payload.exp < currentTime) {
+        showToast("Session expired. Please log in again.", "info");
         console.log("Token has expired");
+        store.dispatch("logout");
         return;
       }
 
       try {
         const response = await axios.get("http://localhost:5000/api/user", {
           headers: {
-            Authorization: `Bearer ${store.getters.accessToken}`,
+            Authorization: `Bearer ${token}`,
           },
         });
-
         userId.value = response.data.userId;
         email.value = response.data.email;
         firstName.value = response.data.firstName;
         lastName.value = response.data.lastName;
       } catch (error) {
-        console.error("Error fetching user ID:", error);
+        handleError("Error fetching user ID:" + error.message);
       }
     };
 
@@ -276,7 +328,7 @@ export default {
 
     const checkOverlap = () => {
       if (!selectedService.value) {
-        alert("Please select a service.");
+        showToast("Please select a service.", "warning");
         return;
       }
       const durationInMinutes = parseInt(selectedService.value.duration, 10);
@@ -289,7 +341,10 @@ export default {
       });
 
       if (hasOverlap) {
-        alert("This time slot is already booked. Please choose another time.");
+        showToast(
+          "This time slot is already booked. Please choose another time.",
+          "error"
+        );
       } else {
         showConfirmationDialog.value = true;
         showFirstDialog.value = false;
@@ -322,20 +377,23 @@ export default {
         });
 
         calendarOptions.events.push(newEvent);
-        alert(
+        showToast(
           `Appointment for ${selectedService.value.title} successfully booked!`
         );
 
         fetchPendingEvents();
         showConfirmationDialog.value = false;
       } catch (error) {
-        console.error("Error booking appointment:", error);
-        alert("There was an error booking your appointment. Please try again.");
+        // console.error("Error booking appointment:", error);
+        handleError(
+          "There was an error booking your appointment. Please try again." +
+            error.message
+        );
       }
     };
 
     const resetModifications = () => {
-      console.log("RESET")
+      console.log("RESET");
       showModificationDialog.value = false;
       modifiedEvents.value = [];
       calendarOptions.editable = false;
@@ -381,6 +439,10 @@ export default {
       confirmationDialogCancel,
       finalizeBooking,
       resetModifications,
+      showToast,
+      handleError,
+      formattedDate,
+      formattedTime,
     };
   },
 };
@@ -475,11 +537,11 @@ export default {
           <p v-else>{{ t("dialog.bookDialog.noServices") }}</p>
           <p>
             <strong>{{ t("dialog.date") }}</strong>
-            {{ selectedSlot.usableDate }}
+            {{ formattedDate }}
           </p>
           <p class="pb-2">
             <strong>{{ t("dialog.time") }}</strong>
-            {{ selectedSlot.usableTime }}
+            {{ formattedTime }}
           </p>
           <div v-if="selectedService">
             <p v-if="$store.getters.isLoggedIn">
@@ -544,11 +606,11 @@ export default {
           </p>
           <p>
             <strong>{{ t("dialog.date") }}</strong>
-            {{ selectedSlot.usableDate }}
+            {{ formattedDate }}
           </p>
           <p>
             <strong>{{ t("dialog.time") }}</strong>
-            {{ selectedSlot.usableTime }}
+            {{ formattedTime }}
           </p>
           <p>
             <strong>{{ t("dialog.price") }}</strong>
