@@ -56,7 +56,7 @@
           <td>
             <div v-if="!isEditing[index]">
               <button @click="startEdit(index, service)">Edit</button>
-              <button @click="deleteService(service.id)">Delete</button>
+              <button @click="openDeleteModal(service.id)">Delete</button>
             </div>
             <div v-else>
               <button
@@ -108,14 +108,31 @@
       </tbody>
     </v-table>
 
-    <!-- Import and use the confirmation modal -->
-    <ConfirmationModal
-      :isOpen="isModalOpen"
-      :selectedEventId="selectedServiceId"
-      @confirm="handleConfirmDelete"
-      @cancel="closeModal"
-      @update:isOpen="closeModal"
-    />
+    <!-- Delete Confirmation Modal -->
+    <v-dialog v-model="isModalOpen" max-width="600" persistent>
+      <v-card class="bg-garrisons text-garrisons">
+        <v-card-title
+          ><h2 class="headline title-garrisons">
+            Confirm Deletion
+          </h2></v-card-title
+        >
+        <v-divider></v-divider>
+        <v-card-text>
+          <h3>
+            Are you sure you want to delete this service? This action cannot be
+            undone.
+          </h3>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-btn @click="closeModal">Cancel</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn class="bg-red-lighten-1 text-garrisons" @click="confirmDelete"
+            >Delete</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -124,13 +141,12 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import { reactive, ref, computed, onMounted } from "vue";
 import { useToast } from "vue-toastification";
-import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
 
 const { t } = useI18n();
 const toast = useToast();
 const services = ref([]);
-const isModalOpen = ref(false);  // Controls modal visibility
-const selectedServiceId = ref(null);  // Holds the selected service ID for deletion
+const isModalOpen = ref(false); // Controls modal visibility
+const selectedServiceId = ref(null); // Holds the selected service ID for deletion
 const searchQuery = ref(""); // Add search query for filtering services
 const isEditing = reactive({}); // Track which row is being edited
 const editServiceData = reactive({
@@ -159,13 +175,29 @@ const handleError = (customMessage, error) => {
 
 // Function to open the delete modal and set the service ID
 const openDeleteModal = (id) => {
-  selectedServiceId.value = id;  // Store the ID of the service to be deleted
-  isModalOpen.value = true;  // Open the confirmation modal
+  selectedServiceId.value = id; // Store the ID of the service to be deleted
+  isModalOpen.value = true; // Open the confirmation modal
 };
 
 // Function to close the modal
 const closeModal = () => {
   isModalOpen.value = false;
+};
+
+// Function to handle the confirmed deletion
+const confirmDelete = async () => {
+  try {
+    await axios.delete(
+      `http://localhost:5000/api/services/${selectedServiceId.value}`
+    );
+    services.value = services.value.filter(
+      (service) => service.id !== selectedServiceId.value
+    );
+    showToast("Service deleted successfully!");
+    closeModal();
+  } catch (error) {
+    handleError("Error deleting service", error);
+  }
 };
 
 // Fetch all services from backend
@@ -237,19 +269,6 @@ const addService = async () => {
     handleError("Error adding service", error);
   }
 };
-
-// Function to handle the confirmed deletion
-const handleConfirmDelete = async (id) => {
-  try {
-    await axios.delete(`http://localhost:5000/api/services/${id}`);
-    services.value = services.value.filter((service) => service.id !== id);
-    toast.success("Service deleted successfully!");
-    closeModal();
-  } catch (error) {
-    toast.error(`Error deleting service: ${error.message}`);
-  }
-};
-
 
 // Fetch services when the component is mounted
 onMounted(fetchServices);

@@ -178,6 +178,7 @@ async function fetchUserId() {
     firstName.value = response.data.firstName;
     lastName.value = response.data.lastName;
   } catch (error) {
+    console.log('Error fetching user ID: ' + error.message);
     handleError('Error fetching user ID: ' + error.message);
   }
 }

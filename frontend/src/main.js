@@ -14,18 +14,14 @@ import store from './stores/store';
 import Toast, { POSITION } from 'vue-toastification';
 import 'vue-toastification/dist/index.css'; // Import the CSS for the toast
 
-// // FullCalendar styles
-// import '@fullcalendar/core/index.css';
-// import '@fullcalendar/daygrid/index.css'; // For dayGrid view
-// // Add other FullCalendar styles as needed, e.g. timeGrid if used
-// // import '@fullcalendar/timegrid/main.css';
-
+// Axios interceptor to add the accessToken from sessionStorage
 axios.interceptors.request.use(function (config) {
-  const token = localStorage.getItem('accessToken');
+  const token = sessionStorage.getItem('accessToken'); // Use sessionStorage
   config.headers.Authorization = token ? `Bearer ${token}` : '';
   return config;
 });
 
+// Vuetify setup
 const vuetify = createVuetify({
   components,
   directives,
@@ -40,8 +36,13 @@ const vuetify = createVuetify({
   },
 });
 
+// Vue app setup
 const app = createApp(App);
 
+// Initialize the store (refresh token from sessionStorage)
+store.dispatch('initializeStore'); // Ensure token is available
+
+// Use Vuetify, router, i18n, and Toast in the app
 app.use(vuetify);
 app.use(router);
 app.use(i18n);
@@ -54,6 +55,7 @@ app.use(Toast, {
   newestOnTop: true
 });
 
+// Watch theme changes
 watch(
   () => store.getters['theme/currentTheme'],
   (newTheme) => {
@@ -63,4 +65,5 @@ watch(
   { immediate: true }
 );
 
+// Mount the app
 app.mount('#app');
