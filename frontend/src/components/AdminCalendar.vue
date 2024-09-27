@@ -1,19 +1,384 @@
 <script>
+import { ref, onMounted, reactive } from "vue";
+import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
-import adminCalendar from "@/composables/adminCalendar.js";
+import axios from "axios";
+import { useI18n } from "vue-i18n";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import enLocale from "@fullcalendar/core/locales/en-gb";
+import huLocale from "@fullcalendar/core/locales/hu";
 
 export default {
   components: {
     FullCalendar,
   },
-  mixins: [adminCalendar],
-  // Importing JS logic as a mixin
-  setup(props, context) {
-    // Since we're using the setup function, let's get t directly from the mixin
-    const { t } = adminCalendar.setup();
+  setup() {
+    // i18n
+    const { locale, t } = useI18n();
+
+    // Access the store using useStore()
+    const store = useStore(); // Use Vuex store
+
+    const handleEventDrop = (info) => {
+      const modifiedEvent = {
+        id: info.event.id,
+        modifiedTitle: info.event.title,
+        modifiedEventDate: info.event.start.toISOString(),
+        newStart: info.event.start.toISOString(),
+        newEnd: info.event.end.toISOString(),
+        reserving_user_id: info.event.extendedProps.reserving_user_id,
+      };
+
+      const existingEventIndex = modifiedEvents.value.findIndex(
+        (event) => event.id === info.event.id
+      );
+
+      if (existingEventIndex !== -1) {
+        modifiedEvents.value[existingEventIndex] = modifiedEvent;
+      } else {
+        modifiedEvents.value.push(modifiedEvent);
+      }
+    };
+
+    const handleDateClick = (arg) => {
+      selectedSlot.value = {
+        date: arg.dateStr,
+        time: arg.dateStr,
+        usableDate: formatDate(arg.dateStr),
+        usableTime: formatTime(arg.dateStr),
+      };
+      selectedService.value = null;
+      showFirstDialog.value = true;
+    };
+
+    const handleEventClick = (info) => {
+      selectedEvent.value = info.event;
+      showEventDialog.value = true;
+    };
+
+    const closeEventDialog = () => {
+      showEventDialog.value = false;
+      selectedEvent.value = {};
+    };
+
+    // Reactive state
+    const calendarOptions = reactive({
+      timeZone: "UTC",
+      weekends: false,
+      locales: [huLocale, enLocale],
+      locale: locale.value,
+      plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
+      slotEventOverlap: false,
+      initialView: "timeGridWeek",
+      slotDuration: "00:15:00",
+      slotMinTime: "08:00:00",
+      slotMaxTime: "17:00:00",
+      editable: false,
+      eventDrop: handleEventDrop,
+      eventClick: handleEventClick,
+      aspectRatio: 2.5,
+      nowIndicator: true,
+      headerToolbar: {
+        left: "prev",
+        center: "title",
+        right: "today,next",
+      },
+      footerToolbar: {
+        left: "",
+        center: "",
+        right: "",
+      },
+      slotLabelFormat: {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      },
+      dateClick: handleDateClick,
+      allDaySlot: false,
+      events: [],
+    });
+
+    // Other reactive state
+    const calendarEvents = ref([]);
+    const originalEvents = ref([]);
+    const modifiedEvents = ref([]);
+    const modifying = ref(false);
+    const showModificationDialog = ref(false);
+    const showFirstDialog = ref(false);
+    const showConfirmationDialog = ref(false);
+    const selectedSlot = ref({});
+    const services = ref([]);
+    const selectedService = ref(null);
+    const userId = ref(null);
+    const email = ref(null);
+    const firstName = ref(null);
+    const lastName = ref(null);
+    const showEventDialog = ref(false);
+    const selectedEvent = ref({});
+
+    // Lifecycle hooks
+    onMounted(() => {
+      fetchUserId();
+      fetchEvents();
+      fetchPendingEvents();
+      fetchServices();
+    });
+
+    // Methods
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error("Invalid date provided:", dateString);
+        return "";
+      }
+      return new Intl.DateTimeFormat("hu-HU", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(date);
+    };
+
+    const formatTime = (dateString) => {
+      const date = new Date(dateString);
+      if (isNaN(date)) {
+        console.error("Invalid date provided:", dateString);
+        return "";
+      }
+      return new Intl.DateTimeFormat("hu-HU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC",
+      }).format(date);
+    };
+
+    const deleteEvent = async () => {
+      if (confirm("Are you sure you want to delete this event?")) {
+        try {
+          const response = await axios.delete(
+            `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${store.getters.accessToken}`,
+              },
+            }
+          );
+          if (response.status !== 200) {
+            throw new Error("Failed to delete event");
+          }
+          closeEventDialog();
+          alert("Event deleted successfully");
+          window.location.reload();
+        } catch (error) {
+          console.error("Error deleting event:", error);
+          alert("Error deleting event: " + error.message);
+        }
+      }
+    };
+
+    const enableModification = () => {
+      originalEvents.value = JSON.parse(JSON.stringify(calendarOptions.events));
+      calendarOptions.editable = true;
+      modifying.value = true;
+    };
+
+    const showModificationModal = () => {
+      if (modifiedEvents.value.length > 0) {
+        showModificationDialog.value = true;
+      } else {
+        alert("No events have been modified.");
+      }
+    };
+
+    const confirmModifications = async () => {
+      try {
+        await axios.post(
+          "http://localhost:5000/api/updateConfirmedEvents",
+          modifiedEvents.value
+        );
+        alert("Modifications saved successfully!");
+        resetModifications();
+      } catch (error) {
+        console.error("Error saving modifications:", error);
+        alert("There was an error saving the modifications. Please try again.");
+      }
+    };
+
+    const discardModifications = () => {
+      calendarOptions.events = JSON.parse(JSON.stringify(originalEvents.value));
+      resetModifications();
+    };
+
+    const fetchUserId = async () => {
+      if (!store.getters.isLoggedIn) return;
+
+      const token = store.getters.accessToken;
+      const payload = JSON.parse(atob(token.split(".")[1]));
+
+      const currentTime = Math.floor(Date.now() / 1000);
+      if (payload.exp < currentTime) {
+        console.log("Token has expired");
+        return;
+      }
+
+      try {
+        const response = await axios.get("http://localhost:5000/api/user", {
+          headers: {
+            Authorization: `Bearer ${store.getters.accessToken}`,
+          },
+        });
+
+        userId.value = response.data.userId;
+        email.value = response.data.email;
+        firstName.value = response.data.firstName;
+        lastName.value = response.data.lastName;
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+    };
+
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/getEvents");
+        calendarOptions.events = [...calendarOptions.events, ...response.data];
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    const fetchPendingEvents = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/getPendingEvents2"
+        );
+        calendarOptions.events = [...calendarOptions.events, ...response.data];
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    const fetchServices = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/services");
+        services.value = response.data;
+      } catch (error) {
+        console.error("Error fetching services:", error);
+      }
+    };
+
+    const closeDialog = () => {
+      showFirstDialog.value = false;
+      showConfirmationDialog.value = false;
+      selectedSlot.value = {};
+      selectedService.value = null;
+    };
+
+    const checkOverlap = () => {
+      if (!selectedService.value) {
+        alert("Please select a service.");
+        return;
+      }
+      const durationInMinutes = parseInt(selectedService.value.duration, 10);
+      const startTime = new Date(selectedSlot.value.date);
+      const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
+      const hasOverlap = calendarOptions.events.some((event) => {
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
+        return startTime < eventEnd && endTime > eventStart;
+      });
+
+      if (hasOverlap) {
+        alert("This time slot is already booked. Please choose another time.");
+      } else {
+        showConfirmationDialog.value = true;
+        showFirstDialog.value = false;
+      }
+    };
+
+    const confirmationDialogCancel = () => {
+      showConfirmationDialog.value = false;
+    };
+
+    const finalizeBooking = async () => {
+      const durationInMinutes = parseInt(selectedService.value.duration, 10);
+      const startTime = new Date(selectedSlot.value.date);
+      const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
+
+      const newEvent = {
+        pending_service_title: selectedService.value.title,
+        pending_service_id: selectedService.value.id,
+        pending_date: selectedSlot.value.date,
+        pending_start_of_event: startTime.toISOString(),
+        pending_end_of_event: endTime.toISOString(),
+        user_id: userId.value,
+      };
+
+      try {
+        await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
+          headers: {
+            Authorization: `Bearer ${store.getters.accessToken}`,
+          },
+        });
+
+        calendarOptions.events.push(newEvent);
+        alert(
+          `Appointment for ${selectedService.value.title} successfully booked!`
+        );
+
+        fetchPendingEvents();
+        showConfirmationDialog.value = false;
+      } catch (error) {
+        console.error("Error booking appointment:", error);
+        alert("There was an error booking your appointment. Please try again.");
+      }
+    };
+
+    const resetModifications = () => {
+      showModificationDialog.value = false;
+      modifiedEvents.value = [];
+      calendarOptions.editable = false;
+      modifying.value = false;
+      fetchEvents();
+    };
 
     return {
+      locale,
       t,
+      calendarOptions,
+      calendarEvents,
+      originalEvents,
+      modifiedEvents,
+      modifying,
+      showModificationDialog,
+      showFirstDialog,
+      showConfirmationDialog,
+      selectedSlot,
+      services,
+      selectedService,
+      userId,
+      email,
+      firstName,
+      lastName,
+      showEventDialog,
+      selectedEvent,
+      enableModification,
+      showModificationModal,
+      confirmModifications,
+      discardModifications,
+      handleEventClick,
+      handleEventDrop,
+      fetchUserId,
+      fetchEvents,
+      fetchPendingEvents,
+      fetchServices,
+      handleDateClick,
+      closeEventDialog,
+      deleteEvent,
+      closeDialog,
+      checkOverlap,
+      confirmationDialogCancel,
+      finalizeBooking,
     };
   },
 };
@@ -250,7 +615,5 @@ export default {
 .bg-garrisons {
   background-color: #26211e;
 }
-
-
 </style>
   
