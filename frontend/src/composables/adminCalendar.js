@@ -1,10 +1,4 @@
-import axios from "axios";
-import { useI18n } from "vue-i18n";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import enLocale from "@fullcalendar/core/locales/en-gb";
-import huLocale from "@fullcalendar/core/locales/hu";
+
 
 export default {
   setup() {

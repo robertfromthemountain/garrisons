@@ -2,6 +2,28 @@ import { createI18n } from "vue-i18n";
 
 const messages = {
     en: {
+        logout:{
+            toasts:{
+                success:"You have successfully logged out. See-ya!"
+            }
+        },
+        registration: {
+            toasts: {
+                success: "Registration successful!",
+                error: "Registration failed!"
+            }
+        },
+        login: {
+            toasts: {
+                missingFields: "Please fill in both email and password.",
+                success: "Login successful! Welcome back.",
+                invalidCredentials: "Invalid credentials. Please check your email and password.",
+                userNotFound: "User not found. Please check your email or register.",
+                serverError: "Server error. Please try again later.",
+                genericError: "Login failed! Please try again.",
+                networkError: "Network error. Please check your connection."
+            }
+        },
         link: {
             home: "Home",
             booking: "Booking",
@@ -102,7 +124,7 @@ const messages = {
                 title: "Manage User Accounts",
                 subtitle: "Here you can manage the registered users."
             },
-            titles: {
+            toasts: {
 
             }
         }

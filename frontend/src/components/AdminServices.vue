@@ -5,13 +5,16 @@
     </h2>
     <v-divider></v-divider>
     <!-- Search Input for Services -->
-    <v-text-field
-      v-model="searchQuery"
-      label="Search Services"
-      class="mb-4"
-      clearable
-      placeholder="Search by title, price, or duration"
-    ></v-text-field>
+    <v-col cols="12" lg="3">
+      <v-text-field
+        v-model="searchQuery"
+        label="Search Services"
+        class="mt-5 rounded-pill"
+        clearable
+        placeholder="Search by title, price, or duration"
+        append-inner-icon="mdi-magnify"
+      ></v-text-field>
+    </v-col>
 
     <!-- Display Services Table -->
     <v-table height="100vh" fixed-header class="bg-garrisons">

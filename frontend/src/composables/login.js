@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import axios from 'axios';
+import { useToast } from 'vue-toastification';  // Import Toast
 
 export function useLogin() {
     const { t } = useI18n();
@@ -11,45 +12,67 @@ export function useLogin() {
     const password = ref('');
     const isLoading = ref(false);
     const store = useStore();
+    const visible = ref(false);
+    const toast = useToast();  // Initialize Toast
+
+    // Define validation rules
+    const emailRules = [
+        (value) => !!value || t("validation.emailRequired"),
+        (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || t("validation.invalidEmailFormat"),
+    ];
+
+    const passwordRules = [
+        (value) => !!value || t("validation.passwordRequired"),
+    ];
 
     const loginUser = async () => {
+        // Check if email and password are not empty before making the request
+        if (!email.value || !password.value) {
+            toast.error(t("login.toasts.missingFields"));
+            return;
+        }
+
         isLoading.value = true;
         try {
             const response = await axios.post('http://localhost:5000/login', {
                 email: email.value,
                 password: password.value,
             });
+
             console.log('Server response:', response.data);
+
+            // Check if token is received
             if (response.data.token) {
                 store.dispatch('login', response.data.token);
-                alert('Login successful!');
+                toast.success(t("login.toasts.success"));
                 router.push('/');
             } else {
                 throw new Error('No token received');
             }
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
+
             if (error.response) {
                 switch (error.response.status) {
                     case 401:
-                        alert('Invalid credentials. Please check your email and password.');
+                        toast.error(t("login.toasts.invalidCredentials"));
                         break;
                     case 404:
-                        alert('User not found. Please check your email or register.');
+                        toast.error(t("login.toasts.userNotFound"));
                         break;
                     case 500:
-                        alert('Server error. Please try again later.');
+                        toast.error(t("login.toasts.serverError"));
                         break;
                     default:
-                        alert('Login failed! Please try again.');
+                        toast.error(t("login.toasts.genericError"));
                 }
             } else {
-                alert('Login failed! Please check your network connection.');
+                toast.error(t("login.toasts.networkError"));
             }
         } finally {
             isLoading.value = false;
         }
     };
 
-    return { email, password, isLoading, loginUser, t };
+    return { email, password, emailRules, passwordRules, isLoading, loginUser, t, visible };
 }

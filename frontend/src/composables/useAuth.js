@@ -1,17 +1,25 @@
 import { ref } from 'vue';
-import router from '@/router';
+import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useToast } from 'vue-toastification';
+import { useStore } from 'vuex';
 
-const token = ref(sessionStorage.getItem('token'));
 
 export function useAuth() {
+    const { t } = useI18n();
+    const token = ref(sessionStorage.getItem('token'));
+    const toast = useToast();
     const isLoggedIn = ref(!!token.value);
+    const router = useRouter();
+    const store = useStore();
 
     const logout = () => {
         sessionStorage.removeItem('token');
         localStorage.removeItem('token');
+        store.dispatch("logout")
         token.value = null;
-        isLoggedIn.value = false;
         router.push('/login');
+        toast.success(t('logout.toasts.success'));
     };
 
     return { isLoggedIn, logout };

@@ -3,14 +3,16 @@
     <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
       {{ t("dashboard.manageUsers.subtitle") }}
     </h2>
-
+    <v-col cols="12" lg="3">
     <v-text-field
       v-model="searchQuery"
       label="Search Users"
-      class="mb-4"
+      class="mt-5 rounded-pill"
       clearable
       placeholder="Search by first name, last name, email, etc."
+      append-inner-icon="mdi-magnify"
     ></v-text-field>
+  </v-col>
 
     <v-divider></v-divider>
 

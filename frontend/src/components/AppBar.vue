@@ -3,10 +3,12 @@ import { computed } from "vue";
 import { useStore } from "vuex";
 import { useI18n } from "vue-i18n";
 import { RouterLink, useRouter } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
 
 const store = useStore();
 const { t } = useI18n();
 const router = useRouter();
+const { logout } = useAuth();
 
 const isLoggedIn = computed(() => store.getters.isLoggedIn);
 
@@ -42,16 +44,12 @@ const visibleNavLinks = computed(() => {
 });
 
 function handleLogout() {
-  store.dispatch("logout");
-  router.push("/login");
+  logout();
 }
 </script>
 
 <template>
-  <v-app-bar
-    density="compact"
-    class="nav-color"
-  >
+  <v-app-bar density="compact" class="nav-color">
     <nav class="align-center">
       <div class="d-flex justify-center">
         <RouterLink
@@ -93,20 +91,18 @@ function handleLogout() {
             >{{ t("button.register") }}</v-btn
           ></RouterLink
         >
-        <RouterLink
+
+        <v-btn
           v-if="isLoggedIn"
           @click="handleLogout"
-          to="/logout"
-          class="clear"
-          ><v-btn
-            prepend-icon="mdi-logout"
-            density="compact"
-            variant="tonal"
-            class="mx-1"
-            rounded="xl"
-            >{{ t("button.logout") }}</v-btn
-          ></RouterLink
+          prepend-icon="mdi-logout"
+          density="compact"
+          variant="tonal"
+          class="mx-1"
+          rounded="xl"
+          >{{ t("button.logout") }}</v-btn
         >
+
         <RouterLink v-if="isLoggedIn" to="/dashboard" class="clear"
           ><v-btn
             prepend-icon="mdi-view-dashboard-edit-outline"

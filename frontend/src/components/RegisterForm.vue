@@ -1,33 +1,69 @@
 <script setup>
 import { useRegisterForm } from "@/composables/register.js";
 
-const { form, fields, t, register } = useRegisterForm();
+const { form, fields, t, register, passwordVisible, repeatPasswordVisible } =
+  useRegisterForm();
 </script>
 
 <template>
   <div class="mx-auto w-25">
-    <h1 class="text-center text-h4 font-weight-light text-uppercase mt-5 text-color">
+    <h1
+      class="text-center text-h4 font-weight-light text-uppercase mt-5 text-color"
+    >
       {{ t("button.register") }}
     </h1>
 
     <form @submit.prevent="register">
       <v-text-field
         density="compact"
-        clearable
         v-for="field in fields"
         :key="field.label"
         :rules="field.rules"
         :placeholder="field.placeholder"
-        :type="field.type"
+        :prepend-inner-icon="field.innerIcon"
+        clearable
+        :type="
+          field.model === 'password'
+            ? passwordVisible
+              ? 'text'
+              : 'password'
+            : field.model === 'repeatPassword'
+            ? repeatPasswordVisible
+              ? 'text'
+              : 'password'
+            : field.type
+        "
         v-model="form[field.model]"
         hide-details="auto"
         :label="field.label"
         class="my-5"
+        :append-inner-icon="
+          field.model === 'password'
+            ? passwordVisible
+              ? 'mdi-eye-off'
+              : 'mdi-eye'
+            : field.model === 'repeatPassword'
+            ? repeatPasswordVisible
+              ? 'mdi-eye-off'
+              : 'mdi-eye'
+            : ''
+        "
+        @click:append-inner="
+          field.model === 'password'
+            ? (passwordVisible = !passwordVisible)
+            : field.model === 'repeatPassword'
+            ? (repeatPasswordVisible = !repeatPasswordVisible)
+            : null
+        "
       ></v-text-field>
 
-      <v-btn density="default" block @click="register" class="login-btn-color">{{
-        t("inputFields.submit")
-      }}</v-btn>
+      <v-btn
+        density="default"
+        block
+        @click="register"
+        class="login-btn-color"
+        >{{ t("inputFields.submit") }}</v-btn
+      >
 
       <p class="mt-10">
         {{ t("text.alreadyHaveAccount1") }}
