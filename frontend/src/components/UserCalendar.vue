@@ -32,10 +32,6 @@ const handleError = (customMessage) => {
 
 // Reactive State
 const calendarEvents = ref([]);
-const originalEvents = ref([]);
-const modifiedEvents = ref([]);
-const modifying = ref(false);
-const showModificationDialog = ref(false);
 const showFirstDialog = ref(false);
 const showConfirmationDialog = ref(false);
 const selectedSlot = ref({ date: '', time: '' });
@@ -45,8 +41,6 @@ const userId = ref(null);
 const email = ref(null);
 const firstName = ref(null);
 const lastName = ref(null);
-const showEventDialog = ref(false);
-const selectedEvent = ref({});
 
 // Calendar Options
 const calendarOptions = reactive({
@@ -56,16 +50,11 @@ const calendarOptions = reactive({
   locale: locale.value,
   plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
   slotEventOverlap: false,
-  allDaySlot: false,
-  initialView: 'timeGridWeek',
+  initialView: 'timeGridDay',
   slotDuration: '00:15:00',
   slotMinTime: '08:00:00',
   slotMaxTime: '17:00:00',
   editable: false,
-  eventDurationEditable: false,
-  eventDrop: handleEventDrop,
-  eventClick: handleEventClick,
-  aspectRatio: 2.5,
   nowIndicator: true,
   headerToolbar: {
     left: 'prev',
@@ -83,6 +72,7 @@ const calendarOptions = reactive({
     hour12: false,
   },
   dateClick: handleDateClick,
+  allDaySlot: false,
   events: calendarEvents,
 });
 
@@ -108,43 +98,10 @@ const formattedTime = computed(() => {
     : '';
 });
 
-// Event Handlers
-function handleEventDrop(info) {
-  const modifiedEvent = {
-    id: info.event.id,
-    modifiedTitle: info.event.title,
-    modifiedEventDate: info.event.start.toISOString(),
-    newStart: info.event.start.toISOString(),
-    newEnd: info.event.end.toISOString(),
-    reserving_user_id: info.event.extendedProps.reserving_user_id,
-  };
-
-  const existingEventIndex = modifiedEvents.value.findIndex(
-    (event) => event.id === info.event.id
-  );
-
-  if (existingEventIndex !== -1) {
-    modifiedEvents.value[existingEventIndex] = modifiedEvent;
-  } else {
-    modifiedEvents.value.push(modifiedEvent);
-  }
-}
-
 function handleDateClick(arg) {
   selectedSlot.value = { date: arg.dateStr, time: arg.dateStr };
   selectedService.value = null;
   showFirstDialog.value = true;
-}
-
-function handleEventClick(info) {
-  selectedEvent.value = info.event;
-  showEventDialog.value = true;
-}
-
-function closeEventDialog() {
-  showEventDialog.value = false;
-  selectedEvent.value = {};
-  fetchEvents();
 }
 
 // Lifecycle Hook
@@ -209,72 +166,6 @@ async function fetchServices() {
   } catch (error) {
     console.error('Error fetching services:', error);
   }
-}
-
-async function deleteEvent() {
-  if (confirm('Are you sure you want to delete this event?')) {
-    try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
-        { headers: { Authorization: `Bearer ${store.getters.accessToken}` } }
-      );
-      if (response.status !== 200) {
-        throw new Error('Failed to delete event');
-      }
-
-      calendarEvents.value = calendarEvents.value.filter(
-        (event) => event.id !== selectedEvent.value.id
-      );
-
-      closeEventDialog();
-      showToast('Event deleted successfully');
-    } catch (error) {
-      handleError('Error deleting event: ' + error.message);
-    }
-  }
-}
-
-function enableModification() {
-  originalEvents.value = JSON.parse(JSON.stringify(calendarOptions.events));
-  calendarOptions.editable = true;
-  modifying.value = true;
-}
-
-function showModificationModal() {
-  if (modifiedEvents.value.length > 0) {
-    showModificationDialog.value = true;
-  } else {
-    showToast('No events have been modified.', 'info');
-  }
-}
-
-async function confirmModifications() {
-  try {
-    await axios.post(
-      'http://localhost:5000/api/updateConfirmedEvents',
-      modifiedEvents.value
-    );
-    showToast('Modifications saved successfully!');
-    resetModifications();
-  } catch (error) {
-    handleError(
-      'There was an error saving the modifications. Please try again.' +
-        error.message
-    );
-  }
-}
-
-function discardModifications() {
-  calendarOptions.events = JSON.parse(JSON.stringify(originalEvents.value));
-  resetModifications();
-}
-
-function resetModifications() {
-  showModificationDialog.value = false;
-  modifiedEvents.value = [];
-  calendarOptions.editable = false;
-  modifying.value = false;
-  fetchEvents();
 }
 
 function closeDialog() {
@@ -350,69 +241,7 @@ async function finalizeBooking() {
 
 <template>
   <div class="pa-8">
-    <!-- Modification controls -->
-    <div v-if="!modifying" class="d-flex align-center justify-start">
-      <v-btn
-        @click="enableModification"
-        class="elevation-8 btn-garrisons text-white"
-      >
-        {{ t("button.calendarEdit") }}
-      </v-btn>
-    </div>
-    <div v-if="modifying" class="d-flex align-center justify-start">
-      <v-btn
-        class="elevation-8 bg-red-darken-1 text-garrisons"
-        @click="resetModifications"
-      >
-        {{ t("dialog.button.cancel") }}
-      </v-btn>
-      <div class="mx-2"></div>
-      <v-btn
-        class="elevation-8 bg-green text-garrisons"
-        @click="showModificationModal"
-      >
-        {{ t("dialog.button.save") }}
-      </v-btn>
-    </div>
-
     <FullCalendar :options="calendarOptions" class="h-auto" />
-
-    <!-- Modal for Confirming Modifications -->
-    <v-dialog v-model="showModificationDialog" max-width="600" persistent>
-      <v-card class="bg-garrisons text-garrisons">
-        <v-card-title>
-          <h2 class="headline title-garrisons">
-            {{ t("dialog.confirmChanges") }}
-          </h2>
-        </v-card-title>
-        <v-divider></v-divider>
-        <v-card-text>
-          <h3>{{ t("dialog.modifiedEvents") }}</h3>
-          <ul>
-            <li v-for="event in modifiedEvents" :key="event.id">
-              <strong>{{ event.modifiedTitle }}</strong
-              ><br />
-              Original: {{ event.originalEventDate }}
-              {{ event.originalStart }} - {{ event.originalEnd }}<br />
-              Modified: {{ event.modifiedEventDate }} {{ event.newStart }} -
-              {{ event.newEnd }}
-            </li>
-          </ul>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-btn @click="discardModifications">{{
-            t("dialog.button.discard")
-          }}</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn
-            class="bg-green text-garrisons"
-            @click="confirmModifications"
-            >{{ t("dialog.button.modify") }}</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
     <v-dialog v-model="showFirstDialog" max-width="500">
       <v-card class="bg-garrisons text-garrisons">
@@ -529,32 +358,6 @@ async function finalizeBooking() {
           <v-btn class="text-garrisons bg-green" @click="finalizeBooking">{{
             t("dialog.button.requestBook")
           }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="showEventDialog" max-width="500">
-      <v-card>
-        <v-card-title>
-          <span class="headline">Event Details</span>
-        </v-card-title>
-        <v-card-text>
-          <p><strong>Title:</strong> {{ selectedEvent.title }}</p>
-          <p><strong>Date:</strong> {{ selectedEvent.start }}</p>
-          <p><strong>Time:</strong> {{ selectedEvent.end }}</p>
-          <p>
-            <strong>Duration:</strong>
-            minutes
-          </p>
-          <p><strong>Price:</strong></p>
-          <p>
-            <strong>Reserved by User ID:</strong>
-          </p>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="secondary" @click="closeEventDialog">Close</v-btn>
-          <v-btn color="red" @click="deleteEvent">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

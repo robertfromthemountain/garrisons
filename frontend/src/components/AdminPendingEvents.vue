@@ -55,16 +55,28 @@ import { ref, onMounted } from "vue";
 import axios from "axios";
 import { useI18n } from "vue-i18n";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
+import { useToast } from "vue-toastification";
 
 // Initialize i18n translation function
 const { t } = useI18n();
-
+const toast = useToast();
 // Reactive variable to store the list of pending events
 const pendingEvents = ref([]);
 
 // Modal and event state
 const isDeleteModalOpen = ref(false);
 const selectedEventId = ref(null);
+
+const showToast = (message, type = "success") => {
+  if (type === "success") toast.success(message);
+  else if (type === "error") toast.error(message);
+  else if (type === "warning") toast.warning(message);
+  else if (type === "info") toast.info(message);
+};
+
+const handleError = (customMessage) => {
+  showToast(customMessage, "error");
+};
 
 // Fetch all pending events from the backend
 const fetchPendingEvents = async () => {
@@ -84,10 +96,23 @@ const confirmPendingEvent = async (id) => {
     const response = await axios.get(
       `http://localhost:5000/api/confirmEvent/${id}`
     );
-    alert(response.data); // Show the response message
-    fetchPendingEvents(); // Refresh the list of pending events
+
+    // Check if the response is successful
+    if (response.status === 200) {
+      showToast(response.data.message || "Event successfully confirmed!"); // Show success message
+      fetchPendingEvents(); // Refresh the list of pending events
+    } else {
+      throw new Error(
+        response.data.message || "Failed to confirm event. Please try again."
+      );
+    }
   } catch (error) {
-    console.error("Error confirming pending event:", error);
+    // Display the specific error message from the server, or a default message
+    handleError(
+      `Error confirming event (ID: ${id}): ${
+        error.response?.data?.message || error.message
+      }`
+    );
   }
 };
 
@@ -108,11 +133,24 @@ const denyPendingEvent = async (id) => {
     const response = await axios.delete(
       `http://localhost:5000/api/deletePendingEvent/${id}`
     );
-    alert(response.data.message); // Show the response message
-    fetchPendingEvents(); // Refresh the list of pending events
-    closeDeleteModal();
+
+    // Check if the response is successful
+    if (response.status === 200) {
+      showToast("Event successfully denied!"); // Show success message
+      fetchPendingEvents(); // Refresh the list of pending events
+      closeDeleteModal(); // Close modal only on success
+    } else {
+      throw new Error(
+        response.data.message || "Failed to deny event. Try again later."
+      );
+    }
   } catch (error) {
-    console.error("Error denying pending event:", error);
+    // Display the specific error message from the server, or a default message
+    handleError(
+      `Error denying event (ID: ${id}): ${
+        error.response?.data?.message || error.message
+      }`
+    );
   }
 };
 
