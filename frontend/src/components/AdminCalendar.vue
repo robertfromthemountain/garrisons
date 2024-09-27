@@ -335,6 +335,7 @@ export default {
     };
 
     const resetModifications = () => {
+      console.log("RESET")
       showModificationDialog.value = false;
       modifiedEvents.value = [];
       calendarOptions.editable = false;
@@ -379,6 +380,7 @@ export default {
       checkOverlap,
       confirmationDialogCancel,
       finalizeBooking,
+      resetModifications,
     };
   },
 };
