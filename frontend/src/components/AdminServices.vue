@@ -3,7 +3,7 @@
     <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
       {{ t("dashboard.manageServices.subtitle") }}
     </h2>
-
+    <v-divider></v-divider>
     <!-- Search Input for Services -->
     <v-text-field
       v-model="searchQuery"
@@ -13,28 +13,30 @@
       placeholder="Search by title, price, or duration"
     ></v-text-field>
 
-    <v-divider></v-divider>
-
     <!-- Display Services Table -->
     <v-table height="100vh" fixed-header class="bg-garrisons">
       <thead class="bg-garrisons">
         <tr>
-          <th class="text-left bg-garrisons">ID</th>
-          <th class="text-left">Title</th>
-          <th class="text-left">Price</th>
-          <th class="text-left">Duration</th>
-          <th class="text-left">Actions</th>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Price</th>
+          <th>Duration</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <!-- Loop through filtered services -->
         <tr v-for="(service, index) in filteredServices" :key="service.id">
+          <!-- Display ID -->
           <td>{{ service.id }}</td>
+
+          <!-- Editable Title -->
           <td v-if="!isEditing[index]">{{ service.title }}</td>
           <td v-else>
             <input v-model="editServiceData.title" placeholder="Title" />
           </td>
 
+          <!-- Editable Price -->
           <td v-if="!isEditing[index]">{{ service.price }}</td>
           <td v-else>
             <input
@@ -44,6 +46,7 @@
             />
           </td>
 
+          <!-- Editable Duration -->
           <td v-if="!isEditing[index]">{{ service.duration }}</td>
           <td v-else>
             <input
@@ -53,6 +56,7 @@
             />
           </td>
 
+          <!-- Actions: Edit/Delete or Save/Cancel -->
           <td>
             <div v-if="!isEditing[index]">
               <button @click="startEdit(index, service)">Edit</button>
@@ -74,7 +78,7 @@
           </td>
         </tr>
 
-        <!-- Editable row for adding a new service -->
+        <!-- Row for Adding a New Service -->
         <tr>
           <td>New</td>
           <td>
@@ -108,111 +112,134 @@
       </tbody>
     </v-table>
 
-    <!-- Delete Confirmation Modal -->
-    <v-dialog v-model="isModalOpen" max-width="600" persistent>
-      <v-card class="bg-garrisons text-garrisons">
-        <v-card-title
-          ><h2 class="headline title-garrisons">
-            Confirm Deletion
-          </h2></v-card-title
-        >
-        <v-divider></v-divider>
-        <v-card-text>
-          <h3>
-            Are you sure you want to delete this service? This action cannot be
-            undone.
-          </h3>
-        </v-card-text>
-        <v-divider></v-divider>
-        <v-card-actions>
-          <v-btn @click="closeModal">Cancel</v-btn>
-          <v-spacer></v-spacer>
-          <v-btn class="bg-red-lighten-1 text-garrisons" @click="confirmDelete"
-            >Delete</v-btn
-          >
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <!-- Confirmation Modal for Deleting Service -->
+    <ConfirmDeleteModal
+      :isOpen="isDeleteModalOpen"
+      :selectedEventId="selectedServiceId"
+      title="Delete Service"
+      message="Are you sure you want to delete this service? This action cannot be undone."
+      @cancel="closeDeleteModal"
+      @confirm="confirmDelete"
+      @update:isOpen="(val) => (isDeleteModalOpen = val)"
+    />
   </div>
 </template>
 
 <script setup>
-import { useI18n } from "vue-i18n";
+import { ref, computed, onMounted } from "vue";
 import axios from "axios";
-import { reactive, ref, computed, onMounted } from "vue";
 import { useToast } from "vue-toastification";
+import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
+import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-const toast = useToast();
 const services = ref([]);
-const isModalOpen = ref(false); // Controls modal visibility
-const selectedServiceId = ref(null); // Holds the selected service ID for deletion
-const searchQuery = ref(""); // Add search query for filtering services
-const isEditing = reactive({}); // Track which row is being edited
-const editServiceData = reactive({
+const searchQuery = ref("");
+const isEditing = ref({}); // Track which row is being edited
+const editServiceData = ref({
   id: null,
   title: "",
   price: null,
   duration: null,
-});
-const newService = reactive({
+}); // Store the currently editing service's data
+const newService = ref({
   title: "",
   price: null,
   duration: null,
 });
+const isDeleteModalOpen = ref(false); // Control the modal visibility
+const selectedServiceId = ref(null); // Store the ID of the service to be deleted
+const toast = useToast();
 
-const showToast = (message, type = "success") => {
-  if (type === "success") toast.success(message);
-  else if (type === "error") toast.error(message);
-  else if (type === "warning") toast.warning(message);
-  else if (type === "info") toast.info(message);
-};
-
-const handleError = (customMessage, error) => {
-  const errorMsg = error?.response?.data?.message || customMessage;
-  showToast(errorMsg, "error");
-};
-
-// Function to open the delete modal and set the service ID
-const openDeleteModal = (id) => {
-  selectedServiceId.value = id; // Store the ID of the service to be deleted
-  isModalOpen.value = true; // Open the confirmation modal
-};
-
-// Function to close the modal
-const closeModal = () => {
-  isModalOpen.value = false;
-};
-
-// Function to handle the confirmed deletion
-const confirmDelete = async () => {
-  try {
-    await axios.delete(
-      `http://localhost:5000/api/services/${selectedServiceId.value}`
-    );
-    services.value = services.value.filter(
-      (service) => service.id !== selectedServiceId.value
-    );
-    showToast("Service deleted successfully!");
-    closeModal();
-  } catch (error) {
-    handleError("Error deleting service", error);
-  }
-};
-
-// Fetch all services from backend
+// Fetch services from backend
 const fetchServices = async () => {
   try {
     const response = await axios.get("http://localhost:5000/api/services");
-    services.value = response.data; // Populate services with data from API
+    services.value = response.data;
   } catch (error) {
-    handleError("Error fetching services", error);
+    console.error("Error fetching services", error);
+  }
+};
+
+// Open delete confirmation modal
+const openDeleteModal = (serviceId) => {
+  selectedServiceId.value = serviceId; // Set the ID for deletion
+  isDeleteModalOpen.value = true; // Open modal
+};
+
+// Close delete modal
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+};
+
+// Confirm the deletion of the service
+const confirmDelete = async (id) => {
+  console.log(id);
+  try {
+    await axios.delete(`http://localhost:5000/api/services/${id}`);
+    services.value = services.value.filter((service) => service.id !== id);
+    toast.success("Service deleted successfully!");
+    closeDeleteModal();
+  } catch (error) {
+    toast.error("Failed to delete service.");
+    console.error("Error deleting service:", error);
+  }
+};
+
+// Start editing a service
+const startEdit = (index, service) => {
+  isEditing.value[index] = true; // Track that this row is being edited
+  editServiceData.value = { ...service }; // Store current service data to edit
+};
+
+// Cancel editing and revert changes
+const cancelEdit = (index) => {
+  isEditing.value[index] = false; // Exit edit mode without saving
+};
+
+// Save edited service data
+const saveEdit = async (index) => {
+  try {
+    await axios.put(
+      `http://localhost:5000/api/services/${editServiceData.value.id}`,
+      editServiceData.value
+    );
+    services.value[index] = { ...editServiceData.value }; // Update the service in the list
+    isEditing.value[index] = false; // Exit edit mode
+    toast.success("Service updated successfully!");
+  } catch (error) {
+    toast.error("Failed to update service.");
+    console.error("Error updating service:", error);
+  }
+};
+
+// Add a new service
+const addService = async () => {
+  try {
+    if (
+      !newService.value.title ||
+      !newService.value.price ||
+      !newService.value.duration
+    ) {
+      toast.warning("All fields are required");
+      return;
+    }
+    const response = await axios.post(
+      "http://localhost:5000/api/services",
+      newService.value
+    );
+    services.value.push(response.data); // Add new service to the list
+    toast.success("New service added successfully!");
+
+    // Clear the new service form
+    newService.value = { title: "", price: null, duration: null };
+  } catch (error) {
+    toast.error("Error adding service");
   }
 };
 
 // Computed property to filter services based on search query
 const filteredServices = computed(() => {
-  if (!searchQuery.value) return services.value;
   const query = searchQuery.value.toLowerCase();
   return services.value.filter((service) =>
     ["title", "price", "duration"].some((key) =>
@@ -221,56 +248,7 @@ const filteredServices = computed(() => {
   );
 });
 
-// Start editing a specific service row
-const startEdit = (index, service) => {
-  isEditing[index] = true; // Set this row to be in edit mode
-  Object.assign(editServiceData, service);
-};
-
-// Cancel editing for a specific row
-const cancelEdit = (index) => {
-  isEditing[index] = false; // Exit edit mode for this row
-};
-
-// Save changes for the edited row
-const saveEdit = async (index) => {
-  try {
-    await axios.put(
-      `http://localhost:5000/api/services/${editServiceData.id}`,
-      editServiceData
-    );
-    services.value[index] = { ...editServiceData }; // Update the row with new data
-    isEditing[index] = false; // Exit edit mode
-    showToast("Service updated successfully!");
-  } catch (error) {
-    handleError("Error updating service", error);
-  }
-};
-
-// Add a new service
-const addService = async () => {
-  try {
-    if (!newService.title || !newService.price || !newService.duration) {
-      showToast("All fields are required", "warning");
-      return;
-    }
-    const response = await axios.post(
-      "http://localhost:5000/api/services",
-      newService
-    );
-    services.value.push(response.data); // Add new service to the list
-    showToast("New service added successfully!");
-
-    // Clear the new service form
-    newService.title = "";
-    newService.price = null;
-    newService.duration = null;
-  } catch (error) {
-    handleError("Error adding service", error);
-  }
-};
-
-// Fetch services when the component is mounted
+// Fetch services on component mount
 onMounted(fetchServices);
 </script>
 

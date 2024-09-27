@@ -43,6 +43,8 @@
     <ConfirmDeleteModal
       :isOpen="isDeleteModalOpen"
       :selectedEventId="selectedEventId"
+      title="Delete Pending Reservation"
+      message="Are you sure you want to deny this pending reservation?"
       @cancel="closeDeleteModal"
       @confirm="denyPendingEvent"
       @update:isOpen="(val) => (isDeleteModalOpen = val)"
