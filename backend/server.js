@@ -204,6 +204,23 @@ app.get('/verify-email', (req, res) => {
     });
 });
 
+//This ensures that the token is validated on the server, preventing any tampering on the client side
+app.get('/verify-token', (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1]; // Bearer token
+
+    if (!token) {
+        return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid token' });
+        }
+
+        // Return the user's role securely
+        return res.json({ role: decoded.role });
+    });
+});
 
 
 // Login endpoint
@@ -223,11 +240,19 @@ app.post('/login', async (req, res) => {
                 const validPassword = await bcrypt.compare(password, user.password);
                 if (validPassword) {
                     const token = jwt.sign(
-                        { userId: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName }, // ITT ADOM HOZZA A TOKENHEZ A DOLGOKAT
+                        {
+                            // ITT ADOM HOZZA A TOKENHEZ A DOLGOKAT
+                            userId: user.id,
+                            email: user.email,
+                            firstName: user.firstName,
+                            lastName: user.lastName,
+                            role: user.role
+                        },
                         process.env.JWT_SECRET,
                         { expiresIn: '1h' }
                     );
-                    res.json({ token });
+                    console.log("SZIAHELO", user.role);
+                    res.json({ token, role: user.role });
                 } else {
                     res.status(401).send('Invalid credentials');
                 }

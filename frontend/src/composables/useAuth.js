@@ -7,15 +7,15 @@ import { useStore } from 'vuex';
 
 export function useAuth() {
     const { t } = useI18n();
-    const token = ref(sessionStorage.getItem('token'));
+    const token = ref(sessionStorage.getItem('accessToken'));
     const toast = useToast();
     const isLoggedIn = ref(!!token.value);
     const router = useRouter();
     const store = useStore();
 
     const logout = () => {
-        sessionStorage.removeItem('token');
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('accessToken');
+        localStorage.removeItem('accessToken');
         store.dispatch("logout")
         token.value = null;
         router.push('/login');

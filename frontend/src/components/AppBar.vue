@@ -11,6 +11,7 @@ const router = useRouter();
 const { logout } = useAuth();
 
 const isLoggedIn = computed(() => store.getters.isLoggedIn);
+const userRole = computed(() => store.getters.userRole);
 
 const currentTheme = computed(() => store.state.theme.theme);
 
@@ -28,7 +29,13 @@ const themeIcon = computed(() =>
 
 const navLinks = [
   { name: t("link.home"), path: "/", requiresAuth: false },
-  { name: t("link.booking"), path: "/booking", requiresAuth: true },
+  {
+    name: t("link.booking"),
+    path: "/booking",
+    requiresAuth: true,
+    role: "user",
+  },
+  { name: "GuestBooking", path: "/guestBooking", requiresAuth: false },
   {
     name: t("link.references"),
     path: "/references",
@@ -103,7 +110,10 @@ function handleLogout() {
           >{{ t("button.logout") }}</v-btn
         >
 
-        <RouterLink v-if="isLoggedIn" to="/dashboard" class="clear"
+        <RouterLink
+          v-if="isLoggedIn && userRole === 'admin'"
+          to="/dashboard"
+          class="clear"
           ><v-btn
             prepend-icon="mdi-view-dashboard-edit-outline"
             density="compact"

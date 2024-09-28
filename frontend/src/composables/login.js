@@ -41,13 +41,27 @@ export function useLogin() {
 
             console.log('Server response:', response.data);
 
-            // Check if token is received
-            if (response.data.token) {
-                store.dispatch('login', response.data.token);
+            // Check if token and role are received
+            if (response.data.token && response.data.role) {
+
+                sessionStorage.setItem('accessToken', response.data.token);
+                console.log("ITT VAN A toke:", response.data.token);
+                sessionStorage.setItem('role', response.data.role);
+                console.log("ITT VAN A role:", response.data.role);
+
+                store.dispatch('login', { token: response.data.token, role: response.data.role });
                 toast.success(t("login.toasts.success"));
-                router.push('/');
+                // Role-based redirection
+                if (response.data.role === 'admin') {
+                    router.push('/dashboard'); // Redirect admin to dashboard
+                } else if (response.data.role === 'user') {
+                    router.push('/'); // Redirect user to homepage or wherever it is now
+                } else {
+                    router.push('/login'); // Fallback for any unexpected roles
+                    toast.error("Itt valami nagy baj van")
+                }
             } else {
-                throw new Error('No token received');
+                throw new Error('No token or role received');
             }
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
