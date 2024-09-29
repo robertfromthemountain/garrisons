@@ -16,6 +16,8 @@ export function useAuth() {
     const logout = () => {
         sessionStorage.removeItem('accessToken');
         localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('role');
+        localStorage.removeItem('role');
         store.dispatch("logout")
         token.value = null;
         router.push('/login');
