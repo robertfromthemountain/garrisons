@@ -51,7 +51,6 @@ const selectedEvent = ref({});
 const isPending = ref(false);
 const loading = ref(false);
 
-
 const pickedStart = ref(null);
 const pickedEnd = ref(null);
 const pickedDuration = ref(0);
@@ -159,11 +158,11 @@ async function confirmEvent() {
       }
     );
     showToast("Event successfully confirmed.");
-    fetchEvents(); // Refresh the events after confirmation
+    await fetchAllEvents();
     closeEventDialog(); // Close the dialog
   } catch (error) {
     handleError("Error confirming event: " + error.message);
-  } finally{
+  } finally {
     loading.value = false;
   }
 }
@@ -179,11 +178,11 @@ async function denyEvent() {
         }
       );
       showToast("Event successfully denied.");
-      fetchEvents(); // Refresh the events after denial
+      await fetchAllEvents();
       closeEventDialog(); // Close the dialog
     } catch (error) {
       handleError("Error denying event: " + error.message);
-    }finally {
+    } finally {
       loading.value = false;
     }
   }
@@ -225,7 +224,7 @@ function handleEventClick(info) {
 function closeEventDialog() {
   showEventDialog.value = false;
   // selectedEvent.value = {};
-  fetchEvents();
+  fetchAllEvents();
 }
 
 function clearSelectedEvent() {
@@ -236,8 +235,7 @@ function clearSelectedEvent() {
 // Lifecycle Hook
 onMounted(() => {
   fetchUserId();
-  fetchEvents();
-  fetchPendingEvents();
+  fetchAllEvents();
   fetchServices();
 });
 
@@ -268,34 +266,27 @@ async function fetchUserId() {
   } catch (error) {
     console.log("Error fetching user ID: " + error.message);
     handleError("Error fetching user ID: " + error.message);
-  }finally {
-    loading.value = false;
-  }
-}
-
-async function fetchEvents() {
-  loading.value = true;
-  try {
-    const response = await axios.get("http://localhost:5000/api/getEvents");
-    console.log("Megkaptam a SIMA eventeket a servertől:", response.data);
-    calendarOptions.events = [...calendarOptions.events, ...response.data];
-  } catch (error) {
-    console.error("Error fetching events:", error);
   } finally {
     loading.value = false;
   }
 }
 
-async function fetchPendingEvents() {
+async function fetchAllEvents() {
   loading.value = true;
   try {
-    const response = await axios.get(
-      "http://localhost:5000/api/getPendingEvents2"
-    );
-    console.log("Megkaptam a pending eventeket a servertől:", response.data);
-    calendarOptions.events = [...calendarOptions.events, ...response.data];
+    const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
+      axios.get("http://localhost:5000/api/getEvents"),
+      axios.get("http://localhost:5000/api/getPendingEvents2"),
+    ]);
+
+    // Combine both event types in a single assignment
+    calendarOptions.events = [
+      ...regularEventsResponse.data,
+      ...pendingEventsResponse.data,
+    ];
+    console.log("Fetched all events:", calendarOptions.events);
   } catch (error) {
-    console.error("Error fetching pending events:", error);
+    console.error("Error fetching all events:", error);
   } finally {
     loading.value = false;
   }
@@ -333,7 +324,7 @@ async function deleteEvent() {
       showToast("Event deleted successfully");
     } catch (error) {
       handleError("Error deleting event: " + error.message);
-    } finally{
+    } finally {
       loading.value = false;
     }
   }
@@ -367,7 +358,7 @@ async function confirmModifications() {
       "There was an error saving the modifications. Please try again." +
         error.message
     );
-  } finally{
+  } finally {
     loading.value = false;
   }
 }
@@ -382,7 +373,7 @@ function resetModifications() {
   modifiedEvents.value = [];
   calendarOptions.editable = false;
   modifying.value = false;
-  fetchEvents();
+  fetchAllEvents();
 }
 
 function closeDialog() {
@@ -457,7 +448,7 @@ async function finalizeBooking() {
       `Appointment for ${selectedService.value.title} successfully requested!`
     );
 
-    fetchPendingEvents();
+    await fetchAllEvents();
     showConfirmationDialog.value = false;
   } catch (error) {
     handleError(
@@ -480,7 +471,8 @@ async function finalizeBooking() {
     ></v-progress-linear>
     <!-- Modification controls -->
     <div v-if="!modifying" class="d-flex align-center justify-start">
-      <v-btn :disabled="loading"
+      <v-btn
+        :disabled="loading"
         @click="enableModification"
         class="elevation-8 btn-garrisons text-white"
       >
@@ -488,14 +480,16 @@ async function finalizeBooking() {
       </v-btn>
     </div>
     <div v-if="modifying" class="d-flex align-center justify-start">
-      <v-btn :disabled="loading"
+      <v-btn
+        :disabled="loading"
         class="elevation-8 bg-red-darken-1 text-garrisons"
         @click="resetModifications"
       >
         {{ t("dialog.button.cancel") }}
       </v-btn>
       <div class="mx-2"></div>
-      <v-btn :disabled="loading"
+      <v-btn
+        :disabled="loading"
         class="elevation-8 bg-green text-garrisons"
         @click="showModificationModal"
       >
@@ -533,7 +527,8 @@ async function finalizeBooking() {
             t("dialog.button.discard")
           }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading"
+          <v-btn
+            :disabled="loading"
             class="bg-green text-garrisons"
             @click="confirmModifications"
             >{{ t("dialog.button.modify") }}</v-btn
@@ -599,13 +594,20 @@ async function finalizeBooking() {
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn :disabled="loading" class="text-garrisons" variant="tonal" @click="closeDialog">{{
-            t("dialog.button.cancel")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons"
+            variant="tonal"
+            @click="closeDialog"
+            >{{ t("dialog.button.cancel") }}</v-btn
+          >
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="checkOverlap">{{
-            t("dialog.button.next")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons bg-green"
+            @click="checkOverlap"
+            >{{ t("dialog.button.next") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -645,16 +647,20 @@ async function finalizeBooking() {
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn :disabled="loading"
+          <v-btn
+            :disabled="loading"
             class="text-garrisons"
             variant="tonal"
             @click="confirmationDialogCancel"
             >{{ t("dialog.button.cancel") }}</v-btn
           >
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="finalizeBooking">{{
-            t("dialog.button.requestBook")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons bg-green"
+            @click="finalizeBooking"
+            >{{ t("dialog.button.requestBook") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -750,23 +756,40 @@ async function finalizeBooking() {
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
           <template v-if="selectedEvent.extendedProps.reserved_at">
-            <v-btn :disabled="loading" class="text-garrisons" @click="closeEventDialog"
+            <v-btn
+              :disabled="loading"
+              class="text-garrisons"
+              @click="closeEventDialog"
               >Cancel</v-btn
             >
             <v-spacer></v-spacer>
-            <v-btn :disabled="loading" class="text-garrisons bg-red" @click="denyEvent">Deny</v-btn>
-            <v-btn :disabled="loading" class="text-garrisons bg-green" @click="confirmEvent"
+            <v-btn
+              :disabled="loading"
+              class="text-garrisons bg-red"
+              @click="denyEvent"
+              >Deny</v-btn
+            >
+            <v-btn
+              :disabled="loading"
+              class="text-garrisons bg-green"
+              @click="confirmEvent"
               >Accept</v-btn
             >
           </template>
 
           <!-- Regular Close Button for Confirmed Event -->
           <template v-else-if="selectedEvent.extendedProps.confirmed_at">
-            <v-btn :disabled="loading" class="text-garrisons" @click="closeEventDialog"
+            <v-btn
+              :disabled="loading"
+              class="text-garrisons"
+              @click="closeEventDialog"
               >Close</v-btn
             >
             <v-spacer></v-spacer>
-            <v-btn :disabled="loading" class="text-garrisons bg-red" @click="deleteEvent"
+            <v-btn
+              :disabled="loading"
+              class="text-garrisons bg-red"
+              @click="deleteEvent"
               >Delete</v-btn
             >
           </template>

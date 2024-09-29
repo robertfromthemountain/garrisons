@@ -48,7 +48,6 @@ const pickedEnd = ref(null);
 const pickedDuration = ref(0);
 const loading = ref(false);
 
-
 // Calendar Options
 const calendarOptions = reactive({
   timeZone: "UTC",
@@ -61,7 +60,6 @@ const calendarOptions = reactive({
   slotDuration: "00:15:00",
   slotMinTime: "08:00:00",
   slotMaxTime: "17:00:00",
-  eventMouseEnter: eventMouseEnter(),
   editable: false,
   nowIndicator: true,
   headerToolbar: {
@@ -106,8 +104,6 @@ const formattedTime = computed(() => {
     : "";
 });
 
-
-
 function formatDate(date) {
   if (!date) return "";
 
@@ -150,8 +146,7 @@ function handleDateClick(arg) {
 // Lifecycle Hook
 onMounted(() => {
   fetchUserId();
-  fetchEvents();
-  fetchPendingEvents();
+  fetchAllEvents();
   fetchServices();
 });
 
@@ -182,34 +177,27 @@ async function fetchUserId() {
   } catch (error) {
     console.log("Error fetching user ID: " + error.message);
     handleError("Error fetching user ID: " + error.message);
-  } finally{
-    loading.value = false;
-  }
-}
-
-async function fetchEvents() {
-  loading.value = true;
-  try {
-    const response = await axios.get("http://localhost:5000/api/getEvents");
-    console.log("Megkaptam a SIMA eventeket a servertől:", response.data);
-    calendarOptions.events = [...calendarOptions.events, ...response.data];
-  } catch (error) {
-    console.error("Error fetching events:", error);
   } finally {
     loading.value = false;
   }
 }
 
-async function fetchPendingEvents() {
+async function fetchAllEvents() {
   loading.value = true;
   try {
-    const response = await axios.get(
-      "http://localhost:5000/api/getPendingEvents2"
-    );
-    console.log("Megkaptam a pending eventeket a servertől:", response.data);
-    calendarOptions.events = [...calendarOptions.events, ...response.data];
+    const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
+      axios.get("http://localhost:5000/api/getEvents"),
+      axios.get("http://localhost:5000/api/getPendingEvents2"),
+    ]);
+
+    // Combine both event types in a single assignment
+    calendarOptions.events = [
+      ...regularEventsResponse.data,
+      ...pendingEventsResponse.data,
+    ];
+    console.log("Fetched all events:", calendarOptions.events);
   } catch (error) {
-    console.error("Error fetching pending events:", error);
+    console.error("Error fetching all events:", error);
   } finally {
     loading.value = false;
   }
@@ -299,7 +287,7 @@ async function finalizeBooking() {
       `Appointment for ${selectedService.value.title} successfully requested!`
     );
 
-    fetchPendingEvents();
+    await fetchAllEvents();
     showConfirmationDialog.value = false;
   } catch (error) {
     handleError(
@@ -379,13 +367,20 @@ async function finalizeBooking() {
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn :disabled="loading" class="text-garrisons" variant="tonal" @click="closeDialog">{{
-            t("dialog.button.cancel")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons"
+            variant="tonal"
+            @click="closeDialog"
+            >{{ t("dialog.button.cancel") }}</v-btn
+          >
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="checkOverlap">{{
-            t("dialog.button.next")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons bg-green"
+            @click="checkOverlap"
+            >{{ t("dialog.button.next") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -425,16 +420,20 @@ async function finalizeBooking() {
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn :disabled="loading"
+          <v-btn
+            :disabled="loading"
             class="text-garrisons"
             variant="tonal"
             @click="confirmationDialogCancel"
             >{{ t("dialog.button.cancel") }}</v-btn
           >
           <v-spacer></v-spacer>
-          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="finalizeBooking">{{
-            t("dialog.button.requestBook")
-          }}</v-btn>
+          <v-btn
+            :disabled="loading"
+            class="text-garrisons bg-green"
+            @click="finalizeBooking"
+            >{{ t("dialog.button.requestBook") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
