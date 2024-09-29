@@ -177,7 +177,8 @@ const closeDeleteModal = () => {
 
 // Confirm the deletion of the service
 const confirmDelete = async (id) => {
-  console.log(id);
+  console.log("Service ID to delete:", id);
+
   try {
     await axios.delete(`http://localhost:5000/api/services/${id}`);
     services.value = services.value.filter((service) => service.id !== id);

@@ -1,15 +1,15 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import FullCalendar from '@fullcalendar/vue3';
-import axios from 'axios';
-import { useI18n } from 'vue-i18n';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import enLocale from '@fullcalendar/core/locales/en-gb';
-import huLocale from '@fullcalendar/core/locales/hu';
-import { useToast } from 'vue-toastification';
+import { ref, reactive, computed, onMounted } from "vue";
+import { useStore } from "vuex";
+import FullCalendar from "@fullcalendar/vue3";
+import axios from "axios";
+import { useI18n } from "vue-i18n";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import enLocale from "@fullcalendar/core/locales/en-gb";
+import huLocale from "@fullcalendar/core/locales/hu";
+import { useToast } from "vue-toastification";
 
 // i18n and toast
 const { locale, t } = useI18n();
@@ -19,15 +19,15 @@ const toast = useToast();
 const store = useStore();
 
 // Show toast function
-const showToast = (message, type = 'success') => {
-  if (type === 'success') toast.success(message);
-  else if (type === 'error') toast.error(message);
-  else if (type === 'warning') toast.warning(message);
-  else if (type === 'info') toast.info(message);
+const showToast = (message, type = "success") => {
+  if (type === "success") toast.success(message);
+  else if (type === "error") toast.error(message);
+  else if (type === "warning") toast.warning(message);
+  else if (type === "info") toast.info(message);
 };
 
 const handleError = (customMessage) => {
-  showToast(customMessage, 'error');
+  showToast(customMessage, "error");
 };
 
 // Reactive State
@@ -38,29 +38,37 @@ const modifying = ref(false);
 const showModificationDialog = ref(false);
 const showFirstDialog = ref(false);
 const showConfirmationDialog = ref(false);
-const selectedSlot = ref({ date: '', time: '' });
+const selectedSlot = ref({ date: "", time: "" });
 const services = ref([]);
 const selectedService = ref(null);
 const userId = ref(null);
 const email = ref(null);
 const firstName = ref(null);
 const lastName = ref(null);
+const phoneNumber = ref(null);
 const showEventDialog = ref(false);
 const selectedEvent = ref({});
+const isPending = ref(false);
+const loading = ref(false);
+
+
+const pickedStart = ref(null);
+const pickedEnd = ref(null);
+const pickedDuration = ref(0);
 
 // Calendar Options
 const calendarOptions = reactive({
-  timeZone: 'UTC',
+  timeZone: "UTC",
   weekends: false,
   locales: [huLocale, enLocale],
   locale: locale.value,
   plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
   slotEventOverlap: false,
   allDaySlot: false,
-  initialView: 'timeGridWeek',
-  slotDuration: '00:15:00',
-  slotMinTime: '08:00:00',
-  slotMaxTime: '17:00:00',
+  initialView: "timeGridWeek",
+  slotDuration: "00:15:00",
+  slotMinTime: "08:00:00",
+  slotMaxTime: "17:00:00",
   editable: false,
   eventDurationEditable: false,
   eventDrop: handleEventDrop,
@@ -68,18 +76,18 @@ const calendarOptions = reactive({
   aspectRatio: 2.5,
   nowIndicator: true,
   headerToolbar: {
-    left: 'prev',
-    center: 'title',
-    right: 'today,next',
+    left: "prev",
+    center: "title",
+    right: "today,next",
   },
   footerToolbar: {
-    left: '',
-    center: '',
-    right: '',
+    left: "",
+    center: "",
+    right: "",
   },
   slotLabelFormat: {
-    hour: '2-digit',
-    minute: '2-digit',
+    hour: "2-digit",
+    minute: "2-digit",
     hour12: false,
   },
   dateClick: handleDateClick,
@@ -89,24 +97,97 @@ const calendarOptions = reactive({
 // Computed Properties
 const formattedDate = computed(() => {
   return selectedSlot.value.date
-    ? new Intl.DateTimeFormat('hu-HU', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        timeZone: 'UTC',
+    ? new Intl.DateTimeFormat("hu-HU", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        timeZone: "UTC",
       }).format(new Date(selectedSlot.value.date))
-    : '';
+    : "";
 });
 
 const formattedTime = computed(() => {
   return selectedSlot.value.time
-    ? new Intl.DateTimeFormat('hu-HU', {
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'UTC',
+    ? new Intl.DateTimeFormat("hu-HU", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "UTC",
       }).format(new Date(selectedSlot.value.time))
-    : '';
+    : "";
 });
+
+function formatDate(date) {
+  if (!date) return "";
+
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate)) {
+    console.error("Invalid date provided:", date);
+    return ""; // Return a fallback if the date is invalid
+  }
+
+  return new Intl.DateTimeFormat("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "UTC",
+  }).format(parsedDate);
+}
+
+function formatTime(time) {
+  if (!time) return "";
+
+  const parsedTime = new Date(time);
+  if (isNaN(parsedTime)) {
+    console.error("Invalid time provided:", time);
+    return ""; // Return a fallback if the time is invalid
+  }
+
+  return new Intl.DateTimeFormat("hu-HU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(parsedTime);
+}
+
+async function confirmEvent() {
+  loading.value = true; // Start loading
+  try {
+    const response = await axios.get(
+      `http://localhost:5000/api/confirmEvent/${selectedEvent.value.id}`,
+      {
+        headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+      }
+    );
+    showToast("Event successfully confirmed.");
+    fetchEvents(); // Refresh the events after confirmation
+    closeEventDialog(); // Close the dialog
+  } catch (error) {
+    handleError("Error confirming event: " + error.message);
+  } finally{
+    loading.value = false;
+  }
+}
+
+async function denyEvent() {
+  if (confirm("Are you sure you want to deny this event?")) {
+    loading.value = true;
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/api/deletePendingEvent/${selectedEvent.value.id}`,
+        {
+          headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+        }
+      );
+      showToast("Event successfully denied.");
+      fetchEvents(); // Refresh the events after denial
+      closeEventDialog(); // Close the dialog
+    } catch (error) {
+      handleError("Error denying event: " + error.message);
+    }finally {
+      loading.value = false;
+    }
+  }
+}
 
 // Event Handlers
 function handleEventDrop(info) {
@@ -143,8 +224,13 @@ function handleEventClick(info) {
 
 function closeEventDialog() {
   showEventDialog.value = false;
-  selectedEvent.value = {};
+  // selectedEvent.value = {};
   fetchEvents();
+}
+
+function clearSelectedEvent() {
+  selectedEvent.value = {}; // Reset selectedEvent after the dialog is fully closed
+  isPending.value = false; // Reset the pending flag
 }
 
 // Lifecycle Hook
@@ -160,67 +246,83 @@ async function fetchUserId() {
   if (!store.getters.isLoggedIn) return;
 
   const token = store.getters.accessToken;
-  const payload = JSON.parse(atob(token.split('.')[1]));
+  const payload = JSON.parse(atob(token.split(".")[1]));
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (payload.exp < currentTime) {
-    showToast('Session expired. Please log in again.', 'info');
-    store.dispatch('logout');
+    showToast("Session expired. Please log in again.", "info");
+    store.dispatch("logout");
     return;
   }
 
+  loading.value = true;
   try {
-    const response = await axios.get('http://localhost:5000/api/user', {
+    const response = await axios.get("http://localhost:5000/api/user", {
       headers: { Authorization: `Bearer ${token}` },
     });
     userId.value = response.data.userId;
     email.value = response.data.email;
     firstName.value = response.data.firstName;
     lastName.value = response.data.lastName;
+    phoneNumber.value = response.data.phoneNumber;
   } catch (error) {
-    console.log('Error fetching user ID: ' + error.message);
-    handleError('Error fetching user ID: ' + error.message);
+    console.log("Error fetching user ID: " + error.message);
+    handleError("Error fetching user ID: " + error.message);
+  }finally {
+    loading.value = false;
   }
 }
 
 async function fetchEvents() {
+  loading.value = true;
   try {
-    const response = await axios.get('http://localhost:5000/api/getEvents');
+    const response = await axios.get("http://localhost:5000/api/getEvents");
+    console.log("Megkaptam a SIMA eventeket a servertől:", response.data);
     calendarOptions.events = [...calendarOptions.events, ...response.data];
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error("Error fetching events:", error);
+  } finally {
+    loading.value = false;
   }
 }
 
 async function fetchPendingEvents() {
+  loading.value = true;
   try {
     const response = await axios.get(
-      'http://localhost:5000/api/getPendingEvents2'
+      "http://localhost:5000/api/getPendingEvents2"
     );
+    console.log("Megkaptam a pending eventeket a servertől:", response.data);
     calendarOptions.events = [...calendarOptions.events, ...response.data];
   } catch (error) {
-    console.error('Error fetching pending events:', error);
+    console.error("Error fetching pending events:", error);
+  } finally {
+    loading.value = false;
   }
 }
 
 async function fetchServices() {
+  loading.value = true;
   try {
-    const response = await axios.get('http://localhost:5000/api/services');
+    const response = await axios.get("http://localhost:5000/api/services");
     services.value = response.data;
   } catch (error) {
-    console.error('Error fetching services:', error);
+    console.error("Error fetching services:", error);
+  } finally {
+    loading.value = false;
   }
 }
 
 async function deleteEvent() {
-  if (confirm('Are you sure you want to delete this event?')) {
+  if (confirm("Are you sure you want to delete this event?")) {
+    loading.value = true;
     try {
       const response = await axios.delete(
         `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
         { headers: { Authorization: `Bearer ${store.getters.accessToken}` } }
       );
       if (response.status !== 200) {
-        throw new Error('Failed to delete event');
+        throw new Error("Failed to delete event");
       }
 
       calendarEvents.value = calendarEvents.value.filter(
@@ -228,9 +330,11 @@ async function deleteEvent() {
       );
 
       closeEventDialog();
-      showToast('Event deleted successfully');
+      showToast("Event deleted successfully");
     } catch (error) {
-      handleError('Error deleting event: ' + error.message);
+      handleError("Error deleting event: " + error.message);
+    } finally{
+      loading.value = false;
     }
   }
 }
@@ -245,23 +349,26 @@ function showModificationModal() {
   if (modifiedEvents.value.length > 0) {
     showModificationDialog.value = true;
   } else {
-    showToast('No events have been modified.', 'info');
+    showToast("No events have been modified.", "info");
   }
 }
 
 async function confirmModifications() {
+  loading.value = true;
   try {
     await axios.post(
-      'http://localhost:5000/api/updateConfirmedEvents',
+      "http://localhost:5000/api/updateConfirmedEvents",
       modifiedEvents.value
     );
-    showToast('Modifications saved successfully!');
+    showToast("Modifications saved successfully!");
     resetModifications();
   } catch (error) {
     handleError(
-      'There was an error saving the modifications. Please try again.' +
+      "There was an error saving the modifications. Please try again." +
         error.message
     );
+  } finally{
+    loading.value = false;
   }
 }
 
@@ -287,22 +394,33 @@ function closeDialog() {
 
 function checkOverlap() {
   if (!selectedService.value) {
-    showToast('Please select a service.', 'warning');
+    showToast("Please select a service.", "warning");
     return;
   }
-  const durationInMinutes = parseInt(selectedService.value.duration, 10);
+
+  pickedDuration.value = selectedService.value.duration;
   const startTime = new Date(selectedSlot.value.date);
-  const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
+  pickedStart.value = startTime;
+  pickedEnd.value = new Date(
+    startTime.getTime() + pickedDuration.value * 60000
+  );
+  // console.log(
+  //   "ITT VANNAK EZEK ASZAROK IS:",
+  //   pickedDuration.value,
+  //   pickedStart.value,
+  //   pickedEnd.value
+  // );
+
   const hasOverlap = calendarOptions.events.some((event) => {
     const eventStart = new Date(event.start);
     const eventEnd = new Date(event.end);
-    return startTime < eventEnd && endTime > eventStart;
+    return startTime < eventEnd && pickedEnd.value > eventStart;
   });
 
   if (hasOverlap) {
     showToast(
-      'This time slot is already booked. Please choose another time.',
-      'error'
+      "This time slot is already booked. Please choose another time.",
+      "error"
     );
   } else {
     showConfirmationDialog.value = true;
@@ -328,32 +446,41 @@ async function finalizeBooking() {
     user_id: userId.value,
   };
 
+  loading.value = true;
   try {
-    await axios.post('http://localhost:5000/api/requestEvent', newEvent, {
+    await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
       headers: { Authorization: `Bearer ${store.getters.accessToken}` },
     });
 
     calendarOptions.events.push(newEvent);
     showToast(
-      `Appointment for ${selectedService.value.title} successfully booked!`
+      `Appointment for ${selectedService.value.title} successfully requested!`
     );
 
     fetchPendingEvents();
     showConfirmationDialog.value = false;
   } catch (error) {
     handleError(
-      'There was an error booking your appointment. Please try again.' +
+      "There was an error booking your appointment. Please try again." +
         error.message
     );
+  } finally {
+    loading.value = false;
   }
 }
 </script>
 
 <template>
   <div class="pa-8">
+    <v-progress-linear
+      v-if="loading"
+      indeterminate
+      color="primary"
+      class="mb-4"
+    ></v-progress-linear>
     <!-- Modification controls -->
     <div v-if="!modifying" class="d-flex align-center justify-start">
-      <v-btn
+      <v-btn :disabled="loading"
         @click="enableModification"
         class="elevation-8 btn-garrisons text-white"
       >
@@ -361,14 +488,14 @@ async function finalizeBooking() {
       </v-btn>
     </div>
     <div v-if="modifying" class="d-flex align-center justify-start">
-      <v-btn
+      <v-btn :disabled="loading"
         class="elevation-8 bg-red-darken-1 text-garrisons"
         @click="resetModifications"
       >
         {{ t("dialog.button.cancel") }}
       </v-btn>
       <div class="mx-2"></div>
-      <v-btn
+      <v-btn :disabled="loading"
         class="elevation-8 bg-green text-garrisons"
         @click="showModificationModal"
       >
@@ -402,11 +529,11 @@ async function finalizeBooking() {
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
-          <v-btn @click="discardModifications">{{
+          <v-btn :disabled="loading" @click="discardModifications">{{
             t("dialog.button.discard")
           }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn
+          <v-btn :disabled="loading"
             class="bg-green text-garrisons"
             @click="confirmModifications"
             >{{ t("dialog.button.modify") }}</v-btn
@@ -415,7 +542,7 @@ async function finalizeBooking() {
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showFirstDialog" max-width="500">
+    <v-dialog v-model="showFirstDialog" max-width="600">
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
@@ -424,6 +551,9 @@ async function finalizeBooking() {
         </v-card-title>
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
+          <p class="pb-1">
+            Please select a service to calculate your appointment!
+          </p>
           <v-select
             class=""
             v-model="selectedService"
@@ -437,125 +567,209 @@ async function finalizeBooking() {
           ></v-select>
           <p v-else>{{ t("dialog.bookDialog.noServices") }}</p>
           <p>
-            <strong>{{ t("dialog.date") }}</strong>
+            <span class="mdi mdi-calendar-question-outline"></span>
             {{ formattedDate }}
           </p>
           <p class="pb-2">
-            <strong>{{ t("dialog.time") }}</strong>
+            <span class="mdi mdi-clock-outline"></span>
             {{ formattedTime }}
           </p>
           <div v-if="selectedService">
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>Logged in user ID (ONLY FOR DEBUG):</strong> {{ userId }}
-            </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <strong>{{ t("dialog.userName") }}</strong>
+            <!-- <p v-if="$store.getters.isLoggedIn">
+              <span class="mdi mdi-account-circle-outline"></span>
               {{ firstName + " " + lastName }}
             </p>
+            <p v-if="$store.getters.isLoggedIn">
+              <span class="mdi mdi-email-outline"></span> {{ email }}
+            </p>
             <p v-if="$store.getters.isLoggedIn" class="pb-2">
-              <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+              <span class="mdi mdi-phone-outline"></span> {{ phoneNumber }}
+            </p> -->
+            <p>
+              <span class="mdi mdi-content-cut"></span>
+              {{ selectedService.title }} -
+              <span class="mdi mdi-cash-multiple"></span>
+              {{ selectedService.price }} HUF
             </p>
             <p>
-              <strong>{{ t("dialog.service") }}</strong>
-              {{ selectedService.title }}
-            </p>
-            <p>
-              <strong>{{ t("dialog.duration") }}</strong>
+              <span class="mdi mdi-timer-sand"></span>
               {{ selectedService.duration }} {{ t("dialog.duration2") }}
-            </p>
-            <p>
-              <strong>{{ t("dialog.price") }}</strong>
-              {{ selectedService.price }} {{ t("dialog.price2") }}
             </p>
           </div>
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn class="text-garrisons" variant="tonal" @click="closeDialog">{{
+          <v-btn :disabled="loading" class="text-garrisons" variant="tonal" @click="closeDialog">{{
             t("dialog.button.cancel")
           }}</v-btn>
           <v-spacer></v-spacer>
-          <v-btn class="text-garrisons bg-green" @click="checkOverlap">{{
+          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="checkOverlap">{{
             t("dialog.button.next")
           }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showConfirmationDialog" max-width="500" persistent>
+    <v-dialog v-model="showConfirmationDialog" max-width="600" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <h2 class="headline title-garrisons">
-            {{ t("dialog.bookDialog.title1") }}
-          </h2>
+          <h2 class="headline title-garrisons py-2">Finalize your booking</h2>
         </v-card-title>
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
           <p>
-            <strong>{{ t("dialog.userName") }}</strong>
+            <span class="mdi mdi-account-circle-outline"></span>
             {{ firstName + " " + lastName }}
           </p>
+          <p><span class="mdi mdi-email-outline"></span> {{ email }}</p>
+          <p><span class="mdi mdi-phone-outline"></span> {{ phoneNumber }}</p>
+          <div class="py-2"></div>
           <p>
-            <strong>{{ t("dialog.userEmail") }}</strong> {{ email }}
+            <span class="mdi mdi-calendar-outline"></span>
+            {{ formatDate(pickedStart) }}
           </p>
           <p>
-            <strong>{{ t("dialog.userPhone") }}</strong> {{ phone }}
+            <span class="mdi mdi-calendar-start-outline"></span>
+            {{ formatTime(pickedStart) }} -
+            <span class="mdi mdi-calendar-end-outline"></span>
+            {{ formatTime(pickedEnd) }},
+            <span class="mdi mdi-timer-sand"></span>
+            {{ pickedDuration }} minutes
           </p>
           <p>
-            <strong>{{ t("dialog.service") }}</strong>
-            {{ selectedService.title }}
-          </p>
-          <p>
-            <strong>{{ t("dialog.date") }}</strong>
-            {{ formattedDate }}
-          </p>
-          <p>
-            <strong>{{ t("dialog.time") }}</strong>
-            {{ formattedTime }}
-          </p>
-          <p>
-            <strong>{{ t("dialog.price") }}</strong>
-            {{ selectedService.price }} {{ t("dialog.price2") }}
+            <span class="mdi mdi-content-cut"></span>
+            {{ selectedService.title }} -
+            <span class="mdi mdi-cash-multiple"></span>
+            {{ selectedService.price }} HUF
           </p>
         </v-card-text>
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
-          <v-btn
+          <v-btn :disabled="loading"
             class="text-garrisons"
             variant="tonal"
             @click="confirmationDialogCancel"
             >{{ t("dialog.button.cancel") }}</v-btn
           >
           <v-spacer></v-spacer>
-          <v-btn class="text-garrisons bg-green" @click="finalizeBooking">{{
+          <v-btn :disabled="loading" class="text-garrisons bg-green" @click="finalizeBooking">{{
             t("dialog.button.requestBook")
           }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="showEventDialog" max-width="500">
-      <v-card>
+    <v-dialog
+      v-model="showEventDialog"
+      max-width="600"
+      @close="clearSelectedEvent"
+    >
+      <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <span class="headline">Event Details</span>
+          <h2 class="headline title-garrisons py-2">
+            <span class="mdi mdi-information-outline"></span>
+            {{
+              selectedEvent.extendedProps.firstName +
+              " " +
+              selectedEvent.extendedProps.lastName +
+              ", " +
+              formatDate(selectedEvent.start) +
+              " " +
+              formatTime(selectedEvent.start) +
+              " - " +
+              formatTime(selectedEvent.end) +
+              ", " +
+              selectedEvent.title
+            }}
+          </h2>
         </v-card-title>
+        <v-divider class="mx-3"></v-divider>
         <v-card-text>
-          <p><strong>Title:</strong> {{ selectedEvent.title }}</p>
-          <p><strong>Date:</strong> {{ selectedEvent.start }}</p>
-          <p><strong>Time:</strong> {{ selectedEvent.end }}</p>
           <p>
-            <strong>Duration:</strong>
-            minutes
+            <span class="mdi mdi-account-circle-outline"></span>
+            {{
+              selectedEvent.extendedProps.firstName +
+              " " +
+              selectedEvent.extendedProps.lastName
+            }}
           </p>
-          <p><strong>Price:</strong></p>
           <p>
-            <strong>Reserved by User ID:</strong>
+            <span class="mdi mdi-email-outline"></span>
+            {{ selectedEvent.extendedProps.email }}
+          </p>
+          <p>
+            <span class="mdi mdi-phone-outline"></span>
+            {{ selectedEvent.extendedProps.phoneNumber }}
+          </p>
+          <div class="py-2"></div>
+
+          <p>
+            <span class="mdi mdi-calendar-question-outline"></span>
+            {{ formatDate(selectedEvent.start) }}
+          </p>
+          <p>
+            <span class="mdi mdi-calendar-start-outline"></span>
+            {{ formatTime(selectedEvent.start) }} -
+            <span class="mdi mdi-calendar-end-outline"></span>
+            {{ formatTime(selectedEvent.end) }},
+            <span class="mdi mdi-timer-sand"></span>
+            {{ selectedEvent.extendedProps.service_duration }} minutes
+          </p>
+
+          <p>
+            <span class="mdi mdi-content-cut"></span>
+            {{ selectedEvent.title }} -
+            <span class="mdi mdi-cash-multiple"></span>
+            {{ selectedEvent.extendedProps.price }} HUF
+          </p>
+          <div class="py-2 w-50"></div>
+          <p v-if="selectedEvent.extendedProps.reserved_at">
+            <strong
+              ><span class="mdi mdi-timer-plus-outline"></span> Foglalást
+              leadta:</strong
+            >
+            {{
+              formatDate(selectedEvent.extendedProps.reserved_at) +
+              ", " +
+              formatTime(selectedEvent.extendedProps.reserved_at)
+            }}
+          </p>
+
+          <p v-else-if="selectedEvent.extendedProps.confirmed_at">
+            <strong
+              ><span class="mdi mdi-timer-check-outline"></span> Foglalás
+              megerősítve:</strong
+            >
+            {{
+              formatDate(selectedEvent.extendedProps.confirmed_at) +
+              ", " +
+              formatTime(selectedEvent.extendedProps.confirmed_at)
+            }}
           </p>
         </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="secondary" @click="closeEventDialog">Close</v-btn>
-          <v-btn color="red" @click="deleteEvent">Delete</v-btn>
+        <v-divider class="mx-3"></v-divider>
+        <v-card-actions class="ma-2">
+          <template v-if="selectedEvent.extendedProps.reserved_at">
+            <v-btn :disabled="loading" class="text-garrisons" @click="closeEventDialog"
+              >Cancel</v-btn
+            >
+            <v-spacer></v-spacer>
+            <v-btn :disabled="loading" class="text-garrisons bg-red" @click="denyEvent">Deny</v-btn>
+            <v-btn :disabled="loading" class="text-garrisons bg-green" @click="confirmEvent"
+              >Accept</v-btn
+            >
+          </template>
+
+          <!-- Regular Close Button for Confirmed Event -->
+          <template v-else-if="selectedEvent.extendedProps.confirmed_at">
+            <v-btn :disabled="loading" class="text-garrisons" @click="closeEventDialog"
+              >Close</v-btn
+            >
+            <v-spacer></v-spacer>
+            <v-btn :disabled="loading" class="text-garrisons bg-red" @click="deleteEvent"
+              >Delete</v-btn
+            >
+          </template>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -579,6 +793,9 @@ async function finalizeBooking() {
 
 .bg-garrisons {
   background-color: #26211e;
+}
+p {
+  font-size: larger;
 }
 </style>
   

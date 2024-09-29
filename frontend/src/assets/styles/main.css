@@ -39,8 +39,8 @@ body {
 }
 
 .fc-event-main {
-    background-color: #261e1e;
-    border-color: #26211e;
+    background-color: #8f6a48;
+    border-color: #8f6a48;
     border-radius: 5px;
     box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
 }
@@ -50,7 +50,7 @@ body {
     opacity: 100%;
     /*Ezzel lehet allitani az eventek kartyajat*/
     box-shadow: none;
-    border-color: #26211e;
+    border-color: #8f6a48;
     margin: 0;
     padding: 0;
     border-radius: 5px;
@@ -95,12 +95,12 @@ fc-today-button{
     --fc-neutral-text-color: #d3cdcd;
     --fc-border-color: #424242;
 
-    --fc-event-bg-color: #26211e;
-    --fc-event-border-color: #26211e;
-    --fc-event-text-color: #ffffff;
+    --fc-event-bg-color: #8f6a48;
+    --fc-event-border-color: #8f6a48;
+    --fc-event-text-color: #d3d2cd;
     --fc-event-selected-overlay-color: rgba(0, 0, 0, 0.25);
 
-    --fc-small-font-size: .85em;
+    --fc-small-font-size: 1em;
     --fc-button-text-color: #d3d2cd;
     --fc-button-bg-color: #ffffff00;
     --fc-button-border-color: #ffffff00;

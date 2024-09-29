@@ -12,7 +12,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
-app.use(cors({}));
+app.use(cors({ origin: 'http://localhost:5173' })); // Replace with your frontend URL
+
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -30,17 +31,54 @@ db.connect(err => {
     console.log('Connected to MySQL');
 });
 
+/*
+---------------MIDDLEWARES:---------------
+*/
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
-    if (token == null) return res.sendStatus(401); // No token found
-    if (!token) return res.status(403).send('Access denied');
+
+    if (!token) {
+        console.log("No token provided"); // Log this
+        return res.sendStatus(401); // No token, Unauthorized
+    }
+
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403); // Invalid token
-        req.user = user;
+        if (err) {
+            console.log("Token verification failed:", err); // Log token errors
+            return res.sendStatus(403); // Invalid token, Forbidden
+        }
+
+        req.user = user; // Attach user data to req.user
         next();
     });
 }
+
+function isAdmin(req, res, next) {
+    const userId = req.user.userId; // Assuming the user ID is present in req.user (from decoded JWT)
+    const sql = 'SELECT role FROM users WHERE id = ?';
+
+    db.query(sql, [userId], (err, results) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).json({ message: 'Database error' });
+        }
+
+        if (results.length === 0) {
+            console.log("User not found in database");
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const userRole = results[0].role;
+        if (userRole === 'admin') {
+            next(); // User is admin, proceed
+        } else {
+            console.log("User is not an admin");
+            return res.status(403).json({ message: 'Forbidden: Admins only' });
+        }
+    });
+}
+
 
 //Nodemailer
 const transporter = nodemailer.createTransport({
@@ -246,6 +284,7 @@ app.post('/login', async (req, res) => {
                             email: user.email,
                             firstName: user.firstName,
                             lastName: user.lastName,
+                            phoneNumber: user.phoneNumber,
                             role: user.role
                         },
                         process.env.JWT_SECRET,
@@ -278,14 +317,22 @@ app.get('/api/getEvents', (req, res) => {
             confirmed_events.reserving_user_id, 
             confirmed_events.confirmed_at, 
             services.title AS service_title, 
-            services.price AS service_price, 
-            services.duration AS service_duration
-        FROM 
+            services.duration AS service_duration,
+            services.price AS service_price,
+            users.firstName AS user_firstName,
+            users.lastName AS user_lastName,
+            users.email AS user_email,
+            users.phoneNumber AS user_phoneNumber
+        FROM
             confirmed_events
-        JOIN 
+        JOIN
             services
-        ON 
-            confirmed_events.confirmed_service_id = services.id;
+        ON
+            confirmed_events.confirmed_service_id = services.id
+        JOIN
+            users
+        ON
+            confirmed_events.reserving_user_id = users.id;
     `;
 
     db.query(sqlQuery, (err, results) => {
@@ -298,12 +345,17 @@ app.get('/api/getEvents', (req, res) => {
         if (Array.isArray(results)) {
             const fullCalendarEvents = results.map(event => ({
                 id: event.confirmed_event_id,
-                title: event.service_title,  // Use service title instead of event title
+                title: event.service_title,
+                service_duration: event.service_duration,
+                price: event.service_price,
                 start: event.confirmed_event_start,
                 end: event.confirmed_event_end,
                 reserving_user_id: event.reserving_user_id,
-                service_duration: event.service_duration,
-                service_price: event.service_price
+                firstName: event.user_firstName,
+                lastName: event.user_lastName,
+                email: event.user_email,
+                phoneNumber: event.user_phoneNumber,
+                confirmed_at: event.confirmed_at,
             }));
             return res.json(fullCalendarEvents);
         } else {
@@ -314,7 +366,7 @@ app.get('/api/getEvents', (req, res) => {
 
 
 // Get services
-app.get('/api/services', (req, res) => {
+app.get('/api/services', authenticateToken, (req, res) => {
     db.query('SELECT * FROM services', (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
@@ -322,7 +374,7 @@ app.get('/api/services', (req, res) => {
 });
 
 // CREATE a new service
-app.post('/api/services', (req, res) => {
+app.post('/api/services', authenticateToken, isAdmin, (req, res) => {
     const { title, price, duration } = req.body;
     const sql = 'INSERT INTO services (title, price, duration) VALUES (?, ?, ?)';
     db.query(sql, [title, price, duration], (err, result) => {
@@ -332,7 +384,7 @@ app.post('/api/services', (req, res) => {
 });
 
 // UPDATE a service
-app.put('/api/services/:id', (req, res) => {
+app.put('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
     const { title, price, duration } = req.body;
     const sql = 'UPDATE services SET title = ?, price = ?, duration = ? WHERE id = ?';
@@ -343,8 +395,9 @@ app.put('/api/services/:id', (req, res) => {
 });
 
 // DELETE a service
-app.delete('/api/services/:id', (req, res) => {
+app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
+    console.log("Service ID received for deletion:", req.params.id);
     const sql = 'DELETE FROM services WHERE id = ?';
     db.query(sql, [id], (err, result) => {
         if (err) return res.status(500).send(err);
@@ -358,11 +411,12 @@ app.get('/api/user', authenticateToken, (req, res) => {
     const email = req.user.email;
     const firstName = req.user.firstName;
     const lastName = req.user.lastName;
+    const phoneNumber = req.user.phoneNumber;
 
     // Optional: Fetch user details from database based on userId
     // ...
 
-    res.json({ userId, email, firstName, lastName });
+    res.json({ userId, email, firstName, lastName, phoneNumber });
 });
 
 // Create an event
@@ -459,7 +513,7 @@ app.get('/api/getPendingEvents', (req, res) => {
 });
 
 // Get pending events TEST ONLY FOR THE BG!!!!!!
-app.get('/api/getPendingEvents2', (req, res) => {
+app.get('/api/getPendingEvents2', authenticateToken, isAdmin, (req, res) => {
     const sqlQuery = `
         SELECT 
             pending_events.pending_event_id, 
@@ -469,15 +523,24 @@ app.get('/api/getPendingEvents2', (req, res) => {
             pending_events.user_id, 
             pending_events.created_at, 
             pending_events.pending_event_classes,
-            services.title AS service_title
+            services.title AS service_title,
+            services.duration AS service_duration,
+            services.price AS service_price,
+            users.firstName AS user_firstName,
+            users.lastName AS user_lastName,
+            users.email AS user_email,
+            users.phoneNumber AS user_phoneNumber
         FROM 
             pending_events
         JOIN 
             services
         ON 
-            pending_events.pending_service_id = services.id;
+            pending_events.pending_service_id = services.id
+        JOIN 
+            users
+        ON 
+            pending_events.user_id = users.id;
     `;
-
     db.query(sqlQuery, (err, results) => {
         if (err) {
             console.error('Error fetching events:', err);
@@ -488,10 +551,17 @@ app.get('/api/getPendingEvents2', (req, res) => {
         if (Array.isArray(results)) {
             const fullCalendarEvents = results.map(event => ({
                 id: event.pending_event_id,
-                title: event.service_title,  // Use service title instead of event title
+                title: event.service_title,
+                service_duration: event.service_duration,
+                price: event.service_price,
                 start: event.pending_start_of_event,
                 end: event.pending_end_of_event,
                 reserving_user_id: event.reserving_user_id,
+                firstName: event.user_firstName,
+                lastName: event.user_lastName,
+                email: event.user_email,
+                phoneNumber: event.user_phoneNumber,
+                reserved_at: event.created_at,
                 classNames: event.pending_event_classes,
             }));
             return res.json(fullCalendarEvents);
@@ -502,7 +572,7 @@ app.get('/api/getPendingEvents2', (req, res) => {
 });
 
 // Confirm a pending event:
-app.get('/api/confirmEvent/:id', (req, res) => {
+app.get('/api/confirmEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const pendingEventId = req.params.id;
     console.log('Pending event id-je:', req.params);
 
@@ -546,7 +616,7 @@ app.get('/api/confirmEvent/:id', (req, res) => {
 });
 
 // Deny (delete) a pending event
-app.delete('/api/deletePendingEvent/:id', (req, res) => {
+app.delete('/api/deletePendingEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
     const sql = 'DELETE FROM pending_events WHERE pending_event_id = ?';
     db.query(sql, [id], (err, result) => {
@@ -555,7 +625,7 @@ app.delete('/api/deletePendingEvent/:id', (req, res) => {
     });
 });
 
-app.post('/api/updateConfirmedEvents', (req, res) => {
+app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, (req, res) => {
     const modifiedEvents = req.body;
 
     modifiedEvents.forEach(event => {
@@ -579,7 +649,7 @@ app.post('/api/updateConfirmedEvents', (req, res) => {
 });
 
 // Delete confirmed event
-app.delete('/api/deleteEvent/:id', (req, res) => {
+app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const confirmedEventId = req.params.id;
 
     const sqlDelete = 'DELETE FROM confirmed_events WHERE confirmed_event_id = ?';
@@ -599,7 +669,7 @@ app.delete('/api/deleteEvent/:id', (req, res) => {
 
 
 // GET all users
-app.get('/api/users', (req, res) => {
+app.get('/api/users', authenticateToken, isAdmin, (req, res) => {
     db.query('SELECT * FROM users', (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
@@ -617,7 +687,7 @@ app.get('/api/users', (req, res) => {
 // });
 
 // UPDATE a user
-app.put('/api/users/:id', (req, res) => {
+app.put('/api/users/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
     const { firstName, lastName, role, email, phoneNumber } = req.body; // Remove password from the body
     const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ? WHERE id = ?'; // No password update
@@ -628,7 +698,7 @@ app.put('/api/users/:id', (req, res) => {
 });
 
 // DELETE a user
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
     const sql = 'DELETE FROM users WHERE id = ?';
     db.query(sql, [id], (err, result) => {
