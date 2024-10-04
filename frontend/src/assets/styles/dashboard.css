@@ -1,29 +1,31 @@
 th {
-    font-size: large;
-    background-color: #26211e !important;
-  }
-  
-  td {
-    font-size: large;
-  }
-  
-  button {
-    margin-right: 8px;
-  }
-  
-  form {
-    font-size: large;
-    margin-bottom: 20px;
-  }
-
-  .subtitle-garrisons{
-    color: #9e7f61;
+  font-size: x-large;
+  background-color: #26211e !important;
+  color: #9e7f61;
 }
 
-.bg-data-table-card{
+td {
+  font-size: large;
+  color: #d3d2cd;
+}
+
+button {
+  margin-right: 8px;
+}
+
+form {
+  font-size: large;
+  margin-bottom: 20px;
+}
+
+.subtitle-garrisons {
+  color: #9e7f61;
+}
+
+.bg-data-table-card {
   background-color: #26211e;
 }
 
-.bg-data-table{
+.bg-data-table {
   background-color: rgba(38, 33, 30, 0.479);
 }

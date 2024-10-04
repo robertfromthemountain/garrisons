@@ -1,39 +1,51 @@
 <template>
   <div>
-    <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
+    <h2
+      class="text-center subtitle-garrisons text-subtitle-1 text-uppercase pb-7"
+    >
       {{ t("dashboard.managePendingEvents.subtitle") }}
     </h2>
-    <v-divider></v-divider>
+    <!-- <v-divider></v-divider> -->
 
     <!-- Display Pending Events Table -->
     <v-table height="100vh" fixed-header class="bg-garrisons">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Service ID</th>
-          <th>Service Title</th>
+          <!-- <th>ID</th> -->
+          <!-- <th>Service ID</th> -->
+          <th>Service</th>
+          <th>Booker</th>
           <th>Date</th>
           <th>Start Time</th>
           <th>End Time</th>
-          <th>User ID</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <!-- Loop through existing pending events -->
         <tr v-for="event in pendingEvents" :key="event.pending_event_id">
-          <td>{{ event.pending_event_id }}</td>
-          <td>{{ event.pending_service_id }}</td>
-          <td>{{ event.pending_service_title }}</td>
-          <td>{{ event.pending_date }}</td>
-          <td>{{ event.pending_start_of_event }}</td>
-          <td>{{ event.pending_end_of_event }}</td>
-          <td>{{ event.user_id }}</td>
+          <!-- <td>{{ event.id }}</td> -->
+          <!-- <td>{{ event.pending_service_id }}</td> -->
+          <td>{{ event.title }}</td>
+          <td>{{ event.firstName + " " + event.lastName }}</td>
+          <td>{{ formatDate(event.start) }}</td>
+          <td>{{ formatTime(event.start) }}</td>
+          <td>{{ formatTime(event.end) }}</td>
           <td>
-            <button @click="confirmPendingEvent(event.pending_event_id)">
-              Accept
-            </button>
-            <button @click="openDeleteModal(event)">Deny</button>
+            <v-btn
+              density="compact"
+              class="bg-green text-garrisons"
+              @click="confirmPendingEvent(event.pending_event_id)"
+            >
+              <v-icon class="pe-2">mdi-book-check-outline</v-icon>Accept
+            </v-btn>
+            <v-btn
+              density="compact"
+              class="bg-red-darken-1 text-garrisons"
+              @click="openDeleteModal(event)"
+            >
+              <v-icon class="pe-2">mdi-book-cancel-outline</v-icon>Deny
+            </v-btn>
           </td>
         </tr>
       </tbody>
@@ -69,6 +81,39 @@ const pendingEvents = ref([]);
 const isDeleteModalOpen = ref(false);
 const selectedEventId = ref(null);
 
+function formatDate(date) {
+  if (!date) return "";
+
+  const parsedDate = new Date(date);
+  if (isNaN(parsedDate)) {
+    console.error("Invalid date provided:", date);
+    return ""; // Return a fallback if the date is invalid
+  }
+
+  return new Intl.DateTimeFormat("hu-HU", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    timeZone: "UTC",
+  }).format(parsedDate);
+}
+
+function formatTime(time) {
+  if (!time) return "";
+
+  const parsedTime = new Date(time);
+  if (isNaN(parsedTime)) {
+    console.error("Invalid time provided:", time);
+    return ""; // Return a fallback if the time is invalid
+  }
+
+  return new Intl.DateTimeFormat("hu-HU", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(parsedTime);
+}
+
 const showToast = (message, type = "success") => {
   if (type === "success") toast.success(message);
   else if (type === "error") toast.error(message);
@@ -84,7 +129,7 @@ const handleError = (customMessage) => {
 const fetchPendingEvents = async () => {
   try {
     const response = await axios.get(
-      "http://localhost:5000/api/getPendingEvents"
+      "http://localhost:5000/api/getPendingEvents2"
     );
     pendingEvents.value = response.data; // Populate pending events with data from API
   } catch (error) {

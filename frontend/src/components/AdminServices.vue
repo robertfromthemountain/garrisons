@@ -3,35 +3,33 @@
     <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
       {{ t("dashboard.manageServices.subtitle") }}
     </h2>
-    <v-divider></v-divider>
-    <!-- Search Input for Services -->
-    <v-col cols="12" lg="3">
-      <v-text-field
-        v-model="searchQuery"
-        label="Search Services"
-        class="mt-5 rounded-pill"
-        clearable
-        placeholder="Search by title, price, or duration"
-        append-inner-icon="mdi-magnify"
-      ></v-text-field>
-    </v-col>
+    <!-- <v-divider></v-divider> -->
 
     <!-- Display Services Table -->
-    <v-table height="100vh" fixed-header class="bg-garrisons">
+    <v-table height="100vh" fixed-header class="bg-garrisons mt-5">
       <thead class="bg-garrisons">
         <tr>
-          <th>ID</th>
+          <!-- <th>ID</th> -->
           <th>Title</th>
           <th>Price</th>
           <th>Duration</th>
-          <th>Actions</th>
+          <th>
+            <v-text-field
+              v-model="searchQuery"
+              label="Search Services"
+              density="compact"
+              clearable
+              placeholder="Search by title, price, or duration"
+              append-inner-icon="mdi-magnify"
+            ></v-text-field>
+          </th>
         </tr>
       </thead>
       <tbody>
         <!-- Loop through filtered services -->
         <tr v-for="(service, index) in filteredServices" :key="service.id">
           <!-- Display ID -->
-          <td>{{ service.id }}</td>
+          <!-- <td>{{ service.id }}</td> -->
 
           <!-- Editable Title -->
           <td v-if="!isEditing[index]">{{ service.title }}</td>
@@ -62,28 +60,46 @@
           <!-- Actions: Edit/Delete or Save/Cancel -->
           <td>
             <div v-if="!isEditing[index]">
-              <button @click="startEdit(index, service)">Edit</button>
-              <button @click="openDeleteModal(service.id)">Delete</button>
+              <v-btn
+                density="compact"
+                class=" btn-garrisons text-garrisons text-start"
+                @click="startEdit(index, service)"
+                ><v-icon class="pe-2">mdi-pencil</v-icon>Edit</v-btn
+              >
+              <v-btn
+                density="compact"
+                class=" bg-red-darken-1 text-garrisons"
+                @click="openDeleteModal(service.id)"
+                ><v-icon class="pe-2">mdi-trash-can-outline</v-icon
+                >Delete</v-btn
+              >
             </div>
             <div v-else>
-              <button
+              <v-btn
                 @click="saveEdit(index)"
                 :disabled="
                   !editServiceData.title ||
                   !editServiceData.price ||
                   !editServiceData.duration
                 "
+                class=" bg-green text-garrisons"
+                density="compact"
               >
-                Save
-              </button>
-              <button @click="cancelEdit(index)">Cancel</button>
+                <v-icon class="pe-2">mdi-content-save-all</v-icon>Save
+              </v-btn>
+              <v-btn
+                density="compact"
+                class=" bg-red-darken-1 text-garrisons"
+                @click="cancelEdit(index)"
+                ><v-icon class="pe-2">mdi-cancel</v-icon>Cancel</v-btn
+              >
             </div>
           </td>
         </tr>
 
         <!-- Row for Adding a New Service -->
         <tr>
-          <td>New</td>
+          <!-- <td>New</td> -->
           <td>
             <input v-model="newService.title" placeholder="Enter title" />
           </td>
@@ -102,14 +118,16 @@
             />
           </td>
           <td>
-            <button
+            <v-btn
+              density="compact"
+              class=" bg-green text-garrisons"
               @click="addService"
               :disabled="
                 !newService.title || !newService.price || !newService.duration
               "
             >
-              Add
-            </button>
+            <v-icon class="pe-2">mdi-plus</v-icon>Add
+            </v-btn>
           </td>
         </tr>
       </tbody>
