@@ -192,11 +192,15 @@ async function denyEvent() {
 function handleEventDrop(info) {
   const modifiedEvent = {
     id: info.event.id,
+    firstName: info.event.firstName,
+    lastName: info.event.lastName,
     modifiedTitle: info.event.title,
     modifiedEventDate: info.event.start.toISOString(),
     newStart: info.event.start.toISOString(),
     newEnd: info.event.end.toISOString(),
     reserving_user_id: info.event.extendedProps.reserving_user_id,
+    firstName: info.event.extendedProps.firstName,
+    lastName: info.event.extendedProps.lastName,
   };
 
   const existingEventIndex = modifiedEvents.value.findIndex(
@@ -204,8 +208,10 @@ function handleEventDrop(info) {
   );
 
   if (existingEventIndex !== -1) {
+    // Update modified event
     modifiedEvents.value[existingEventIndex] = modifiedEvent;
   } else {
+    // Add new modified event
     modifiedEvents.value.push(modifiedEvent);
   }
 }
@@ -330,8 +336,10 @@ async function deleteEvent() {
   }
 }
 
+// Enabling modification by saving original events before edits
 function enableModification() {
   originalEvents.value = JSON.parse(JSON.stringify(calendarOptions.events));
+  console.log("Eredeti eventek: ", originalEvents.value);
   calendarOptions.editable = true;
   modifying.value = true;
 }
@@ -363,17 +371,23 @@ async function confirmModifications() {
   }
 }
 
+// Reset modifications and restore original events
 function discardModifications() {
   calendarOptions.events = JSON.parse(JSON.stringify(originalEvents.value));
   resetModifications();
 }
 
+// Reset modifications after changes are confirmed or discarded
 function resetModifications() {
   showModificationDialog.value = false;
   modifiedEvents.value = [];
   calendarOptions.editable = false;
   modifying.value = false;
   fetchAllEvents();
+}
+
+function closeModificationDialog() {
+  showModificationDialog.value = false;
 }
 
 function closeDialog() {
@@ -421,6 +435,18 @@ function checkOverlap() {
 
 function confirmationDialogCancel() {
   showConfirmationDialog.value = false;
+}
+
+// Method to find the original event based on the ID of the modified event
+function getOriginalEvent(eventId) {
+  console.log("Selected Event ID for getOriginalEvent:", eventId);
+  const originalEvent = originalEvents.value.find(
+    (event) => String(event.id) === String(eventId)
+  );
+  console.log("getOriginalEvent() - Event ID:", eventId);
+  console.log("getOriginalEvent() - Original Event:", originalEvent);
+  return originalEvent;
+  s;
 }
 
 async function finalizeBooking() {
@@ -472,27 +498,33 @@ async function finalizeBooking() {
     <!-- Modification controls -->
     <div v-if="!modifying" class="d-flex align-center justify-start">
       <v-btn
+        density="comfortable"
         :disabled="loading"
         @click="enableModification"
-        class="elevation-8 btn-garrisons text-white"
+        class="elevation-8 btn-garrisons text-garrisons text-start"
       >
+        <v-icon class="pe-2">mdi-pencil</v-icon>
         {{ t("button.calendarEdit") }}
       </v-btn>
     </div>
     <div v-if="modifying" class="d-flex align-center justify-start">
       <v-btn
+        density="comfortable"
         :disabled="loading"
         class="elevation-8 bg-red-darken-1 text-garrisons"
         @click="resetModifications"
       >
+        <v-icon class="pe-2">mdi-cancel</v-icon>
         {{ t("dialog.button.cancel") }}
       </v-btn>
       <div class="mx-2"></div>
       <v-btn
+        density="comfortable"
         :disabled="loading"
         class="elevation-8 bg-green text-garrisons"
         @click="showModificationModal"
       >
+        <v-icon class="pe-2">mdi-content-save-all</v-icon>
         {{ t("dialog.button.save") }}
       </v-btn>
     </div>
@@ -502,32 +534,53 @@ async function finalizeBooking() {
     <!-- Modal for Confirming Modifications -->
     <v-dialog v-model="showModificationDialog" max-width="600" persistent>
       <v-card class="bg-garrisons text-garrisons">
-        <v-card-title>
+        <v-card-title class="">
           <h2 class="headline title-garrisons">
+            <span class="mdi mdi-book-search-outline"></span>
             {{ t("dialog.confirmChanges") }}
           </h2>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
           <h3>{{ t("dialog.modifiedEvents") }}</h3>
-          <ul>
-            <li v-for="event in modifiedEvents" :key="event.id">
-              <strong>{{ event.modifiedTitle }}</strong
+          <ul class="pa-5 larger">
+            <li v-for="event in modifiedEvents" :key="event.id" class="pb-3">
+              <strong>
+                {{ event.firstName + " " + event.lastName + ", " }}
+                {{ event.modifiedTitle }}</strong
               ><br />
-              Original: {{ event.originalEventDate }}
-              {{ event.originalStart }} - {{ event.originalEnd }}<br />
-              Modified: {{ event.modifiedEventDate }} {{ event.newStart }} -
-              {{ event.newEnd }}
+              <span>Original: </span>
+              <span v-if="getOriginalEvent(event.id)" class="">
+                {{ formatDate(getOriginalEvent(event.id).start) }} -
+                {{ formatTime(getOriginalEvent(event.id).start) }} to
+                {{ formatTime(getOriginalEvent(event.id).end) }} </span
+              ><br />
+              <span>Modified: </span>
+              <span class="">
+                {{ formatDate(event.newStart) }} -
+                {{ formatTime(event.newStart) }} to
+                {{ formatTime(event.newEnd) }}
+              </span>
             </li>
           </ul>
         </v-card-text>
         <v-divider></v-divider>
         <v-card-actions>
-          <v-btn :disabled="loading" @click="discardModifications">{{
-            t("dialog.button.discard")
-          }}</v-btn>
+          <v-btn
+            density="comfortable"
+            :disabled="loading"
+            @click="closeModificationDialog"
+            >Close</v-btn
+          >
           <v-spacer></v-spacer>
           <v-btn
+            density="comfortable"
+            :disabled="loading"
+            @click="discardModifications"
+            >{{ t("dialog.button.discard") }}</v-btn
+          >
+          <v-btn
+            density="comfortable"
             :disabled="loading"
             class="bg-green text-garrisons"
             @click="confirmModifications"
@@ -595,6 +648,7 @@ async function finalizeBooking() {
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
           <v-btn
+            density="comfortable"
             :disabled="loading"
             class="text-garrisons"
             variant="tonal"
@@ -603,6 +657,7 @@ async function finalizeBooking() {
           >
           <v-spacer></v-spacer>
           <v-btn
+            density="comfortable"
             :disabled="loading"
             class="text-garrisons bg-green"
             @click="checkOverlap"
@@ -648,6 +703,7 @@ async function finalizeBooking() {
         <v-divider class="mx-3"></v-divider>
         <v-card-actions class="ma-2">
           <v-btn
+            density="comfortable"
             :disabled="loading"
             class="text-garrisons"
             variant="tonal"
@@ -656,6 +712,7 @@ async function finalizeBooking() {
           >
           <v-spacer></v-spacer>
           <v-btn
+            density="comfortable"
             :disabled="loading"
             class="text-garrisons bg-green"
             @click="finalizeBooking"
@@ -757,6 +814,7 @@ async function finalizeBooking() {
         <v-card-actions class="ma-2">
           <template v-if="selectedEvent.extendedProps.reserved_at">
             <v-btn
+              density="comfortable"
               :disabled="loading"
               class="text-garrisons"
               @click="closeEventDialog"
@@ -764,12 +822,14 @@ async function finalizeBooking() {
             >
             <v-spacer></v-spacer>
             <v-btn
+              density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-red"
               @click="denyEvent"
               >Deny</v-btn
             >
             <v-btn
+              density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-green"
               @click="confirmEvent"
@@ -780,6 +840,7 @@ async function finalizeBooking() {
           <!-- Regular Close Button for Confirmed Event -->
           <template v-else-if="selectedEvent.extendedProps.confirmed_at">
             <v-btn
+              density="comfortable"
               :disabled="loading"
               class="text-garrisons"
               @click="closeEventDialog"
@@ -787,6 +848,7 @@ async function finalizeBooking() {
             >
             <v-spacer></v-spacer>
             <v-btn
+              density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-red"
               @click="deleteEvent"
@@ -818,6 +880,10 @@ async function finalizeBooking() {
   background-color: #26211e;
 }
 p {
+  font-size: larger;
+}
+
+.larger{
   font-size: larger;
 }
 </style>

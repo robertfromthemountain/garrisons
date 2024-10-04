@@ -301,7 +301,7 @@ async function finalizeBooking() {
 </script>
 
 <template>
-  <div class="pa-8">
+  <div class="pa-8 rounded elevation-5">
     <v-progress-linear
       v-if="loading"
       indeterminate
@@ -461,6 +461,11 @@ async function finalizeBooking() {
 
 p {
   font-size: larger;
+}
+
+.calendar-border{
+  border: 1px solid #6a4e35;
+  border-radius: 5px;
 }
 </style>
   

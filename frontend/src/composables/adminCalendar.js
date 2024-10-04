@@ -131,12 +131,19 @@ export default {
       }
     },
 
+    // enableModification() {
+    //   this.originalEvents = JSON.parse(
+    //     JSON.stringify(this.calendarOptions.events)
+    //   );
+    //   this.calendarOptions.editable = true;
+    //   this.modifying = true;
+    // },
+
+    // Enabling modification by saving original events before edits
     enableModification() {
-      this.originalEvents = JSON.parse(
-        JSON.stringify(this.calendarOptions.events)
-      );
-      this.calendarOptions.editable = true;
-      this.modifying = true;
+      originalEvents.value = JSON.parse(JSON.stringify(calendarOptions.events));
+      calendarOptions.editable = true;
+      modifying.value = true;
     },
 
     // Show the modification dialog with modified events details
@@ -286,16 +293,16 @@ export default {
       }
     },
 
-//GET ALL PENDING EVENTS TEST ONLY
-async fetchPendingEvents() {
-  try {
-    const response = await axios.get("http://localhost:5000/api/getPendingEvents2");
-    this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
-    console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
-  } catch (error) {
-    console.error("Error fetching events:", error);
-  }
-},
+    //GET ALL PENDING EVENTS TEST ONLY
+    async fetchPendingEvents() {
+      try {
+        const response = await axios.get("http://localhost:5000/api/getPendingEvents2");
+        this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
+        console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    },
 
     async fetchServices() {
       try {
