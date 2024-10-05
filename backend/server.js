@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const crypto = require('crypto');
+const { formatDate, formatTime } = require('./dateFormatter');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -456,6 +457,11 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                     if (serviceResults.length > 0) {
                         const service = serviceResults[0];
 
+                         // Format the dates and times using the utility functions
+                        const formattedDate = formatDate(pending_date);
+                        const formattedStartTime = formatTime(pending_start_of_event);
+                        const formattedEndTime = formatTime(pending_end_of_event);
+
                         // Send email to admin for confirmation
                         const mailOptions = {
                             from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
@@ -472,9 +478,9 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                     <p style="color: #0c0a09;"><strong>Service ID:</strong> ${service.id}</p>
                                     <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
                                     <p style="color: #0c0a09;"><strong>Price:</strong> $${service.price}</p>
-                                    <p style="color: #0c0a09;"><strong>Date:</strong> ${pending_date}</p>
-                                    <p style="color: #0c0a09;"><strong>Start Time:</strong> ${pending_start_of_event}</p>
-                                    <p style="color: #0c0a09;"><strong>End Time:</strong> ${pending_end_of_event}</p>
+                                    <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
+                                    <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
+                                    <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
                                     <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
                                     <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
                                 </div>
@@ -572,7 +578,7 @@ app.get('/api/getPendingEvents2', authenticateToken, isAdmin, (req, res) => {
 });
 
 // Confirm a pending event:
-app.get('/api/confirmEvent/:id', authenticateToken, isAdmin, (req, res) => {
+app.get('/api/confirmEvent/:id', (req, res) => {
     const pendingEventId = req.params.id;
     console.log('Pending event id-je:', req.params);
 

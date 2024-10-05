@@ -35,7 +35,7 @@
             <v-btn
               density="compact"
               class="bg-green text-garrisons"
-              @click="confirmPendingEvent(event.pending_event_id)"
+              @click="confirmPendingEvent(event.id)"
             >
               <v-icon class="pe-2">mdi-book-check-outline</v-icon>Accept
             </v-btn>
@@ -139,6 +139,7 @@ const fetchPendingEvents = async () => {
 
 // Confirm a pending event using the existing confirmEvent endpoint
 const confirmPendingEvent = async (id) => {
+  console.log(id)
   try {
     const response = await axios.get(
       `http://localhost:5000/api/confirmEvent/${id}`
