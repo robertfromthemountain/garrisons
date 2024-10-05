@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { reactive } from "vue";
 import { useI18n } from "vue-i18n";
-import axios from "axios";
+import apiClient from '@/utils/apiClient';
 import { useToast } from 'vue-toastification';
 
 export function useRegisterForm() {
@@ -94,7 +94,7 @@ export function useRegisterForm() {
 
         try {
             // Proceed with registration if all required fields are filled
-            const response = await axios.post('http://localhost:5000/register', form);
+            const response = await apiClient.post('http://localhost:5000/register', form);
 
             // Handle success response
             if (response.status === 201) {

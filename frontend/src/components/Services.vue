@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import apiClient from '@/utils/apiClient';
 
 export default {
   data() {
@@ -34,7 +34,7 @@ export default {
   methods: {
     async fetchEvents() {
       try {
-        const response = await axios.get("http://localhost:5000/api/services");
+        const response = await apiClient.get("http://localhost:5000/api/services");
         this.services = response.data; // Set fetched events
         console.log(this.services[0].title);
       } catch (error) {

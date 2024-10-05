@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
-import axios from 'axios';
+import apiClient from '@/utils/apiClient';
 import { useToast } from 'vue-toastification';  // Import Toast
 
 export function useLogin() {
@@ -34,7 +34,7 @@ export function useLogin() {
 
         isLoading.value = true;
         try {
-            const response = await axios.post('http://localhost:5000/login', {
+            const response = await apiClient.post('http://localhost:5000/login', {
                 email: email.value,
                 password: password.value,
             });

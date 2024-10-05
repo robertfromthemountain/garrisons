@@ -2,7 +2,8 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
-import axios from "axios";
+// import axios from "axios";
+import apiClient from "@/utils/apiClient"; // Import your Axios client
 import { useI18n } from "vue-i18n";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -50,6 +51,7 @@ const showEventDialog = ref(false);
 const selectedEvent = ref({});
 const isPending = ref(false);
 const loading = ref(false);
+const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
 
 const pickedStart = ref(null);
 const pickedEnd = ref(null);
@@ -151,7 +153,7 @@ function formatTime(time) {
 async function confirmEvent() {
   loading.value = true; // Start loading
   try {
-    const response = await axios.get(
+    const response = await apiClient.get(
       `http://localhost:5000/api/confirmEvent/${selectedEvent.value.id}`,
       {
         headers: { Authorization: `Bearer ${store.getters.accessToken}` },
@@ -168,18 +170,28 @@ async function confirmEvent() {
 }
 
 async function denyEvent() {
+  if (!token) {
+    showToast("You are not logged in. Please log in again.", "info");
+    return;
+  }
+
   if (confirm("Are you sure you want to deny this event?")) {
     loading.value = true;
     try {
-      const response = await axios.delete(
+      const response = await apiClient.get(
         `http://localhost:5000/api/deletePendingEvent/${selectedEvent.value.id}`,
         {
-          headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      showToast("Event successfully denied.");
-      await fetchAllEvents();
-      closeEventDialog(); // Close the dialog
+
+      if (response.status === 200) {
+        showToast("Event successfully denied.");
+        await fetchAllEvents();
+        closeEventDialog(); // Close the dialog
+      } else {
+        throw new Error("Failed to deny event.");
+      }
     } catch (error) {
       handleError("Error denying event: " + error.message);
     } finally {
@@ -247,23 +259,28 @@ onMounted(() => {
 
 // Methods
 async function fetchUserId() {
-  if (!store.getters.isLoggedIn) return;
+  if (!token) {
+    showToast("You are not logged in. Please log in again.", "info");
+    return;
+  }
 
-  const token = store.getters.accessToken;
   const payload = JSON.parse(atob(token.split(".")[1]));
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (payload.exp < currentTime) {
     showToast("Session expired. Please log in again.", "info");
-    store.dispatch("logout");
+    sessionStorage.removeItem("accessToken"); // Clear token on expiration
+    sessionStorage.removeItem("role"); // Clear user role as well if needed
     return;
   }
 
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/user", {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    // Assuming the API response returns user details in response.data
     userId.value = response.data.userId;
     email.value = response.data.email;
     firstName.value = response.data.firstName;
@@ -280,11 +297,20 @@ async function fetchUserId() {
 async function fetchAllEvents() {
   loading.value = true;
   try {
-    const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      axios.get("http://localhost:5000/api/getEvents"),
-      axios.get("http://localhost:5000/api/getPendingEvents2"),
-    ]);
+    if (!token) throw new Error("No token available");
 
+    const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
+      apiClient.get("http://localhost:5000/api/getEvents", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in headers
+        },
+      }),
+      apiClient.get("http://localhost:5000/api/getPendingEvents2", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in headers
+        },
+      }),
+    ]);
     // Combine both event types in a single assignment
     calendarOptions.events = [
       ...regularEventsResponse.data,
@@ -301,7 +327,13 @@ async function fetchAllEvents() {
 async function fetchServices() {
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:5000/api/services");
+    if (!token) throw new Error("No token available");
+
+    const response = await apiClient.get("http://localhost:5000/api/services", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token in headers
+      },
+    });
     services.value = response.data;
   } catch (error) {
     console.error("Error fetching services:", error);
@@ -314,10 +346,16 @@ async function deleteEvent() {
   if (confirm("Are you sure you want to delete this event?")) {
     loading.value = true;
     try {
-      const response = await axios.delete(
+      const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
+      if (!token) throw new Error("No token available");
+
+      const response = await apiClient.delete(
         `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
-        { headers: { Authorization: `Bearer ${store.getters.accessToken}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` }, // Include token in headers
+        }
       );
+
       if (response.status !== 200) {
         throw new Error("Failed to delete event");
       }
@@ -354,17 +392,26 @@ function showModificationModal() {
 
 async function confirmModifications() {
   loading.value = true;
+  if (!token) {
+    showToast("You are not logged in. Please log in again.", "error");
+    loading.value = false;
+    return;
+  }
+
   try {
-    await axios.post(
+    await apiClient.post(
       "http://localhost:5000/api/updateConfirmedEvents",
-      modifiedEvents.value
+      modifiedEvents.value,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
-    showToast("Modifications saved successfully!");
+    showToast("Modifications saved successfully!", "success");
     resetModifications();
   } catch (error) {
     handleError(
-      "There was an error saving the modifications. Please try again." +
-        error.message
+      "There was an error saving the modifications. Please try again. " +
+        (error.response?.data?.message || error.message)
     );
   } finally {
     loading.value = false;
@@ -465,7 +512,7 @@ async function finalizeBooking() {
 
   loading.value = true;
   try {
-    await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
+    await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
       headers: { Authorization: `Bearer ${store.getters.accessToken}` },
     });
 
@@ -883,7 +930,7 @@ p {
   font-size: larger;
 }
 
-.larger{
+.larger {
   font-size: larger;
 }
 </style>

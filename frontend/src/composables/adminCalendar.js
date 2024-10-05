@@ -110,7 +110,7 @@ export default {
       if (confirm("Are you sure you want to delete this event?")) {
         try {
           console.log("EZ A KIVALASZTOTT EVENT IDJE AMIT TOTOLNI KELL:", this.selectedEvent.id)
-          const response = await axios.delete(`http://localhost:5000/api/deleteEvent/${this.selectedEvent.id}`, {
+          const response = await apiClient.delete(`http://localhost:5000/api/deleteEvent/${this.selectedEvent.id}`, {
             headers: {
               Authorization: `Bearer ${this.$store.getters.accessToken}`,
             },
@@ -131,19 +131,12 @@ export default {
       }
     },
 
-    // enableModification() {
-    //   this.originalEvents = JSON.parse(
-    //     JSON.stringify(this.calendarOptions.events)
-    //   );
-    //   this.calendarOptions.editable = true;
-    //   this.modifying = true;
-    // },
-
-    // Enabling modification by saving original events before edits
     enableModification() {
-      originalEvents.value = JSON.parse(JSON.stringify(calendarOptions.events));
-      calendarOptions.editable = true;
-      modifying.value = true;
+      this.originalEvents = JSON.parse(
+        JSON.stringify(this.calendarOptions.events)
+      );
+      this.calendarOptions.editable = true;
+      this.modifying = true;
     },
 
     // Show the modification dialog with modified events details
@@ -158,7 +151,7 @@ export default {
     // Confirm modifications and update the confirmed_events table
     async confirmModifications() {
       try {
-        await axios.post("http://localhost:5000/api/updateConfirmedEvents", this.modifiedEvents);
+        await apiClient.post("http://localhost:5000/api/updateConfirmedEvents", this.modifiedEvents);
         alert("Modifications saved successfully!");
 
         this.resetModifications();
@@ -268,7 +261,7 @@ export default {
       }
 
       try {
-        const response = await axios.get("http://localhost:5000/api/user", {
+        const response = await apiClient.get("http://localhost:5000/api/user", {
           headers: {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
@@ -285,7 +278,7 @@ export default {
 
     async fetchEvents() {
       try {
-        const response = await axios.get("http://localhost:5000/api/getEvents");
+        const response = await apiClient.get("http://localhost:5000/api/getEvents");
         this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
         // console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
       } catch (error) {
@@ -293,20 +286,20 @@ export default {
       }
     },
 
-    //GET ALL PENDING EVENTS TEST ONLY
-    async fetchPendingEvents() {
-      try {
-        const response = await axios.get("http://localhost:5000/api/getPendingEvents2");
-        this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
-        console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    },
+//GET ALL PENDING EVENTS TEST ONLY
+async fetchPendingEvents() {
+  try {
+    const response = await apiClient.get("http://localhost:5000/api/getPendingEvents2");
+    this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
+    console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
+  } catch (error) {
+    console.error("Error fetching events:", error);
+  }
+},
 
     async fetchServices() {
       try {
-        const response = await axios.get("http://localhost:5000/api/services");
+        const response = await apiClient.get("http://localhost:5000/api/services");
         this.services = response.data;
       } catch (error) {
         console.error("Error fetching services:", error);
@@ -368,7 +361,7 @@ export default {
       };
 
       try {
-        await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
+        await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
           headers: {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },

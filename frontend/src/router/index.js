@@ -12,7 +12,7 @@ import ManageModifiedView from '@/views/ManageModifiedView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
-import axios from 'axios'
+import apiClient from '@/utils/apiClient'; // Import the custom Axios instance
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -108,7 +108,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.role) {
     try {
       // Validate token with backend to prevent sessionStorage tampering
-      const response = await axios.get('http://localhost:5000/verify-token', {
+      const response = await apiClient.get('http://localhost:5000/verify-token', {
         headers: { Authorization: `Bearer ${token}` },
       });
 

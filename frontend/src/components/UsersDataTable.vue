@@ -43,7 +43,7 @@
   </template>
   
   <script>
-  import axios from 'axios';
+import apiClient from '@/utils/apiClient';
   export default {
     data() {
       return {
@@ -109,7 +109,7 @@
   
         // If the token is valid, fetch the users from the backend
         try {
-          const response = await axios.get("http://localhost:5000/api/users", {
+          const response = await apiClient.get("http://localhost:5000/api/users", {
             headers: {
               Authorization: `Bearer ${token}`,
             },

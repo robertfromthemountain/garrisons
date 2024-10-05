@@ -13,7 +13,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(bodyParser.json());
-app.use(cors({ origin: 'http://localhost:5173' })); // Replace with your frontend URL
+const corsOptions = {
+    origin: 'http://localhost:5173', // The frontend URL
+    credentials: true, // Allow credentials (cookies, authorization headers)
+};
+
+app.use(cors(corsOptions));
 
 
 // MySQL connection
@@ -90,6 +95,23 @@ const transporter = nodemailer.createTransport({
         pass: '378385174926c2'  // Replace with Mailtrap password
     }
 });
+
+// Refresh Token Route
+app.post('/api/refresh-token', (req, res) => {
+    const refreshToken = req.cookies.refreshToken; // Assuming it's stored as an HTTP-only cookie
+
+    if (!refreshToken) return res.status(403).send('No refresh token provided');
+
+    // Verify refresh token
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+        if (err) return res.status(403).send('Invalid refresh token');
+
+        // Generate new access token
+        const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+        res.json({ accessToken });
+    });
+});
+
 
 // Registration with email verification:
 app.post('/register', async (req, res) => {
@@ -457,7 +479,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                     if (serviceResults.length > 0) {
                         const service = serviceResults[0];
 
-                         // Format the dates and times using the utility functions
+                        // Format the dates and times using the utility functions
                         const formattedDate = formatDate(pending_date);
                         const formattedStartTime = formatTime(pending_start_of_event);
                         const formattedEndTime = formatTime(pending_end_of_event);
@@ -482,6 +504,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                     <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
                                     <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
                                     <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
+                                    <a href="http://localhost:5000/api/deletePendingEvent/${result.insertId}" style="background-color: #e6413d; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Deny Appointment</a>
                                     <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
                                 </div>
                             </div>
@@ -580,10 +603,15 @@ app.get('/api/getPendingEvents2', authenticateToken, isAdmin, (req, res) => {
 // Confirm a pending event:
 app.get('/api/confirmEvent/:id', (req, res) => {
     const pendingEventId = req.params.id;
-    console.log('Pending event id-je:', req.params);
+    console.log('Pending event id:', req.params);
 
-    // Find the pending event by ID
-    const sqlSelect = 'SELECT * FROM pending_events WHERE pending_event_id = ?';
+    // Find the pending event by ID and join with the services table
+    const sqlSelect = `
+        SELECT pending_events.*, services.title, services.duration, services.price
+        FROM pending_events
+        JOIN services ON pending_events.pending_service_id = services.id
+        WHERE pending_event_id = ?
+    `;
     db.query(sqlSelect, [pendingEventId], (err, result) => {
         if (err || result.length === 0) {
             return res.status(404).send('Pending event not found');
@@ -615,21 +643,140 @@ app.get('/api/confirmEvent/:id', (req, res) => {
                 if (err) {
                     return res.status(500).send('Error deleting pending event');
                 }
-                res.send('Event confirmed and moved to confirmed_events');
+
+                // Fetch the user's email and full name based on user_id
+                const sqlUserSelect = 'SELECT email, firstName, lastName FROM users WHERE id = ?';
+                db.query(sqlUserSelect, [pendingEvent.user_id], (err, userResult) => {
+                    if (err || userResult.length === 0) {
+                        return res.status(500).send('Error fetching user data');
+                    }
+
+                    const user = userResult[0];
+                    const userEmail = user.email;
+                    const userName = `${user.firstName} ${user.lastName}`;
+                    // Format the dates and times using the utility functions
+                    const formattedDate = formatDate(pendingEvent.pending_date);
+                    const formattedStartTime = formatTime(pendingEvent.pending_start_of_event);
+                    const formattedEndTime = formatTime(pendingEvent.pending_end_of_event);
+
+                    // Send confirmation email with service details
+                    const mailOptions = {
+                        from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                        to: userEmail,
+                        subject: 'Appointment Confirmed',
+                        html: `
+                        <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                            <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                                <h2 style="color: #8f6a48;">Appointment Confirmed</h2>
+                                <p>Dear <strong>${userName}</strong>,</p>
+                                <p>Your appointment has been confirmed for the following service:</p>
+                                <ul>
+                                    <li><strong>Service:</strong> ${pendingEvent.title}</li>
+                                    <li><strong>Duration:</strong> ${pendingEvent.duration} minutes</li>
+                                    <li><strong>Price:</strong> $${pendingEvent.price}</li>
+                                    <li><strong>Date:</strong> ${formattedDate}</li>
+                                    <li><strong>Start Time:</strong> ${formattedStartTime}</li>
+                                    <li><strong>End Time:</strong> ${formattedEndTime}</li>
+                                </ul>
+                                <p>If you have any questions, feel free to contact us.</p>
+                            </div>
+                        </div>
+                        `
+                    };
+
+                    transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            console.error('Error sending confirmation email:', error);
+                            return res.status(500).send('Error sending confirmation email');
+                        }
+                        console.log('Confirmation email sent:', info.response);
+                    });
+
+                    res.send('Event confirmed and moved to confirmed_events, email sent to user');
+                });
             });
         });
     });
 });
 
 // Deny (delete) a pending event
-app.delete('/api/deletePendingEvent/:id', authenticateToken, isAdmin, (req, res) => {
+app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
     const { id } = req.params;
-    const sql = 'DELETE FROM pending_events WHERE pending_event_id = ?';
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Event denied and deleted' });
+
+    // First, fetch the event details and the user's email before deleting the event
+    const sqlSelect = `
+        SELECT pending_events.*, users.email, users.firstName, users.lastName, services.title, services.duration, services.price
+        FROM pending_events
+        JOIN users ON pending_events.user_id = users.id
+        JOIN services ON pending_events.pending_service_id = services.id
+        WHERE pending_events.pending_event_id = ?
+    `;
+
+    db.query(sqlSelect, [id], (err, result) => {
+        if (err) {
+            console.error('Error fetching pending event:', err);
+            return res.status(500).send('Error fetching pending event');
+        }
+
+        if (result.length === 0) {
+            return res.status(404).send('Pending event not found');
+        }
+
+        const pendingEvent = result[0];
+        const userEmail = pendingEvent.email;
+        const userName = `${pendingEvent.firstName} ${pendingEvent.lastName}`;
+        // Format the dates and times using the utility functions
+        const formattedDate = formatDate(pendingEvent.pending_date);
+        const formattedStartTime = formatTime(pendingEvent.pending_start_of_event);
+        const formattedEndTime = formatTime(pendingEvent.pending_end_of_event);
+
+        // Send the denial feedback email
+        const mailOptions = {
+            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+            to: userEmail,
+            subject: 'Appointment Denied',
+            html: `
+            <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                    <h2 style="color: #8f6a48;">Appointment Denied</h2>
+                    <p>Dear <strong>${userName}</strong>,</p>
+                    <p>We regret to inform you that your appointment request for the following service has been denied:</p>
+                    <ul>
+                        <li><strong>Service:</strong> ${pendingEvent.title}</li>
+                        <li><strong>Duration:</strong> ${pendingEvent.duration} minutes</li>
+                        <li><strong>Price:</strong> $${pendingEvent.price}</li>
+                        <li><strong>Date:</strong> ${formattedDate}</li>
+                        <li><strong>Start Time:</strong> ${formattedStartTime}</li>
+                        <li><strong>End Time:</strong> ${formattedEndTime}</li>
+                    </ul>
+                    <p>If you have any questions, feel free to contact us.</p>
+                </div>
+            </div>
+            `
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending denial email:', error);
+                return res.status(500).send('Error sending denial email');
+            }
+            console.log('Denial email sent:', info.response);
+
+            // After sending the email, proceed to delete the event from the pending_events table
+            const sqlDelete = 'DELETE FROM pending_events WHERE pending_event_id = ?';
+            db.query(sqlDelete, [id], (err, result) => {
+                if (err) {
+                    console.error('Error deleting pending event:', err);
+                    return res.status(500).send('Error deleting pending event');
+                }
+
+                res.send('Event denied and deleted, email sent to user');
+            });
+        });
     });
 });
+
+
 
 app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, (req, res) => {
     const modifiedEvents = req.body;

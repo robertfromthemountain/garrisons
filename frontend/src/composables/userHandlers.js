@@ -1,10 +1,10 @@
-import axios from "axios";
+import apiClient from '@/utils/apiClient';
 
 export const fetchUserId = async (store, user) => {
   if (!store.getters.isLoggedIn) return;
 
   try {
-    const response = await axios.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/user", {
       headers: {
         Authorization: `Bearer ${store.getters.accessToken}`,
       },

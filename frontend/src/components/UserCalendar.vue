@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
-import axios from "axios";
+import apiClient from "@/utils/apiClient";
 import { useI18n } from "vue-i18n";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -166,7 +166,7 @@ async function fetchUserId() {
 
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/user", {
       headers: { Authorization: `Bearer ${token}` },
     });
     userId.value = response.data.userId;
@@ -186,8 +186,8 @@ async function fetchAllEvents() {
   loading.value = true;
   try {
     const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      axios.get("http://localhost:5000/api/getEvents"),
-      axios.get("http://localhost:5000/api/getPendingEvents2"),
+      apiClient.get("http://localhost:5000/api/getEvents"),
+      apiClient.get("http://localhost:5000/api/getPendingEvents2"),
     ]);
 
     // Combine both event types in a single assignment
@@ -206,7 +206,7 @@ async function fetchAllEvents() {
 async function fetchServices() {
   loading.value = true;
   try {
-    const response = await axios.get("http://localhost:5000/api/services");
+    const response = await apiClient.get("http://localhost:5000/api/services");
     services.value = response.data;
   } catch (error) {
     console.error("Error fetching services:", error);
@@ -278,7 +278,7 @@ async function finalizeBooking() {
 
   loading.value = true;
   try {
-    await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
+    await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
       headers: { Authorization: `Bearer ${store.getters.accessToken}` },
     });
 
@@ -463,7 +463,7 @@ p {
   font-size: larger;
 }
 
-.calendar-border{
+.calendar-border {
   border: 1px solid #6a4e35;
   border-radius: 5px;
 }

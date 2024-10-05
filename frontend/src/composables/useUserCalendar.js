@@ -1,4 +1,4 @@
-import axios from "axios";
+import apiClient from '@/utils/apiClient';
 import { useI18n } from "vue-i18n";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -101,7 +101,7 @@ export default {
             }
 
             try {
-                const response = await axios.get("http://localhost:5000/api/user", {
+                const response = await apiClient.get("http://localhost:5000/api/user", {
                     headers: {
                         Authorization: `Bearer ${this.$store.getters.accessToken}`,
                     },
@@ -118,7 +118,7 @@ export default {
 
         async fetchEvents() {
             try {
-                const response = await axios.get("http://localhost:5000/api/getEvents");
+                const response = await apiClient.get("http://localhost:5000/api/getEvents");
                 this.calendarOptions.events = response.data;
                 console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
             } catch (error) {
@@ -127,7 +127,7 @@ export default {
         },
         async fetchServices() {
             try {
-                const response = await axios.get("http://localhost:5000/api/services");
+                const response = await apiClient.get("http://localhost:5000/api/services");
                 this.services = response.data;
                 console.log("ITT VANNJAK A SERVICEK:", this.services);
             } catch (error) {
@@ -190,7 +190,7 @@ export default {
             };
 
             try {
-                await axios.post("http://localhost:5000/api/requestEvent", newEvent, {
+                await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
                     headers: {
                         Authorization: `Bearer ${this.$store.getters.accessToken}`,
                     },
