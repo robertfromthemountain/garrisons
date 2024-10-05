@@ -12,15 +12,17 @@
         class="btn-garrisons ma-1 mb-5 text-center elevation-5 rounded-pill d-flex justify-space-between px-5 align-center"
       >
         <h2 class="text-garrisons font-weight-regular">{{ service.title }}</h2>
-        <h3 class="text-garrisons font-weight-light">{{ service.duration }} minutes</h3>
-        <h3 class="text-garrisons font-weight-regular">{{ service.price }} HUF</h3>
+        <h3 class="text-garrisons font-weight-regular">
+          {{ service.duration+" minutes, "+service.price }} HUF
+        </h3>
       </div>
     </div>
   </section>
 </template>
 
 <script>
-import apiClient from '@/utils/apiClient';
+import apiClient from "@/utils/apiClient";
+const token = sessionStorage.getItem("accessToken");
 
 export default {
   data() {
@@ -34,7 +36,12 @@ export default {
   methods: {
     async fetchEvents() {
       try {
-        const response = await apiClient.get("http://localhost:5000/api/services");
+        const response = await apiClient.get(
+          "http://localhost:5000/api/services",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         this.services = response.data; // Set fetched events
         console.log(this.services[0].title);
       } catch (error) {

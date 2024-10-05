@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
-import { useStore } from "vuex";
+// import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
 // import axios from "axios";
 import apiClient from "@/utils/apiClient"; // Import your Axios client
@@ -17,7 +17,7 @@ const { locale, t } = useI18n();
 const toast = useToast();
 
 // Vuex Store
-const store = useStore();
+// const store = useStore();
 
 // Show toast function
 const showToast = (message, type = "success") => {
@@ -76,6 +76,7 @@ const calendarOptions = reactive({
   eventClick: handleEventClick,
   aspectRatio: 2.5,
   nowIndicator: true,
+  allDaySlot: true, // Enable all-day slot for break events
   headerToolbar: {
     left: "prev",
     center: "title",
@@ -156,7 +157,7 @@ async function confirmEvent() {
     const response = await apiClient.get(
       `http://localhost:5000/api/confirmEvent/${selectedEvent.value.id}`,
       {
-        headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+        headers: { Authorization: `Bearer ${token}` },
       }
     );
     showToast("Event successfully confirmed.");
@@ -513,7 +514,7 @@ async function finalizeBooking() {
   loading.value = true;
   try {
     await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
-      headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     calendarOptions.events.push(newEvent);

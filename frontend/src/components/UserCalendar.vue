@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from "vue";
-import { useStore } from "vuex";
+// import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
 import apiClient from "@/utils/apiClient";
 import { useI18n } from "vue-i18n";
@@ -16,7 +16,7 @@ const { locale, t } = useI18n();
 const toast = useToast();
 
 // Vuex Store
-const store = useStore();
+// const store = useStore();
 
 // Show toast function
 const showToast = (message, type = "success") => {
@@ -47,6 +47,7 @@ const pickedStart = ref(null);
 const pickedEnd = ref(null);
 const pickedDuration = ref(0);
 const loading = ref(false);
+const token = sessionStorage.getItem("accessToken");
 
 // Calendar Options
 const calendarOptions = reactive({
@@ -152,15 +153,18 @@ onMounted(() => {
 
 // Methods
 async function fetchUserId() {
-  if (!store.getters.isLoggedIn) return;
+  if (!token) {
+    showToast("You are not logged in. Please log in again.", "info");
+    return;
+  }
 
-  const token = store.getters.accessToken;
   const payload = JSON.parse(atob(token.split(".")[1]));
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (payload.exp < currentTime) {
     showToast("Session expired. Please log in again.", "info");
-    store.dispatch("logout");
+    sessionStorage.removeItem("accessToken"); // Clear token on expiration
+    sessionStorage.removeItem("role"); // Clear user role as well if needed
     return;
   }
 
@@ -186,8 +190,16 @@ async function fetchAllEvents() {
   loading.value = true;
   try {
     const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      apiClient.get("http://localhost:5000/api/getEvents"),
-      apiClient.get("http://localhost:5000/api/getPendingEvents2"),
+      apiClient.get("http://localhost:5000/api/getEvents", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in headers
+        },
+      }),
+      apiClient.get("http://localhost:5000/api/getPendingEvents2", {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the token in headers
+        },
+      }),
     ]);
 
     // Combine both event types in a single assignment
@@ -206,7 +218,11 @@ async function fetchAllEvents() {
 async function fetchServices() {
   loading.value = true;
   try {
-    const response = await apiClient.get("http://localhost:5000/api/services");
+    const response = await apiClient.get("http://localhost:5000/api/services", {
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token in headers
+      },
+    });
     services.value = response.data;
   } catch (error) {
     console.error("Error fetching services:", error);
@@ -279,7 +295,7 @@ async function finalizeBooking() {
   loading.value = true;
   try {
     await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
-      headers: { Authorization: `Bearer ${store.getters.accessToken}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     calendarOptions.events.push(newEvent);
