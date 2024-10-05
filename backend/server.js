@@ -428,6 +428,51 @@ app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     });
 });
 
+
+// BREAKSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+// Get all breaks
+app.get('/api/breaks', authenticateToken, (req, res) => {
+    db.query('SELECT * FROM breaks', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// CREATE a new break
+app.post('/api/breaks', authenticateToken, isAdmin, (req, res) => {
+    const { title, duration, all_day } = req.body; // Ensure all_day is included
+    const sql = 'INSERT INTO breaks (title, duration, all_day) VALUES (?, ?, ?)';
+
+    db.query(sql, [title, duration, all_day || false], (err, result) => { // Default to false if all_day is not provided
+        if (err) return res.status(500).send(err);
+        res.status(201).json({ id: result.insertId, title, duration, all_day });
+    });
+});
+
+// UPDATE a break
+app.put('/api/breaks/:id', authenticateToken, isAdmin, (req, res) => {
+    const { id } = req.params;
+    const { title, duration, all_day } = req.body; // Ensure all_day is included
+    const sql = 'UPDATE breaks SET title = ?, duration = ?, all_day = ? WHERE id = ?';
+
+    db.query(sql, [title, duration, all_day || false, id], (err, result) => { // Default to false if all_day is not provided
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Break updated successfully' });
+    });
+});
+
+// DELETE a break
+app.delete('/api/breaks/:id', authenticateToken, isAdmin, (req, res) => {
+    const { id } = req.params;
+    console.log("Break ID received for deletion:", req.params.id);
+    const sql = 'DELETE FROM breaks WHERE id = ?';
+
+    db.query(sql, [id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Break deleted successfully' });
+    });
+});
+
 // Protected route requiring authentication
 app.get('/api/user', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Access user ID from decoded token

@@ -8,7 +8,7 @@ import RegisterView from '@/views/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ManageEventsView from '@/views/ManageEventsView.vue'
 import ManagePendingView from '@/views/ManagePendingView.vue'
-import ManageModifiedView from '@/views/ManageModifiedView.vue'
+import ManageBreaksView from '@/views/ManageBreaksView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
@@ -84,9 +84,9 @@ const router = createRouter({
           meta: { requiresAuth: true, role: 'admin' },
         },
         {
-          path: 'modifiedEvents',
-          name: 'dashboard-modified',
-          component: ManageModifiedView,
+          path: 'breaks',
+          name: 'dashboard-breaks',
+          component: ManageBreaksView,
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]

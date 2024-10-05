@@ -2,9 +2,10 @@
   <v-app>
     <v-navigation-drawer app>
       <v-list>
-        <v-list-item
-          class="list-title-dashboard"
-        ><v-icon left>mdi-view-dashboard-outline</v-icon>Admin Dashboard</v-list-item>
+        <v-list-item class="list-title-dashboard"
+          ><v-icon left>mdi-view-dashboard-outline</v-icon>Admin
+          Dashboard</v-list-item
+        >
         <v-divider></v-divider>
 
         <!-- Admin-only links -->
@@ -14,7 +15,7 @@
           :to="{ name: 'dashboard-events' }"
         >
           <v-icon left>mdi-calendar-check</v-icon>
-          {{ t('dashboard.manageEvents.title') }}
+          {{ t("dashboard.manageEvents.title") }}
         </v-list-item>
 
         <v-list-item
@@ -38,19 +39,19 @@
         <v-list-item
           v-if="isLoggedIn && userRole === 'admin'"
           class="list-item-custom"
-          :to="{ name: 'dashboard-users' }"
+          :to="{ name: 'dashboard-breaks' }"
         >
-          <v-icon left>mdi-account-group</v-icon>
-          Users
+          <v-icon left>mdi-coffee-outline</v-icon>
+          Breaks
         </v-list-item>
 
         <v-list-item
           v-if="isLoggedIn && userRole === 'admin'"
           class="list-item-custom"
-          :to="{ name: 'dashboard-modified' }"
+          :to="{ name: 'dashboard-users' }"
         >
-          <v-icon left>mdi-calendar-edit</v-icon>
-          Modified Events
+          <v-icon left>mdi-account-group</v-icon>
+          Users
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
