@@ -577,7 +577,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
 });
 
 // Get pending events from the unified events table
-app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
+app.get('/api/getPendingEvents2', (req, res) => {
     const sqlQuery = `
         SELECT 
             events.event_id, 

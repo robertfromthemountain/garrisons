@@ -11,14 +11,22 @@ const {
   t,
   visible,
 } = useLogin();
+
+// Add a prop to control the visibility of the register link
+const props = defineProps({
+  showLink: {
+    type: Boolean,
+    default: true, // Show register link by default
+  },
+});
 </script>
 
 <template>
-  <div class="mx-auto w-25">
+  <div class="mx-auto responsive-input">
     <h1
       class="text-center text-h4 font-weight-light text-uppercase mt-5 text-color"
     >
-      {{ t("button.login") }}
+      <span class="mdi mdi-login"></span> {{ t("button.login") }}
     </h1>
     <form @submit.prevent="loginUser">
       <v-text-field
@@ -58,7 +66,7 @@ const {
         {{ t("inputFields.submit") }}
       </v-btn>
 
-      <p class="mt-10">
+      <p v-if="showLink" class="mt-10 text-center">
         {{ t("text.needToRegister1") }}
         <RouterLink to="/register" class="clear">{{
           t("button.needToRegBtn")

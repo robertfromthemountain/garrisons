@@ -2,6 +2,27 @@ body {
     font-family: 'Bebas Neue', sans-serif;
 }
 
+.responsive-input {
+    width: 80vw;
+    /* Default for tiny screens */
+    max-width: 100%;
+    /* Ensure it doesn't exceed the container */
+}
+
+@media (min-width: 600px) {
+    .responsive-input {
+        width: 40vw;
+        /* For mid-sized screens */
+    }
+}
+
+@media (min-width: 1024px) {
+    .responsive-input {
+        width: 20vw;
+        /* For large screens */
+    }
+}
+
 .bg-garrisons {
     background-color: #26211e;
 }
@@ -89,7 +110,7 @@ fc-today-button {
     background-color: #201b18;
 }
 
-li{
+li {
     list-style-type: none;
 }
 
