@@ -20,22 +20,21 @@ body {
 
 .text-garrisons {
     color: #d3d2cd;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
 }
 
 .icon-color-garrisons {
     background-color: #d3d2cd;
 }
 
-.text-garrisons {
-    color: #d3d2cd;
-}
-
 .title-garrisons {
     color: #8f6a48;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
 }
 
 .subtitle-garrisons {
     color: #9e7f61;
+    text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
 }
 
 .fc-event-main {
@@ -88,6 +87,10 @@ fc-today-button {
 .pending_event_bg {
     opacity: 50%;
     background-color: #201b18;
+}
+
+li{
+    list-style-type: none;
 }
 
 :root {

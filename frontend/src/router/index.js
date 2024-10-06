@@ -8,11 +8,11 @@ import RegisterView from '@/views/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import ManageEventsView from '@/views/ManageEventsView.vue'
 import ManagePendingView from '@/views/ManagePendingView.vue'
-import ManageBreaksView from '@/views/ManageBreaksView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
 import ManageBusinessHoursView from '@/views/ManageBusinessHoursView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
+import NotFound from "@/components/NotFound.vue"
 import apiClient from '@/utils/apiClient'; // Import the custom Axios instance
 
 const router = createRouter({
@@ -85,19 +85,18 @@ const router = createRouter({
           meta: { requiresAuth: true, role: 'admin' },
         },
         {
-          path: 'breaks',
-          name: 'dashboard-breaks',
-          component: ManageBreaksView,
-          meta: { requiresAuth: true, role: 'admin' },
-        },
-        {
           path: 'businessHours',
           name: 'dashboard-businessHours',
           component: ManageBusinessHoursView,
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]
-    }
+    },
+    {
+      path: '/:pathMatch(.*)*', // This will catch all invalid routes
+      name: 'NotFound',
+      component: NotFound
+    },
   ]
 });
 

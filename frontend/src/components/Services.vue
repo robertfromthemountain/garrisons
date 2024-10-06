@@ -1,24 +1,36 @@
 <template>
   <section>
-    <div
-      class="d-block justify-center pa-8 elevation-5 rounded bg-dark-garrisons"
-    >
-      <h1 class="text-center divider text-garrisons font-weight-medium">
+    <div class="d-block justify-center pa-8">
+      <h1 class="text-center divider title-garrisons bigger-title">
         Szolgaltatasok
       </h1>
       <div v-if="!loading && services.length > 0">
-        <div
-          v-for="service in services"
-          :key="service.id"
-          class="btn-garrisons ma-1 mb-5 text-center elevation-5 rounded-pill d-flex justify-space-between px-5 align-center"
-        >
-          <h2 class="text-garrisons font-weight-regular">
-            {{ service.title }}
-          </h2>
-          <h3 class="text-garrisons font-weight-regular">
-            {{ service.duration + " minutes, " + service.price }} HUF
-          </h3>
-        </div>
+        <ul class="services-content">
+          <li
+            class="bg-dark-garrisons ma-1 mb-5 text-center elevation-8 rounded-pill service-card-border d-flex justify-space-between px-5 align-center"
+            v-for="service in services"
+            :key="service.id"
+          >
+            <v-col
+              cols="4"
+              class="text-start pa-0 ma-0 text-garrisons bigger"
+              no-gutters
+              ><span class="mdi mdi-content-cut title-garrisons"></span>
+              {{ service.title }}</v-col
+            >
+            <v-col
+              cols="4"
+              class="text-center pa-0 ma-0 text-garrisons bigger"
+              no-gutters
+              ><span class="mdi mdi-timer-sand title-garrisons"></span
+              >{{ service.duration }}</v-col
+            >
+            <v-col cols="4" class="text-end pa-0 ma-0 text-garrisons bigger" no-gutters
+              ><span class="mdi mdi-cash-multiple title-garrisons"></span>
+              {{ service.price }} HUF</v-col
+            >
+          </li>
+        </ul>
       </div>
     </div>
   </section>
@@ -62,7 +74,19 @@ const fetchServices = async () => {
 
 <style>
 .divider {
-  border-bottom: 1px solid #d3d2cd;
+  border-bottom: 1px solid #6a4e35;
   margin-bottom: 30px;
+}
+
+.service-card-border{
+  border: 1px solid #8f6a48;
+}
+
+.bigger{
+  font-size: x-large;
+}
+
+.bigger-title{
+  font-size: xx-large;
 }
 </style>

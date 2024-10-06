@@ -410,7 +410,7 @@ app.get('/api/getEvents', (req, res) => {
 
 
 // Get services
-app.get('/api/services', authenticateToken, (req, res) => {
+app.get('/api/services', (req, res) => {
     db.query('SELECT * FROM services', (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
@@ -450,7 +450,7 @@ app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
 });
 
 // Get all business hours
-app.get('/api/business-hours', authenticateToken, (req, res) => {
+app.get('/api/business-hours', (req, res) => {
     db.query('SELECT * FROM business_hours', (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
@@ -542,7 +542,6 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                     <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
 
                                     <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
-                                    <p style="color: #0c0a09;"><strong>Service ID:</strong> ${service.id}</p>
                                     <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
                                     <p style="color: #0c0a09;"><strong>Price:</strong> ${service.price} HUF</p>
                                     <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
@@ -895,26 +894,82 @@ app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, async (req, r
     }
 });
 
-// Delete confirmed event
+// Delete confirmed event and send feedback email
 app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const confirmedEventId = req.params.id;
 
-    const sqlDelete = 'DELETE FROM events WHERE event_id = ?';
-    db.query(sqlDelete, [confirmedEventId], (err, result) => {
+    // Fetch event details, including user information, before deletion
+    const sqlSelect = `
+        SELECT users.email, users.firstName, users.lastName, services.title, events.event_date, events.event_start, events.event_end
+        FROM events
+        JOIN users ON events.user_id = users.id
+        JOIN services ON events.service_id = services.id
+        WHERE events.event_id = ?
+    `;
+
+    db.query(sqlSelect, [confirmedEventId], (err, eventDetails) => {
         if (err) {
-            console.error('Error deleting event:', err);
-            return res.status(500).send('Error deleting event');
+            console.error('Error fetching event details:', err);
+            return res.status(500).send('Error fetching event details');
         }
 
-        if (result.affectedRows === 0) {
+        if (eventDetails.length === 0) {
             return res.status(404).send('Event not found');
         }
 
-        res.status(200).send('Event deleted successfully');
+        const eventData = eventDetails[0];
+        const fullName = `${eventData.firstName} ${eventData.lastName}`;
+        const formattedDate = formatDate(eventData.event_date);
+        const formattedStartTime = formatTime(eventData.event_start);
+        const formattedEndTime = formatTime(eventData.event_end);
+
+        // Now proceed to delete the event
+        const sqlDelete = 'DELETE FROM events WHERE event_id = ?';
+        db.query(sqlDelete, [confirmedEventId], (err, result) => {
+            if (err) {
+                console.error('Error deleting event:', err);
+                return res.status(500).send('Error deleting event');
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).send('Event not found');
+            }
+
+            // Send feedback email to the user after successful deletion
+            const mailOptions = {
+                from: "Garrison's Haircraft <noreply@garrisons.com>",
+                to: eventData.email,
+                subject: 'Your Appointment has been Cancelled',
+                html: `
+                <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                  <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                      <h2 style="color: #e6413d;">Appointment Cancelled at Garrison's Haircraft</h2>
+                      <p>Hi <strong>${fullName}</strong>,</p>
+                      <div style="height: 1px; background-color: #e6413d; margin: 20px 0; width: 100%;"></div>
+                      <p style="color: #0c0a09;">We regret to inform you that your appointment for the following service has been cancelled:</p>
+                      <p><strong>Service:</strong> ${eventData.title}</p>
+                      <p><strong>Date:</strong> ${formattedDate}</p>
+                      <p><strong>Start Time:</strong> ${formattedStartTime}</p>
+                      <p><strong>End Time:</strong> ${formattedEndTime}</p>
+                      <br>
+                      <p style="color: #0c0a09;">If you have any questions or would like to reschedule, please feel free to contact us.</p>
+                      <p>Best regards,<br>The Garrison's Haircraft Team</p>
+                  </div>
+                </div>`
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending cancellation email:', error);
+                } else {
+                    console.log('Cancellation email sent:', info.response);
+                }
+            });
+
+            res.status(200).send('Event deleted successfully and feedback email sent');
+        });
     });
 });
-
-
 
 // GET all users
 app.get('/api/users', authenticateToken, isAdmin, (req, res) => {

@@ -42,7 +42,7 @@ validateUserRole();
     <header>
       <AppBar></AppBar>
     </header>
-    <v-main>
+    <v-main style="min-height: 80vh;">
       <RouterView />
     </v-main>
     <footer>
