@@ -357,6 +357,7 @@ app.get('/api/getEvents', (req, res) => {
             services.title AS service_title, 
             services.duration AS service_duration,
             services.price AS service_price,
+            services.backgroundColor AS service_backgroundColor,
             users.firstName AS user_firstName,
             users.lastName AS user_lastName,
             users.email AS user_email,
@@ -394,6 +395,7 @@ app.get('/api/getEvents', (req, res) => {
                 email: event.user_email,
                 phoneNumber: event.user_phoneNumber,
                 confirmed_at: event.confirmed_at,
+                backgroundColor: event.service_backgroundColor,
             }));
             return res.json(fullCalendarEvents);
         } else {
@@ -413,20 +415,20 @@ app.get('/api/services', authenticateToken, (req, res) => {
 
 // CREATE a new service
 app.post('/api/services', authenticateToken, isAdmin, (req, res) => {
-    const { title, price, duration } = req.body;
-    const sql = 'INSERT INTO services (title, price, duration) VALUES (?, ?, ?)';
-    db.query(sql, [title, price, duration], (err, result) => {
+    const { title, price, duration, backgroundColor } = req.body;
+    const sql = 'INSERT INTO services (title, price, duration, backgroundColor) VALUES (?, ?, ?, ?)';
+    db.query(sql, [title, price, duration, backgroundColor || '#8f6a48'], (err, result) => {
         if (err) return res.status(500).send(err);
-        res.status(201).json({ id: result.insertId, title, price, duration });
+        res.status(201).json({ id: result.insertId, title, price, duration, backgroundColor });
     });
 });
 
 // UPDATE a service
 app.put('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
-    const { title, price, duration } = req.body;
-    const sql = 'UPDATE services SET title = ?, price = ?, duration = ? WHERE id = ?';
-    db.query(sql, [title, price, duration, id], (err, result) => {
+    const { title, price, duration, backgroundColor } = req.body;
+    const sql = 'UPDATE services SET title = ?, price = ?, duration = ?, backgroundColor = ? WHERE id = ?';
+    db.query(sql, [title, price, duration, backgroundColor || '#8f6a48', id], (err, result) => {
         if (err) return res.status(500).send(err);
         res.json({ message: 'Service updated successfully' });
     });

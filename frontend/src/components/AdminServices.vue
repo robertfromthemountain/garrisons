@@ -15,15 +15,9 @@
       <thead class="bg-garrisons">
         <tr>
           <!-- <th>ID</th> -->
-          <th>
-      <v-icon class="me-2">mdi-label-outline</v-icon>Title
-    </th>
-    <th>
-      <v-icon class="me-2">mdi-cash-multiple</v-icon>Price
-    </th>
-    <th>
-      <v-icon class="me-2">mdi-timer-outline</v-icon>Duration
-    </th>
+          <th><v-icon class="me-2">mdi-label-outline</v-icon>Title</th>
+          <th><v-icon class="me-2">mdi-cash-multiple</v-icon>Price</th>
+          <th><v-icon class="me-2">mdi-timer-outline</v-icon>Duration</th>
           <th>
             <v-text-field
               v-model="searchQuery"
@@ -31,13 +25,16 @@
               density="compact"
               placeholder="Search by title, price, or duration"
               append-inner-icon="mdi-magnify"
-              
             ></v-text-field>
           </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="service in filteredServices" :key="service.id" class="text-start">
+        <tr
+          v-for="service in filteredServices"
+          :key="service.id"
+          class="text-start"
+        >
           <td>{{ service.title }}</td>
           <td>{{ service.price }}</td>
           <td>{{ service.duration }}</td>
@@ -83,8 +80,7 @@
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
-            <span class="mdi mdi-pencil-box"></span>
-            Edit Service
+            <span class="mdi mdi-pencil-box"></span> Edit Service
           </h2>
         </v-card-title>
         <v-divider></v-divider>
@@ -114,12 +110,21 @@
             clearable
             required
           ></v-text-field>
+          <!-- New Color Picker -->
+           <p>Color of the service:</p>
+          <v-color-picker
+          class="mx-auto bg-dark-garrisons"
+            v-model="editServiceData.backgroundColor"
+            label="Select Background Color"
+            mode="hexa"
+            canvas-height="150"
+            hide-mode-switch
+          ></v-color-picker>
         </v-card-text>
-        <v-card-actions>
+        <v-divider></v-divider>
+        <v-card-actions class="pb-5">
           <v-btn
             class="bg-red-darken-1 text-garrisons ms-2"
-            density="comfortable"
-            :disabled="loading"
             @click="closeEditModal"
           >
             Cancel
@@ -127,13 +132,10 @@
           <v-spacer></v-spacer>
           <v-btn
             class="bg-green text-garrisons"
-            density="comfortable"
-            :disabled="
-              !editServiceData.title ||
-              !editServiceData.duration ||
-              loading
-            "
             @click="saveEdit"
+            :disabled="
+              !editServiceData.title || !editServiceData.duration || loading
+            "
           >
             Save
           </v-btn>
@@ -146,8 +148,7 @@
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
-            <span class="mdi mdi-plus"></span>
-            Add New Service
+            <span class="mdi mdi-plus"></span> Add New Service
           </h2>
         </v-card-title>
         <v-divider></v-divider>
@@ -178,12 +179,18 @@
             clearable
             required
           ></v-text-field>
+          <!-- New Color Picker -->
+          <v-color-picker
+            v-model="newService.backgroundColor"
+            label="Select Background Color"
+            mode="hexa"
+            canvas-height="150"
+            hide-mode-switch
+          ></v-color-picker>
         </v-card-text>
         <v-card-actions>
           <v-btn
             class="bg-red-darken-1 text-garrisons ms-2"
-            density="comfortable"
-            :disabled="loading"
             @click="closeAddModal"
           >
             Cancel
@@ -191,13 +198,8 @@
           <v-spacer></v-spacer>
           <v-btn
             class="bg-green text-garrisons"
-            density="comfortable"
-            :disabled="
-              !newService.title ||
-              !newService.duration ||
-              loading
-            "
             @click="addService"
+            :disabled="!newService.title || !newService.duration || loading"
           >
             Add
           </v-btn>
@@ -236,11 +238,13 @@ const editServiceData = ref({
   title: "",
   price: null,
   duration: null,
+  backgroundColor: "#8f6a48",
 }); // Store the currently editing service's data
 const newService = ref({
   title: "",
   price: null,
   duration: null,
+  backgroundColor: "#8f6a48",
 });
 const isDeleteModalOpen = ref(false); // Control the modal visibility
 const selectedServiceId = ref(null); // Store the ID of the service to be deleted
