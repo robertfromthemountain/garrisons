@@ -61,7 +61,7 @@ function authenticateToken(req, res, next) {
 }
 
 function isAdmin(req, res, next) {
-    const userId = req.user.userId; // Assuming the user ID is present in req.user (from decoded JWT)
+    const userId = req.user.userId; // Extract the userId from the decoded JWT
     const sql = 'SELECT role FROM users WHERE id = ?';
 
     db.query(sql, [userId], (err, results) => {
@@ -77,13 +77,14 @@ function isAdmin(req, res, next) {
 
         const userRole = results[0].role;
         if (userRole === 'admin') {
-            next(); // User is admin, proceed
+            next(); // User is admin, proceed to the next middleware or route
         } else {
             console.log("User is not an admin");
             return res.status(403).json({ message: 'Forbidden: Admins only' });
         }
     });
 }
+
 
 
 //Nodemailer
@@ -98,19 +99,33 @@ const transporter = nodemailer.createTransport({
 
 // Refresh Token Route
 app.post('/api/refresh-token', (req, res) => {
-    const refreshToken = req.cookies.refreshToken; // Assuming it's stored as an HTTP-only cookie
+    // Get refresh token from Authorization header or request body
+    const authHeader = req.headers['authorization'];
+    const refreshToken = authHeader && authHeader.split(' ')[1];
 
-    if (!refreshToken) return res.status(403).send('No refresh token provided');
+    // If there's no refresh token in the header or body, return an error
+    if (!refreshToken) {
+        return res.status(403).json({ message: 'No refresh token provided' });
+    }
 
-    // Verify refresh token
+    // Verify the refresh token using JWT
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-        if (err) return res.status(403).send('Invalid refresh token');
+        if (err) {
+            return res.status(403).json({ message: 'Invalid refresh token' });
+        }
 
-        // Generate new access token
-        const accessToken = jwt.sign({ id: user.id, role: user.role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+        // If valid, generate a new access token
+        const accessToken = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET, // Your access token secret
+            { expiresIn: '15m' } // Set the expiration for the new access token
+        );
+
+        // Send the new access token back to the client
         res.json({ accessToken });
     });
 });
+
 
 
 // Registration with email verification:
@@ -473,6 +488,28 @@ app.delete('/api/breaks/:id', authenticateToken, isAdmin, (req, res) => {
     });
 });
 
+//Business hours
+// Get all business hours
+app.get('/api/business-hours', authenticateToken, (req, res) => {
+    db.query('SELECT * FROM business_hours', (err, results) => {
+        if (err) return res.status(500).send(err);
+        res.json(results);
+    });
+});
+
+// Update business hours for a specific day
+app.put('/api/business-hours/:id', authenticateToken, isAdmin, (req, res) => {
+    const { startTime, endTime } = req.body;
+    const { id } = req.params;
+
+    const sql = 'UPDATE business_hours SET startTime = ?, endTime = ? WHERE id = ?';
+    db.query(sql, [startTime, endTime, id], (err, result) => {
+        if (err) return res.status(500).send(err);
+        res.json({ message: 'Business hours updated successfully' });
+    });
+});
+
+
 // Protected route requiring authentication
 app.get('/api/user', authenticateToken, (req, res) => {
     const userId = req.user.userId; // Access user ID from decoded token
@@ -587,7 +624,7 @@ app.get('/api/getPendingEvents', (req, res) => {
 });
 
 // Get pending events TEST ONLY FOR THE BG!!!!!!
-app.get('/api/getPendingEvents2', authenticateToken, isAdmin, (req, res) => {
+app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
     const sqlQuery = `
         SELECT 
             pending_events.pending_event_id, 

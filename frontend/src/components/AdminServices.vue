@@ -104,7 +104,6 @@
             prepend-inner-icon="mdi-currency-usd"
             type="number"
             clearable
-            required
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -131,7 +130,6 @@
             density="comfortable"
             :disabled="
               !editServiceData.title ||
-              !editServiceData.price ||
               !editServiceData.duration ||
               loading
             "
@@ -196,7 +194,6 @@
             density="comfortable"
             :disabled="
               !newService.title ||
-              !newService.price ||
               !newService.duration ||
               loading
             "

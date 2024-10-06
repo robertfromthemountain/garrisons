@@ -76,7 +76,6 @@ const calendarOptions = reactive({
   eventClick: handleEventClick,
   aspectRatio: 2.5,
   nowIndicator: true,
-  allDaySlot: true, // Enable all-day slot for break events
   headerToolbar: {
     left: "prev",
     center: "title",
@@ -92,6 +91,13 @@ const calendarOptions = reactive({
     minute: "2-digit",
     hour12: false,
   },
+  eventTimeFormat: {
+    // for event display
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false, // This ensures 24-hour format
+  },
+  businessHours: true,
   dateClick: handleDateClick,
   events: calendarEvents,
 });
@@ -230,9 +236,31 @@ function handleEventDrop(info) {
 }
 
 function handleDateClick(arg) {
-  selectedSlot.value = { date: arg.dateStr, time: arg.dateStr };
-  selectedService.value = null;
-  showFirstDialog.value = true;
+  const clickedDate = new Date(arg.date);
+  const dayOfWeek = clickedDate.getDay();
+  const clickedTime = clickedDate.toISOString().slice(11, 16); // Extract the time in HH:mm format
+
+  // Check if the clicked time falls within the business hours for that day
+  const isWithinBusinessHours = calendarOptions.businessHours.some(
+    (businessHour) => {
+      if (businessHour.daysOfWeek.includes(dayOfWeek)) {
+        return (
+          clickedTime >= businessHour.startTime &&
+          clickedTime < businessHour.endTime
+        );
+      }
+      return false;
+    }
+  );
+
+  if (isWithinBusinessHours) {
+    selectedSlot.value = { date: arg.dateStr, time: arg.dateStr };
+    selectedService.value = null;
+    showFirstDialog.value = true;
+  } else {
+    console.log("Selected slot is outside of business hours.");
+    showToast("This time slot is outside of business hours.", "error");
+  }
 }
 
 function handleEventClick(info) {
@@ -252,10 +280,17 @@ function clearSelectedEvent() {
 }
 
 // Lifecycle Hook
-onMounted(() => {
+onMounted(async () => {
   fetchUserId();
   fetchAllEvents();
   fetchServices();
+
+  const businessHoursData = await fetchBusinessHours();
+
+  if (businessHoursData) {
+    // Map the fetched business hours to FullCalendar's format and update the calendar
+    calendarOptions.businessHours = mapBusinessHours(businessHoursData);
+  }
 });
 
 // Methods
@@ -293,6 +328,33 @@ async function fetchUserId() {
   } finally {
     loading.value = false;
   }
+}
+
+// Function to fetch business hours from API
+async function fetchBusinessHours() {
+  loading.value = true;
+  try {
+    const response = await apiClient.get(
+      "http://localhost:5000/api/business-hours",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching business hours:", error);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Function to map business hours to FullCalendar's format
+function mapBusinessHours(businessHours) {
+  return businessHours.map((hour) => ({
+    daysOfWeek: [hour.daysOfWeek], // Maps the day number from the database
+    startTime: hour.startTime.slice(0, 5), // FullCalendar expects 'HH:mm' format
+    endTime: hour.endTime.slice(0, 5),
+  }));
 }
 
 async function fetchAllEvents() {
@@ -501,6 +563,27 @@ async function finalizeBooking() {
   const durationInMinutes = parseInt(selectedService.value.duration, 10);
   const startTime = new Date(selectedSlot.value.date);
   const endTime = new Date(startTime.getTime() + durationInMinutes * 60000);
+  const dayOfWeek = startTime.getDay();
+  const startTimeFormatted = startTime.toISOString().slice(11, 16); // Get start time in HH:mm
+  const endTimeFormatted = endTime.toISOString().slice(11, 16); // Get end time in HH:mm
+
+  // Check if the start and end times are within the business hours for the day
+  const isWithinBusinessHours = calendarOptions.businessHours.some(
+    (businessHour) => {
+      if (businessHour.daysOfWeek.includes(dayOfWeek)) {
+        return (
+          startTimeFormatted >= businessHour.startTime &&
+          endTimeFormatted <= businessHour.endTime
+        );
+      }
+      return false;
+    }
+  );
+
+  if (!isWithinBusinessHours) {
+    showToast("The selected time is outside of business hours.", "error");
+    return; // Prevent booking if the event is outside business hours
+  }
 
   const newEvent = {
     pending_service_title: selectedService.value.title,

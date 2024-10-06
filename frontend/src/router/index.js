@@ -11,6 +11,7 @@ import ManagePendingView from '@/views/ManagePendingView.vue'
 import ManageBreaksView from '@/views/ManageBreaksView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
+import ManageBusinessHoursView from '@/views/ManageBusinessHoursView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
 import apiClient from '@/utils/apiClient'; // Import the custom Axios instance
 
@@ -87,6 +88,12 @@ const router = createRouter({
           path: 'breaks',
           name: 'dashboard-breaks',
           component: ManageBreaksView,
+          meta: { requiresAuth: true, role: 'admin' },
+        },
+        {
+          path: 'businessHours',
+          name: 'dashboard-businessHours',
+          component: ManageBusinessHoursView,
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]

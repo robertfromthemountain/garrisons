@@ -113,7 +113,7 @@ fc-today-button{
     --fc-event-resizer-thickness: 8px;
     --fc-event-resizer-dot-total-width: 8px;
     --fc-event-resizer-dot-border-width: 1px;
-    --fc-non-business-color: hsla(0, 0%, 84%, .3);
+    --fc-non-business-color: hsla(0, 100%, 50%, 0.308);
     --fc-bg-event-color: #8fdf82;
     --fc-bg-event-opacity: 0.3;
     --fc-highlight-color: rgba(188, 232, 241, .3);

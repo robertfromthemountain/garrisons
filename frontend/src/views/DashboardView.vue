@@ -2,10 +2,9 @@
   <v-app>
     <v-navigation-drawer app>
       <v-list>
-        <v-list-item class="list-title-dashboard"
-          ><v-icon left>mdi-view-dashboard-outline</v-icon>Admin
-          Dashboard</v-list-item
-        >
+        <v-list-item class="list-title-dashboard">
+          <v-icon left>mdi-view-dashboard-outline</v-icon>Admin Dashboard
+        </v-list-item>
         <v-divider></v-divider>
 
         <!-- Admin-only links -->
@@ -48,6 +47,15 @@
         <v-list-item
           v-if="isLoggedIn && userRole === 'admin'"
           class="list-item-custom"
+          :to="{ name: 'dashboard-businessHours' }"
+        >
+          <v-icon left>mdi-calendar-clock-outline</v-icon>
+          Business Hours
+        </v-list-item>
+
+        <v-list-item
+          v-if="isLoggedIn && userRole === 'admin'"
+          class="list-item-custom"
           :to="{ name: 'dashboard-users' }"
         >
           <v-icon left>mdi-account-group</v-icon>
@@ -64,24 +72,21 @@
 
 <script setup>
 import { useI18n } from "vue-i18n";
-import { computed, onMounted } from "vue"; // Import onMounted for lifecycle hook
-import { useStore } from "vuex";
-import { useRouter, useRoute } from "vue-router"; // Import router and route
+import { computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router"; 
 
-// Setup composition API functions
 const { t } = useI18n();
-const store = useStore();
-const router = useRouter(); // Router instance
-const route = useRoute(); // Current route
+const router = useRouter();
+const route = useRoute();
 
-// Computed properties for checking login and user role
-const isLoggedIn = computed(() => store.getters.isLoggedIn);
-const userRole = computed(() => store.getters.userRole);
+// Computed properties for checking login and user role from sessionStorage
+const isLoggedIn = computed(() => !!sessionStorage.getItem('accessToken'));
+const userRole = computed(() => sessionStorage.getItem('role'));
 
 // Lifecycle hook for redirection logic
 onMounted(() => {
   // Redirect only if the user is not already on a dashboard child route
-  if (route.name !== "dashboard-events") {
+  if (route.name !== "dashboard-events" && userRole.value === 'admin') {
     router.push("/dashboard/manageEvents");
   }
 });
@@ -94,20 +99,20 @@ onMounted(() => {
 }
 
 .list-title-dashboard {
-  font-size: 1.2rem; /* Adjust font size here */
-  font-weight: 500; /* Medium font weight */
-  color: #6a4e35; /* Text color */
-  padding-left: 16px; /* Optional: adjust padding for better spacing */
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #6a4e35;
+  padding-left: 16px;
 }
-/* Custom styling for v-list-item */
+
 .list-item-custom {
-  font-size: 1.2rem; /* Adjust font size here */
-  font-weight: 300; /* Medium font weight */
-  color: #d3d2cd; /* Text color */
-  padding-left: 16px; /* Optional: adjust padding for better spacing */
+  font-size: 1.2rem;
+  font-weight: 300;
+  color: #d3d2cd;
+  padding-left: 16px;
 }
 
 .list-item-custom:hover {
-  background-color: rgba(255, 255, 255, 0.1); /* Optional hover effect */
+  background-color: rgba(255, 255, 255, 0.1);
 }
 </style>
