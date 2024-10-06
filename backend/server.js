@@ -51,11 +51,12 @@ function authenticateToken(req, res, next) {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
-            console.log("Token verification failed:", err); // Log token errors
-            return res.sendStatus(403); // Invalid token, Forbidden
+            console.log("Token verification failed:", err.message); // Log token errors
+            return res.status(403).send('Forbidden: Invalid token');
         }
 
         req.user = user; // Attach user data to req.user
+        console.log("Token successfully decoded. User:", user);
         next();
     });
 }
@@ -344,16 +345,16 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Get events
+// Get confirmed events from the unified events table
 app.get('/api/getEvents', (req, res) => {
     const sqlQuery = `
         SELECT 
-            confirmed_events.confirmed_event_id, 
-            confirmed_events.confirmed_event_date, 
-            confirmed_events.confirmed_event_start, 
-            confirmed_events.confirmed_event_end, 
-            confirmed_events.reserving_user_id, 
-            confirmed_events.confirmed_at, 
+            events.event_id, 
+            events.event_date, 
+            events.event_start, 
+            events.event_end, 
+            events.user_id AS reserving_user_id, 
+            events.confirmed_at, 
             services.title AS service_title, 
             services.duration AS service_duration,
             services.price AS service_price,
@@ -363,15 +364,17 @@ app.get('/api/getEvents', (req, res) => {
             users.email AS user_email,
             users.phoneNumber AS user_phoneNumber
         FROM
-            confirmed_events
+            events
         JOIN
             services
         ON
-            confirmed_events.confirmed_service_id = services.id
+            events.service_id = services.id
         JOIN
             users
         ON
-            confirmed_events.reserving_user_id = users.id;
+            events.user_id = users.id
+        WHERE
+            events.status = 'confirmed';
     `;
 
     db.query(sqlQuery, (err, results) => {
@@ -383,12 +386,12 @@ app.get('/api/getEvents', (req, res) => {
         // Ensure results is an array before mapping
         if (Array.isArray(results)) {
             const fullCalendarEvents = results.map(event => ({
-                id: event.confirmed_event_id,
+                id: event.event_id,
                 title: event.service_title,
                 service_duration: event.service_duration,
                 price: event.service_price,
-                start: event.confirmed_event_start,
-                end: event.confirmed_event_end,
+                start: event.event_start,
+                end: event.event_end,
                 reserving_user_id: event.reserving_user_id,
                 firstName: event.user_firstName,
                 lastName: event.user_lastName,
@@ -403,6 +406,7 @@ app.get('/api/getEvents', (req, res) => {
         }
     });
 });
+
 
 
 // Get services
@@ -445,52 +449,6 @@ app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     });
 });
 
-
-// BREAKSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-// Get all breaks
-app.get('/api/breaks', authenticateToken, (req, res) => {
-    db.query('SELECT * FROM breaks', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
-    });
-});
-
-// CREATE a new break
-app.post('/api/breaks', authenticateToken, isAdmin, (req, res) => {
-    const { title, duration, all_day } = req.body; // Ensure all_day is included
-    const sql = 'INSERT INTO breaks (title, duration, all_day) VALUES (?, ?, ?)';
-
-    db.query(sql, [title, duration, all_day || false], (err, result) => { // Default to false if all_day is not provided
-        if (err) return res.status(500).send(err);
-        res.status(201).json({ id: result.insertId, title, duration, all_day });
-    });
-});
-
-// UPDATE a break
-app.put('/api/breaks/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    const { title, duration, all_day } = req.body; // Ensure all_day is included
-    const sql = 'UPDATE breaks SET title = ?, duration = ?, all_day = ? WHERE id = ?';
-
-    db.query(sql, [title, duration, all_day || false, id], (err, result) => { // Default to false if all_day is not provided
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Break updated successfully' });
-    });
-});
-
-// DELETE a break
-app.delete('/api/breaks/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    console.log("Break ID received for deletion:", req.params.id);
-    const sql = 'DELETE FROM breaks WHERE id = ?';
-
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Break deleted successfully' });
-    });
-});
-
-//Business hours
 // Get all business hours
 app.get('/api/business-hours', authenticateToken, (req, res) => {
     db.query('SELECT * FROM business_hours', (err, results) => {
@@ -528,15 +486,18 @@ app.get('/api/user', authenticateToken, (req, res) => {
 
 // Create an event
 app.post('/api/requestEvent', authenticateToken, (req, res) => {
-    const { pending_service_id, pending_date, pending_start_of_event, pending_end_of_event, user_id } = req.body;
+    const { service_id, event_date, event_start, event_end, user_id } = req.body;
 
     // Check if required fields are provided
-    if (!pending_service_id || !pending_date || !pending_start_of_event || !pending_end_of_event || !user_id) {
+    if (!service_id || !event_date || !event_start || !event_end || !user_id) {
         return res.status(400).send('Missing required fields');
     }
 
-    const sqlInsert = `INSERT INTO pending_events (pending_service_id, pending_date, pending_start_of_event, pending_end_of_event, user_id) VALUES (?, ?, ?, ?, ?)`;
-    db.query(sqlInsert, [pending_service_id, pending_date, pending_start_of_event, pending_end_of_event, user_id], (err, result) => {
+    // Insert into the unified `events` table with status "pending"
+    const sqlInsert = `INSERT INTO events (service_id, event_date, event_start, event_end, user_id, status, event_classes) 
+                       VALUES (?, ?, ?, ?, ?, 'pending', 'pending_event_bg')`;
+
+    db.query(sqlInsert, [service_id, event_date, event_start, event_end, user_id], (err, result) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
@@ -553,9 +514,9 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                 const user = userResults[0];
                 const fullName = `${user.firstName} ${user.lastName}`;
 
-                // Fetch service details from services table
+                // Fetch service details from the services table
                 const sqlServiceSelect = 'SELECT title, id, duration, price FROM services WHERE id = ?';
-                db.query(sqlServiceSelect, [pending_service_id], (err, serviceResults) => {
+                db.query(sqlServiceSelect, [service_id], (err, serviceResults) => {
                     if (err) {
                         console.error(err);
                         return res.status(500).send('Database error');
@@ -563,15 +524,15 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                     if (serviceResults.length > 0) {
                         const service = serviceResults[0];
 
-                        // Format the dates and times using the utility functions
-                        const formattedDate = formatDate(pending_date);
-                        const formattedStartTime = formatTime(pending_start_of_event);
-                        const formattedEndTime = formatTime(pending_end_of_event);
+                        // Format the dates and times using your utility functions
+                        const formattedDate = formatDate(event_date);
+                        const formattedStartTime = formatTime(event_start);
+                        const formattedEndTime = formatTime(event_end);
 
                         // Send email to admin for confirmation
                         const mailOptions = {
                             from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-                            to: 'naboha7589@skrak.com', // Admin's email address
+                            to: 'admin@example.com', // Admin's email address
                             subject: 'New Appointment Request',
                             html: `
                             <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
@@ -583,7 +544,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                     <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
                                     <p style="color: #0c0a09;"><strong>Service ID:</strong> ${service.id}</p>
                                     <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
-                                    <p style="color: #0c0a09;"><strong>Price:</strong> $${service.price}</p>
+                                    <p style="color: #0c0a09;"><strong>Price:</strong> ${service.price} HUF</p>
                                     <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
                                     <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
                                     <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
@@ -604,7 +565,7 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                         });
 
                         // Respond with the event data
-                        res.status(201).json({ id: result.insertId, pending_service_id, pending_date, pending_start_of_event, pending_end_of_event, user_id });
+                        res.status(201).json({ id: result.insertId, service_id, event_date, event_start, event_end, user_id });
                     } else {
                         return res.status(404).send('Service not found');
                     }
@@ -616,26 +577,17 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
     });
 });
 
-
-// GET all pending events
-app.get('/api/getPendingEvents', (req, res) => {
-    db.query('SELECT * FROM pending_events', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
-    });
-});
-
-// Get pending events TEST ONLY FOR THE BG!!!!!!
+// Get pending events from the unified events table
 app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
     const sqlQuery = `
         SELECT 
-            pending_events.pending_event_id, 
-            pending_events.pending_date, 
-            pending_events.pending_start_of_event, 
-            pending_events.pending_end_of_event, 
-            pending_events.user_id, 
-            pending_events.created_at, 
-            pending_events.pending_event_classes,
+            events.event_id, 
+            events.event_date, 
+            events.event_start, 
+            events.event_end, 
+            events.user_id, 
+            events.reserved_at, 
+            events.event_classes,
             services.title AS service_title,
             services.duration AS service_duration,
             services.price AS service_price,
@@ -644,16 +596,19 @@ app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
             users.email AS user_email,
             users.phoneNumber AS user_phoneNumber
         FROM 
-            pending_events
+            events
         JOIN 
             services
         ON 
-            pending_events.pending_service_id = services.id
+            events.service_id = services.id
         JOIN 
             users
         ON 
-            pending_events.user_id = users.id;
+            events.user_id = users.id
+        WHERE 
+            events.status = 'pending';
     `;
+
     db.query(sqlQuery, (err, results) => {
         if (err) {
             console.error('Error fetching events:', err);
@@ -663,19 +618,19 @@ app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
         // Ensure results is an array before mapping
         if (Array.isArray(results)) {
             const fullCalendarEvents = results.map(event => ({
-                id: event.pending_event_id,
+                id: event.event_id,
                 title: event.service_title,
                 service_duration: event.service_duration,
                 price: event.service_price,
-                start: event.pending_start_of_event,
-                end: event.pending_end_of_event,
-                reserving_user_id: event.reserving_user_id,
+                start: event.event_start,
+                end: event.event_end,
+                reserving_user_id: event.user_id,
                 firstName: event.user_firstName,
                 lastName: event.user_lastName,
                 email: event.user_email,
                 phoneNumber: event.user_phoneNumber,
-                reserved_at: event.created_at,
-                classNames: event.pending_event_classes,
+                reserved_at: event.reserved_at,
+                classNames: event.event_classes,
             }));
             return res.json(fullCalendarEvents);
         } else {
@@ -684,119 +639,101 @@ app.get('/api/getPendingEvents2', authenticateToken, (req, res) => {
     });
 });
 
-// Confirm a pending event:
 app.get('/api/confirmEvent/:id', (req, res) => {
-    const pendingEventId = req.params.id;
-    console.log('Pending event id:', req.params);
+    const eventId = req.params.id;
 
-    // Find the pending event by ID and join with the services table
+    // Find the pending event in the `events` table
     const sqlSelect = `
-        SELECT pending_events.*, services.title, services.duration, services.price
-        FROM pending_events
-        JOIN services ON pending_events.pending_service_id = services.id
-        WHERE pending_event_id = ?
+        SELECT events.*, services.title, services.duration, services.price, users.email, users.firstName, users.lastName
+        FROM events
+        JOIN services ON events.service_id = services.id
+        JOIN users ON events.user_id = users.id
+        WHERE events.event_id = ? AND events.status = 'pending'
     `;
-    db.query(sqlSelect, [pendingEventId], (err, result) => {
-        if (err || result.length === 0) {
+
+    db.query(sqlSelect, [eventId], (err, result) => {
+        if (err) {
+            console.error('Database error:', err);
+            return res.status(500).send('Error fetching pending event');
+        }
+
+        if (!result || result.length === 0) {
             return res.status(404).send('Pending event not found');
         }
 
-        const pendingEvent = result[0];
+        const event = result[0];
 
-        // Insert the event into the confirmed_events table
-        const sqlInsert = `
-            INSERT INTO confirmed_events 
-            (confirmed_service_id, confirmed_event_date, confirmed_event_start, confirmed_event_end, reserving_user_id) 
-            VALUES (?, ?, ?, ?, ?)
+        // Update the event's status to "confirmed" and assign the `confirmed_event_bg` class
+        const sqlUpdate = `
+            UPDATE events 
+            SET status = 'confirmed', event_classes = 'confirmed_event_bg', confirmed_at = NOW()
+            WHERE event_id = ?
         `;
-        db.query(sqlInsert, [
-            pendingEvent.pending_service_id,
-            pendingEvent.pending_date,
-            pendingEvent.pending_start_of_event,
-            pendingEvent.pending_end_of_event,
-            pendingEvent.user_id
-        ], (err, result) => {
+
+        db.query(sqlUpdate, [eventId], (err, updateResult) => {
             if (err) {
                 console.error('Error confirming event:', err.message);
-                return res.status(500).send('Error confirming event', err.message);
+                return res.status(500).send('Error confirming event');
             }
 
-            // Delete the event from the pending_events table
-            const sqlDelete = 'DELETE FROM pending_events WHERE pending_event_id = ?';
-            db.query(sqlDelete, [pendingEventId], (err) => {
-                if (err) {
-                    return res.status(500).send('Error deleting pending event');
+            // Send confirmation email to the user
+            const userEmail = event.email;
+            const userName = `${event.firstName} ${event.lastName}`;
+            const formattedDate = formatDate(event.event_date);
+            const formattedStartTime = formatTime(event.event_start);
+            const formattedEndTime = formatTime(event.event_end);
+
+            const mailOptions = {
+                from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                to: userEmail,
+                subject: 'Appointment Confirmed',
+                html: `
+                <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                    <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                        <h2 style="color: #8f6a48;">Appointment Confirmed</h2>
+                        <p>Dear <strong>${userName}</strong>,</p>
+                        <p>Your appointment has been confirmed for the following service:</p>
+                        <ul>
+                            <li><strong>Service:</strong> ${event.title}</li>
+                            <li><strong>Duration:</strong> ${event.duration} minutes</li>
+                            <li><strong>Price:</strong> ${event.price} HUF</li>
+                            <li><strong>Date:</strong> ${formattedDate}</li>
+                            <li><strong>Start Time:</strong> ${formattedStartTime}</li>
+                            <li><strong>End Time:</strong> ${formattedEndTime}</li>
+                        </ul>
+                        <p>If you have any questions, feel free to contact us.</p>
+                    </div>
+                </div>
+                `
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending confirmation email:', error);
+                    return res.status(500).send('Error sending confirmation email');
                 }
-
-                // Fetch the user's email and full name based on user_id
-                const sqlUserSelect = 'SELECT email, firstName, lastName FROM users WHERE id = ?';
-                db.query(sqlUserSelect, [pendingEvent.user_id], (err, userResult) => {
-                    if (err || userResult.length === 0) {
-                        return res.status(500).send('Error fetching user data');
-                    }
-
-                    const user = userResult[0];
-                    const userEmail = user.email;
-                    const userName = `${user.firstName} ${user.lastName}`;
-                    // Format the dates and times using the utility functions
-                    const formattedDate = formatDate(pendingEvent.pending_date);
-                    const formattedStartTime = formatTime(pendingEvent.pending_start_of_event);
-                    const formattedEndTime = formatTime(pendingEvent.pending_end_of_event);
-
-                    // Send confirmation email with service details
-                    const mailOptions = {
-                        from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-                        to: userEmail,
-                        subject: 'Appointment Confirmed',
-                        html: `
-                        <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
-                            <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-                                <h2 style="color: #8f6a48;">Appointment Confirmed</h2>
-                                <p>Dear <strong>${userName}</strong>,</p>
-                                <p>Your appointment has been confirmed for the following service:</p>
-                                <ul>
-                                    <li><strong>Service:</strong> ${pendingEvent.title}</li>
-                                    <li><strong>Duration:</strong> ${pendingEvent.duration} minutes</li>
-                                    <li><strong>Price:</strong> $${pendingEvent.price}</li>
-                                    <li><strong>Date:</strong> ${formattedDate}</li>
-                                    <li><strong>Start Time:</strong> ${formattedStartTime}</li>
-                                    <li><strong>End Time:</strong> ${formattedEndTime}</li>
-                                </ul>
-                                <p>If you have any questions, feel free to contact us.</p>
-                            </div>
-                        </div>
-                        `
-                    };
-
-                    transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending confirmation email:', error);
-                            return res.status(500).send('Error sending confirmation email');
-                        }
-                        console.log('Confirmation email sent:', info.response);
-                    });
-
-                    res.send('Event confirmed and moved to confirmed_events, email sent to user');
-                });
+                console.log('Confirmation email sent:', info.response);
             });
+
+            res.send('Event confirmed, email sent to user');
         });
     });
 });
 
 // Deny (delete) a pending event
-app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
-    const { id } = req.params;
+app.get('/api/deletePendingEvent/:id', (req, res) => {
+    const eventId = req.params.id;
 
-    // First, fetch the event details and the user's email before deleting the event
+    // Fetch the event details and user's email before deleting
     const sqlSelect = `
-        SELECT pending_events.*, users.email, users.firstName, users.lastName, services.title, services.duration, services.price
-        FROM pending_events
-        JOIN users ON pending_events.user_id = users.id
-        JOIN services ON pending_events.pending_service_id = services.id
-        WHERE pending_events.pending_event_id = ?
+        SELECT events.*, users.email, users.firstName, users.lastName, services.title, services.duration, services.price
+        FROM events
+        JOIN users ON events.user_id = users.id
+        JOIN services ON events.service_id = services.id
+        WHERE events.event_id = ? AND events.status = 'pending'
     `;
 
-    db.query(sqlSelect, [id], (err, result) => {
+    db.query(sqlSelect, [eventId], (err, result) => {
         if (err) {
             console.error('Error fetching pending event:', err);
             return res.status(500).send('Error fetching pending event');
@@ -806,15 +743,14 @@ app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
             return res.status(404).send('Pending event not found');
         }
 
-        const pendingEvent = result[0];
-        const userEmail = pendingEvent.email;
-        const userName = `${pendingEvent.firstName} ${pendingEvent.lastName}`;
-        // Format the dates and times using the utility functions
-        const formattedDate = formatDate(pendingEvent.pending_date);
-        const formattedStartTime = formatTime(pendingEvent.pending_start_of_event);
-        const formattedEndTime = formatTime(pendingEvent.pending_end_of_event);
+        const event = result[0];
+        const userEmail = event.email;
+        const userName = `${event.firstName} ${event.lastName}`;
+        const formattedDate = formatDate(event.event_date);
+        const formattedStartTime = formatTime(event.event_start);
+        const formattedEndTime = formatTime(event.event_end);
 
-        // Send the denial feedback email
+        // Send the denial email
         const mailOptions = {
             from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
             to: userEmail,
@@ -826,9 +762,9 @@ app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
                     <p>Dear <strong>${userName}</strong>,</p>
                     <p>We regret to inform you that your appointment request for the following service has been denied:</p>
                     <ul>
-                        <li><strong>Service:</strong> ${pendingEvent.title}</li>
-                        <li><strong>Duration:</strong> ${pendingEvent.duration} minutes</li>
-                        <li><strong>Price:</strong> $${pendingEvent.price}</li>
+                        <li><strong>Service:</strong> ${event.title}</li>
+                        <li><strong>Duration:</strong> ${event.duration} minutes</li>
+                        <li><strong>Price:</strong> ${event.price} HUF</li>
                         <li><strong>Date:</strong> ${formattedDate}</li>
                         <li><strong>Start Time:</strong> ${formattedStartTime}</li>
                         <li><strong>End Time:</strong> ${formattedEndTime}</li>
@@ -846,9 +782,9 @@ app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
             }
             console.log('Denial email sent:', info.response);
 
-            // After sending the email, proceed to delete the event from the pending_events table
-            const sqlDelete = 'DELETE FROM pending_events WHERE pending_event_id = ?';
-            db.query(sqlDelete, [id], (err, result) => {
+            // Delete the pending event from the events table
+            const sqlDelete = 'DELETE FROM events WHERE event_id = ? AND status = "pending"';
+            db.query(sqlDelete, [eventId], (err) => {
                 if (err) {
                     console.error('Error deleting pending event:', err);
                     return res.status(500).send('Error deleting pending event');
@@ -860,36 +796,110 @@ app.get('/api/deletePendingEvent/:id', (req, res) => {  // Change DELETE to GET
     });
 });
 
-
-
-app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, (req, res) => {
+app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, async (req, res) => {
     const modifiedEvents = req.body;
 
-    modifiedEvents.forEach(event => {
-        const sql = `
-        UPDATE confirmed_events 
-        SET confirmed_event_date = ?, confirmed_event_start = ?, confirmed_event_end = ?
-        WHERE confirmed_event_id = ?
-      `;
+    try {
+        // Use Promise.all to handle all queries asynchronously
+        const updatePromises = modifiedEvents.map(event => {
+            return new Promise((resolve, reject) => {
+                const sql = `
+                UPDATE events 
+                SET event_date = ?, event_start = ?, event_end = ?
+                WHERE event_id = ?
+                `;
 
-        db.query(sql, [
-            event.modifiedEventDate,
-            event.newStart,
-            event.newEnd,
-            event.id
-        ], (err, result) => {
-            if (err) return res.status(500).send(err);
+                db.query(sql, [
+                    event.modifiedEventDate,
+                    event.newStart,
+                    event.newEnd,
+                    event.id
+                ], (err, result) => {
+                    if (err) return reject(err);
+                    console.log("Event ID for SQL select:", event.id);
+
+                    // Fetch event details (including email) after the event is updated
+                    const sqlSelect = `
+  SELECT users.email, users.firstName, users.lastName, services.title, events.event_date, events.event_start, events.event_end
+  FROM events
+  JOIN users ON events.user_id = users.id
+  JOIN services ON events.service_id = services.id
+  WHERE events.event_id = ?
+`;
+
+
+                    db.query(sqlSelect, [event.id], (err, eventDetails) => {
+                        if (err || eventDetails.length === 0) {
+                            console.error("Error fetching event details or no event found.");
+                            return reject('Error fetching event details.');
+                        }
+
+                        const eventData = eventDetails[0];  // The updated event data
+                        const fullName = `${eventData.firstName} ${eventData.lastName}`;
+                        const formattedDate = formatDate(eventData.event_date);
+                        const formattedStartTime = formatTime(eventData.event_start);
+                        const formattedEndTime = formatTime(eventData.event_end);
+
+                        // Construct the email HTML content
+                        const emailContent = `
+                        <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                          <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                              <h2 style="color: #8f6a48;">Appointment Updated at Garrison's Haircraft</h2>
+                              <p>Hi <strong>${fullName}</strong>,</p>
+                              <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
+                              <p style="color: #0c0a09;">Your appointment has been updated with the following details:</p>
+                              <br>
+                              <p style="color: #0c0a09;"><strong>Service:</strong> ${eventData.title}</p>
+                              <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
+                              <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
+                              <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
+                              <br>
+                              <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
+                              <br>
+                              <p style="color: #0c0a09;">Best regards,</p>
+                              <p style="color: #0c0a09;">The Garrison's Haircraft Team</p>
+                              <p style="color: #0c0a09;"><strong>noreply@garrisons.com</strong></p>
+                          </div>
+                        </div>`;
+
+                        // Send the feedback email
+                        const mailOptions = {
+                            from: "Garrison's Haircraft <noreply@garrisons.com>",
+                            to: eventData.email,  // User's email
+                            subject: 'Your Appointment has been Updated',
+                            html: emailContent  // The constructed HTML email content
+                        };
+
+                        transporter.sendMail(mailOptions, (error, info) => {
+                            if (error) {
+                                console.error('Error sending update email:', error);
+                            } else {
+                                console.log('Update email sent:', info.response);
+                            }
+                        });
+                        resolve();
+                    });
+                });
+            });
         });
-    });
 
-    res.send('Events updated successfully');
+        // Wait for all promises to resolve
+        await Promise.all(updatePromises);
+
+        // Once all events are updated, send a success response
+        res.send('Events updated successfully and feedback emails sent.');
+
+    } catch (error) {
+        console.error('Error updating events:', error);
+        res.status(500).send('An error occurred while updating events.');
+    }
 });
 
 // Delete confirmed event
 app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const confirmedEventId = req.params.id;
 
-    const sqlDelete = 'DELETE FROM confirmed_events WHERE confirmed_event_id = ?';
+    const sqlDelete = 'DELETE FROM events WHERE event_id = ?';
     db.query(sqlDelete, [confirmedEventId], (err, result) => {
         if (err) {
             console.error('Error deleting event:', err);
@@ -905,6 +915,7 @@ app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
 });
 
 
+
 // GET all users
 app.get('/api/users', authenticateToken, isAdmin, (req, res) => {
     db.query('SELECT * FROM users', (err, results) => {
@@ -912,16 +923,6 @@ app.get('/api/users', authenticateToken, isAdmin, (req, res) => {
         res.json(results);
     });
 });
-
-// // CREATE a new user
-// app.post('/api/users', (req, res) => {
-//     const { firstName, lastName, role, email, phone, password } = req.body;
-//     const sql = 'INSERT INTO users (firstName, lastName, role, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?, ?)';
-//     db.query(sql, [firstName, lastName, role, email, phone, password], (err, result) => {
-//         if (err) return res.status(500).send(err);
-//         res.status(201).json({ id: result.insertId, firstName, lastName, role, email, phone });
-//     });
-// });
 
 // UPDATE a user
 app.put('/api/users/:id', authenticateToken, isAdmin, (req, res) => {

@@ -72,8 +72,10 @@ const calendarOptions = reactive({
   slotMaxTime: "17:00:00",
   editable: false,
   eventDurationEditable: false,
+  eventResizableFromEnd: false,
   eventDrop: handleEventDrop,
   eventClick: handleEventClick,
+  // eventResize: handleEventResize,
   aspectRatio: 2.5,
   nowIndicator: true,
   headerToolbar: {
@@ -137,7 +139,6 @@ function formatDate(date) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    timeZone: "UTC",
   }).format(parsedDate);
 }
 
@@ -153,26 +154,35 @@ function formatTime(time) {
   return new Intl.DateTimeFormat("hu-HU", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
   }).format(parsedTime);
 }
 
 async function confirmEvent() {
-  loading.value = true; // Start loading
+  loading.value = true; // Start loading indicator
   try {
+    console.log("Token being sent:", token); // Log the token to verify
+
+    // Send GET request to confirm the event
     const response = await apiClient.get(
       `http://localhost:5000/api/confirmEvent/${selectedEvent.value.id}`,
       {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }, // Ensure token is passed correctly
       }
     );
+
+    // Show success toast message
     showToast("Event successfully confirmed.");
+
+    // Re-fetch all events to update the calendar
     await fetchAllEvents();
-    closeEventDialog(); // Close the dialog
+
+    // Close the event dialog/modal
+    closeEventDialog();
   } catch (error) {
+    // Handle any errors that occur during confirmation
     handleError("Error confirming event: " + error.message);
   } finally {
-    loading.value = false;
+    loading.value = false; // Stop loading indicator
   }
 }
 
@@ -461,6 +471,8 @@ async function confirmModifications() {
     return;
   }
 
+console.log("ModifiedEventek:", modifiedEvents.value);
+
   try {
     await apiClient.post(
       "http://localhost:5000/api/updateConfirmedEvents",
@@ -586,11 +598,10 @@ async function finalizeBooking() {
   }
 
   const newEvent = {
-    pending_service_title: selectedService.value.title,
-    pending_service_id: selectedService.value.id,
-    pending_date: selectedSlot.value.date,
-    pending_start_of_event: startTime.toISOString(),
-    pending_end_of_event: endTime.toISOString(),
+    service_id: selectedService.value.id,
+    event_date: selectedSlot.value.date,
+    event_start: startTime.toISOString(),
+    event_end: endTime.toISOString(),
     user_id: userId.value,
   };
 

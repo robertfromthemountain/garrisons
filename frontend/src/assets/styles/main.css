@@ -18,7 +18,7 @@ body {
     background-color: #6a4e35;
 }
 
-.text-garrisons{
+.text-garrisons {
     color: #d3d2cd;
 }
 
@@ -30,11 +30,11 @@ body {
     color: #d3d2cd;
 }
 
-.title-garrisons{
+.title-garrisons {
     color: #8f6a48;
 }
 
-.subtitle-garrisons{
+.subtitle-garrisons {
     color: #9e7f61;
 }
 
@@ -76,7 +76,7 @@ body {
     margin-bottom: 1em;
 }
 
-fc-today-button{
+fc-today-button {
     width: 400px;
 }
 
@@ -85,8 +85,9 @@ fc-today-button{
     color: #d3d2cd;
 }
 
-.pending_event_bg{
+.pending_event_bg {
     opacity: 50%;
+    background-color: #201b18;
 }
 
 :root {

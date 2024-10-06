@@ -388,11 +388,10 @@ async function finalizeBooking() {
   }
 
   const newEvent = {
-    pending_service_title: selectedService.value.title,
-    pending_service_id: selectedService.value.id,
-    pending_date: selectedSlot.value.date,
-    pending_start_of_event: startTime.toISOString(),
-    pending_end_of_event: endTime.toISOString(),
+    service_id: selectedService.value.id,
+    event_date: selectedSlot.value.date,
+    event_start: startTime.toISOString(),
+    event_end: endTime.toISOString(),
     user_id: userId.value,
   };
 
