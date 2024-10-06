@@ -18,6 +18,7 @@
           <th><v-icon class="me-2">mdi-label-outline</v-icon>Title</th>
           <th><v-icon class="me-2">mdi-cash-multiple</v-icon>Price</th>
           <th><v-icon class="me-2">mdi-timer-outline</v-icon>Duration</th>
+          <th><v-icon class="me-2">mdi-palette</v-icon>Color</th>
           <th>
             <v-text-field
               v-model="searchQuery"
@@ -36,8 +37,22 @@
           class="text-start"
         >
           <td>{{ service.title }}</td>
-          <td>{{ service.price }}</td>
+          <td>{{ service.price === null ? "-" : service.price }}</td>
           <td>{{ service.duration }}</td>
+          <td>
+            <!-- Show color box and color name -->
+            <span
+              :style="{
+                backgroundColor: service.backgroundColor,
+                width: '20px',
+                height: '20px',
+                display: 'inline-block',
+                marginRight: '10px',
+                borderRadius: '4px',
+              }"
+            ></span>
+            {{ getColorName(service.backgroundColor) }}
+          </td>
           <td>
             <v-btn
               density="compact"
@@ -111,9 +126,9 @@
             required
           ></v-text-field>
           <!-- New Color Picker -->
-           <p>Color of the service:</p>
+          <p>Color of the service:</p>
           <v-color-picker
-          class="mx-auto bg-dark-garrisons"
+            class="mx-auto bg-dark-garrisons"
             v-model="editServiceData.backgroundColor"
             label="Select Background Color"
             mode="hexa"
@@ -226,6 +241,13 @@ import apiClient from "@/utils/apiClient";
 import { useToast } from "vue-toastification";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
 import { useI18n } from "vue-i18n";
+import namer from "color-namer"; // Import color-namer
+
+// Utility function to get color name using color-namer
+const getColorName = (hex) => {
+  const result = namer(hex);
+  return result?.ntc[0]?.name || "Custom Color"; // Using the "ntc" dataset for named colors
+};
 
 const { t } = useI18n();
 const token = sessionStorage.getItem("accessToken");
