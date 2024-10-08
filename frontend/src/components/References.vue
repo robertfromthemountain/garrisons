@@ -1,54 +1,48 @@
-<script>
-export default {
-  name: "references",
+<script setup>
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
-  // Data in the Options API
-  data() {
-    return {
-      // Reference images array
-      references: [
-        {
-          src: new URL("@/assets/images/hc_1.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_2.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_3.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_4.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_5.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_6.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        {
-          src: new URL("@/assets/images/hc_7.jpg", import.meta.url).href,
-          alt: "Reference Work 1",
-        },
-        // Add more images here
-      ],
-
-      // Model to track the selected slide
-      model: 0,
-    };
+const { t } = useI18n();
+const references = [
+  {
+    src: new URL("@/assets/images/hc_1.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
   },
-};
+  {
+    src: new URL("@/assets/images/hc_2.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  {
+    src: new URL("@/assets/images/hc_3.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  {
+    src: new URL("@/assets/images/hc_4.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  {
+    src: new URL("@/assets/images/hc_5.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  {
+    src: new URL("@/assets/images/hc_6.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  {
+    src: new URL("@/assets/images/hc_7.jpg", import.meta.url).href,
+    alt: "Reference Work 1",
+  },
+  // Add more images here
+];
+
+// Model to track the selected slide
+const model = ref(0);
 </script>
 
 <template>
   <section fluid class="mx-auto mt-10 references-bg-color">
     <v-row class="d-flex justify-center">
-      <h2 class="references-title">Munkáim</h2>
+      <h2 class="references-title">{{t('references.title')}}</h2>
     </v-row>
     <v-row>
       <v-sheet class="mx-auto" max-width="80vw">
@@ -62,7 +56,6 @@ export default {
             v-for="(reference, index) in references"
             :key="index"
             v-slot="{ toggle }"
-            
           >
             <v-card
               :class="['mx-3 elevation-5 references-border', selectedClass]"

@@ -18,11 +18,11 @@ const { t } = useI18n();
         <div>
           <p class="hero-subtitle-size hero-subtitle-color">
             <v-icon class="hero-title-color pe-2" icon="mdi-phone"></v-icon
-            >{{ t("button.tel") }}
+            >{{ t("global.tel") }}
           </p>
           <p class="hero-subtitle-size hero-subtitle-color">
             <v-icon class="hero-title-color pe-2" icon="mdi-email-outline"></v-icon
-            >{{ t("button.email") }}
+            >{{ t("global.email") }}
           </p>
         </div>
       </v-col>
@@ -33,7 +33,7 @@ const { t } = useI18n();
           size="x-large"
           rounded="lg"
           class="hero-button elevation-5"
-          >{{ t("button.book") }}</v-btn
+          >{{ t("hero.button") }}</v-btn
         ></RouterLink>
       </v-col>
 

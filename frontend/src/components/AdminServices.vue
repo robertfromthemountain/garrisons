@@ -76,7 +76,7 @@
         <!-- Row for Adding a New Service -->
         <tr>
           <!-- <td colspan="4" class="text-center">Add a new service</td> -->
-          <td colspan="4" class="text-center">
+          <td colspan="5" class="text-center">
             <v-btn
               density="compact"
               class="bg-green text-garrisons"

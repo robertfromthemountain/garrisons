@@ -35,7 +35,12 @@ const navLinks = [
     requiresAuth: true,
     role: "user",
   },
-  { name: "GuestBooking", path: "/guestBooking", requiresAuth: false },
+  {
+    name: "GuestBooking",
+    path: "/guestBooking",
+    requiresAuth: false,
+    guestOnly: true,
+  },
   {
     name: t("link.references"),
     path: "/references",
@@ -46,7 +51,9 @@ const navLinks = [
 
 const visibleNavLinks = computed(() => {
   return navLinks.filter(
-    (link) => link.requiresAuth === false || isLoggedIn.value
+    (link) =>
+      (link.requiresAuth === false || isLoggedIn.value) &&
+      !(isLoggedIn.value && link.guestOnly)
   );
 });
 

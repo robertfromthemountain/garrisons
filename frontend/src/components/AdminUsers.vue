@@ -15,26 +15,26 @@
         <tr>
           <th>
             <v-icon class="me-2">mdi-account-outline</v-icon>
-            Name
+            {{t("dashboard.manageUsers.table.name")}}
           </th>
           <th>
             <v-icon class="me-2">mdi-security</v-icon>
-            Role
+            {{t("dashboard.manageUsers.table.role")}}
           </th>
           <th>
             <v-icon class="me-2">mdi-email-outline</v-icon>
-            Email
+            {{t("dashboard.manageUsers.table.email")}}
           </th>
           <th>
             <v-icon class="me-2">mdi-phone-outline</v-icon>
-            Phone
+            {{t("dashboard.manageUsers.table.phone")}}
           </th>
           <th>
             <v-text-field
               v-model="searchQuery"
-              label="Search Users"
+              :label="t('dashboard.manageUsers.table.search')"
               density="compact"
-              placeholder="Search by first name, last name, email, etc."
+              :placeholder="t('dashboard.manageUsers.table.searchPlaceholder')"
               append-inner-icon="mdi-magnify"
               :disabled="isAnyRowEditing"
             ></v-text-field>
@@ -56,7 +56,7 @@
               @click="openEditModal(user)"
               :disabled="loading"
             >
-              <v-icon class="pe-2">mdi-pencil</v-icon>Edit
+              <v-icon class="pe-2">mdi-pencil</v-icon>{{t("dashboard.manageUsers.table.buttons.edit")}}
             </v-btn>
             <v-btn
               density="compact"
@@ -64,7 +64,7 @@
               @click="openDeleteModal(user.id)"
               :disabled="loading"
             >
-              <v-icon class="pe-2">mdi-trash-can-outline</v-icon>Delete
+              <v-icon class="pe-2">mdi-trash-can-outline</v-icon>{{t("dashboard.manageUsers.table.buttons.delete")}}
             </v-btn>
           </td>
         </tr>
@@ -77,14 +77,14 @@
         <v-card-title>
           <h2 class="headline title-garrisons">
             <span class="mdi mdi-account-edit"></span>
-            {{ t("title") }}
+            {{ t("dashboard.manageUsers.modal.title") }}
           </h2></v-card-title
         >
         <v-divider></v-divider>
         <v-card-text>
           <v-text-field
             density="compact"
-            label="First Name"
+            :label="t('dashboard.manageUsers.modal.textFields.labels.firstName')"
             v-model="editUserData.firstName"
             prepend-inner-icon="mdi-account-outline"
             clearable
@@ -92,14 +92,14 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Last Name"
+            :label="t('dashboard.manageUsers.modal.textFields.labels.lastName')"
             prepend-inner-icon="mdi-account-outline"
             v-model="editUserData.lastName"
             clearable
             required
           ></v-text-field>
           <v-select
-            label="Role"
+            :label="t('dashboard.manageUsers.modal.textFields.labels.role')"
             v-model="editUserData.role"
             prepend-inner-icon="mdi-security"
             :items="roles"
@@ -108,7 +108,7 @@
           ></v-select>
           <v-text-field
             density="compact"
-            label="Email"
+            :label="t('dashboard.manageUsers.modal.textFields.labels.email')"
             v-model="editUserData.email"
             prepend-inner-icon="mdi-email-outline"
             type="email"
@@ -117,7 +117,7 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Phone Number"
+            :label="t('dashboard.manageUsers.modal.textFields.labels.phoneNumber')"
             v-model="editUserData.phoneNumber"
             prepend-inner-icon="mdi-phone-outline"
             type="tel"
@@ -132,7 +132,7 @@
             :disabled="loading"
             @click="closeEditModal"
           >
-            Cancel
+            {{t("dashboard.manageUsers.modal.buttons.cancel")}}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
@@ -148,7 +148,7 @@
             "
             @click="saveEdit"
           >
-            Save
+          {{t("dashboard.manageUsers.modal.buttons.save")}}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -158,8 +158,8 @@
     <ConfirmDeleteModal
       :isOpen="isDeleteModalOpen"
       :selectedEventId="selectedUserId"
-      title="Delete User"
-      message="Are you sure you want to delete this user? This action cannot be undone."
+      :title="t('dashboard.manageUsers.deleteModal.title')"
+      :message="t('dashboard.manageUsers.deleteModal.message')"
       @cancel="closeDeleteModal"
       @confirm="confirmDelete"
       @update:isOpen="(val) => (isDeleteModalOpen = val)"
@@ -206,7 +206,7 @@ const closeEditModal = () => {
 // Save user data from modal
 const saveEdit = async () => {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.token.error.tokenError"), "error");
     return;
   }
   loading.value = true;
@@ -221,9 +221,9 @@ const saveEdit = async () => {
     const index = users.value.findIndex((u) => u.id === editUserData.value.id);
     users.value[index] = { ...editUserData.value }; // Update the user list
     isEditModalOpen.value = false;
-    toast.success("User updated successfully!");
+    toast.success(t("dashboard.toast.success.userUpdate"));
   } catch (error) {
-    toast.error("Failed to update user.");
+    toast.error(t("dashboard.toast.error.userUpdate"));
     console.error("Error updating user:", error);
   } finally {
     loading.value = false;
@@ -244,7 +244,7 @@ const closeDeleteModal = () => {
 // Confirm the deletion of the user
 const confirmDelete = async (id) => {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.toast.error.tokenError"), "error");
     return;
   }
   loading.value = true;
@@ -253,10 +253,10 @@ const confirmDelete = async (id) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     users.value = users.value.filter((user) => user.id !== id);
-    toast.success("User deleted successfully!");
+    toast.success(t("dashboard.toast.success.userDelete"));
     closeDeleteModal();
   } catch (error) {
-    toast.error("Failed to delete user.");
+    toast.error(t("dashboard.toast.error.userDelete"));
     console.error("Error deleting user:", error);
   } finally {
     loading.value = false;

@@ -1,7 +1,7 @@
 <template>
   <div>
     <h2 class="text-center subtitle-garrisons text-subtitle-1 text-uppercase">
-      {{ t("dashboard.manageServices.subtitle") }}
+      {{ t("dashboard.manageBusinessHours.subtitle") }}
     </h2>
     <v-progress-linear
       v-if="loading"
@@ -16,19 +16,19 @@
         <tr>
           <th>
             <v-icon class="me-2">mdi-calendar-today</v-icon>
-            Days of Week
+            {{ t("dashboard.manageBusinessHours.table.days") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-clock-start</v-icon>
-            Start Time
+            {{ t("dashboard.manageBusinessHours.table.open") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-clock-end</v-icon>
-            End Time
+            {{ t("dashboard.manageBusinessHours.table.close") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-cog-outline</v-icon>
-            Actions
+            {{ t("dashboard.manageBusinessHours.table.actions") }}
           </th>
         </tr>
       </thead>
@@ -47,7 +47,8 @@
               class="btn-garrisons text-garrisons text-start"
               @click="openEditModal(businessHour)"
             >
-              <v-icon class="pe-2">mdi-pencil</v-icon>Edit
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageBusinessHours.table.buttons.edit") }}
             </v-btn>
           </td>
         </tr>
@@ -60,7 +61,7 @@
         <v-card-title>
           <h2 class="headline title-garrisons">
             <span class="mdi mdi-pencil-box"></span>
-            Edit Business Hours
+            {{ t("dashboard.manageBusinessHours.modal.title") }}
           </h2>
         </v-card-title>
         <v-divider></v-divider>
@@ -68,7 +69,7 @@
           <!-- Day of Week (Non-editable for this example) -->
           <v-text-field
             density="compact"
-            label="Day of Week"
+            :label="t('dashboard.manageBusinessHours.modal.weekday')"
             v-model="dayOfWeekMap[editBusinessHourData.daysOfWeek]"
             prepend-inner-icon="mdi-calendar-outline"
             readonly
@@ -77,7 +78,7 @@
           <!-- Start Time Picker -->
           <v-text-field
             v-model="editBusinessHourData.startTime"
-            label="Start Time"
+            :label="t('dashboard.manageBusinessHours.table.open')"
             readonly
             prepend-inner-icon="mdi-clock-outline"
             @click="startTimeDialog = true"
@@ -93,7 +94,9 @@
                 @update:modelValue="updateTempStartTime"
               ></v-time-picker>
               <v-card-actions>
-                <v-btn text @click="startTimeDialog = false">Cancel</v-btn>
+                <v-btn text @click="startTimeDialog = false">{{
+                  t("dashboard.manageBusinessHours.modal.buttons.cancel")
+                }}</v-btn>
                 <v-spacer></v-spacer>
                 <v-btn text @click="confirmStartTime">OK</v-btn>
               </v-card-actions>
@@ -103,7 +106,7 @@
           <!-- End Time Picker -->
           <v-text-field
             v-model="editBusinessHourData.endTime"
-            label="End Time"
+            :label="t('dashboard.manageBusinessHours.table.close')"
             readonly
             prepend-inner-icon="mdi-clock-outline"
             @click="endTimeDialog = true"
@@ -119,7 +122,9 @@
                 @update:modelValue="updateTempEndTime"
               ></v-time-picker>
               <v-card-actions>
-                <v-btn text @click="endTimeDialog = false">Cancel</v-btn>
+                <v-btn text @click="endTimeDialog = false">{{
+                  t("dashboard.manageBusinessHours.modal.buttons.cancel")
+                }}</v-btn>
                 <v-spacer></v-spacer>
                 <v-btn text @click="confirmEndTime">OK</v-btn>
               </v-card-actions>
@@ -132,7 +137,7 @@
             density="comfortable"
             @click="closeEditModal"
           >
-            Cancel
+            {{ t("dashboard.manageBusinessHours.modal.buttons.cancel") }}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
@@ -140,7 +145,7 @@
             density="comfortable"
             @click="saveEdit"
           >
-            Save
+            {{ t("dashboard.manageBusinessHours.modal.buttons.save") }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -176,19 +181,19 @@ const toast = useToast();
 
 // Map numbers to day names
 const dayOfWeekMap = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday",
+  1: t("footer.openingHours.days.monday"),
+  2: t("footer.openingHours.days.tuesday"),
+  3: t("footer.openingHours.days.wednesday"),
+  4: t("footer.openingHours.days.thursday"),
+  5: t("footer.openingHours.days.firday"),
+  6: t("footer.openingHours.days.saturday"),
+  7: t("footer.openingHours.days.sunday"),
 };
 
 // Fetch business hours from the backend
 const fetchBusinessHours = async () => {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.manageBusinessHours.toast.tokenError"), "error");
     return;
   }
   loading.value = true;
@@ -251,7 +256,7 @@ const formatTime = (timeKey) => {
 // Save the edited business hours
 const saveEdit = async () => {
   if (!token) {
-    toast.error("You are not logged in. Please log in again.");
+    toast.error(t("dashboard.manageBusinessHours.toast.tokenError"));
     return;
   }
   loading.value = true;
@@ -276,9 +281,9 @@ const saveEdit = async () => {
     businessHours.value[index] = { ...editBusinessHourData.value };
 
     isEditModalOpen.value = false; // Close the modal
-    toast.success("Business hour updated successfully!");
+    toast.success(t("dashboard.manageBusinessHours.toast.updateSuccess"));
   } catch (error) {
-    toast.error("Failed to update business hour.");
+    toast.error(t("dashboard.manageBusinessHours.toast.updateError"));
     console.error("Error updating business hour:", error);
   } finally {
     loading.value = false;

@@ -2,16 +2,188 @@ import { createI18n } from "vue-i18n";
 
 const messages = {
     en: {
-        logout:{
-            toasts:{
-                success:"You have successfully logged out. See-ya!"
+        global: {
+            tel: "+36 (30) 456 4526",
+            email: "info@garrisons.hu",
+            owner: "Bíró Dominik, E.V.",
+            shop: "Garrisons Haircraft & Barbershop",
+            developer: "Nagy Róbert"
+        },
+        footer: {
+            important: {
+                title: "Important",
+            },
+            openingHours: {
+                title: "Opening Hours",
+                days: {
+                    monday: "Monday",
+                    tuesday: "Tuesday",
+                    wednesday: "Wednesday",
+                    thursday: "Thursday",
+                    firday: "Friday",
+                    saturday: "Saturday",
+                    sunday: "Sunday"
+                },
+                closed: "CLOSED",
+            },
+            socials: {
+                title: "Social Media",
+            },
+            toasts: {
+                error: "Error fetching opening hours."
+            },
+            rights: "All rights reserved."
+        },
+        hero: {
+            title: "Garrison's haircraft and barbershop",
+            button: "Book Now!"
+        },
+        intro: {
+            about: "About me",
+            services: "My services"
+        },
+        references: {
+            title: "References"
+        },
+        guestBooking: {
+            modal: {
+                createAccount: "Click here to create an account!",
+                haveAccount: "I already have an account!",
+            },
+            services: {
+                title: "Services",
+                subtitle: "You can decide what service do you want to book.",
+            }
+        },
+        dashboard: {
+            title: "Dashboard",
+            manageEvents: {
+                title: "Manage Reservations",
+
+            },
+            managePendingEvents: {
+                title: "Manage Pending Reservations",
+                subtitle: "Here you can accept or deny the pending appointment booking requests.",
+                noEvents: "There are no pending events at the moment. Take a break, grab some coffee, and wait for the next booking to come in!",
+                table: {
+                    service: "Service",
+                    booker: "Booker",
+                    date: "Date",
+                    start: "Start Time",
+                    end: "End Time",
+                    actions: "Actions",
+                    buttons: {
+                        accept: "Accept",
+                        deny: "Deny"
+                    },
+                },
+                deleteModal: {
+                    title: "Delete Pending Reservation",
+                    message: "Are you sure you want to deny this pending reservation?"
+                },
+                toast: {
+                    error: {
+                        token: "You are not logged in. Please log in again.",
+                        confirm: "Failed to confirm appointment, please try again later!",
+                        noEvent: "No appointment selected to deny.",
+                        deny: "Failed to deny event, please try again later!"
+
+                    },
+                    success: {
+                        confirm: "Appointment successfully confirmed!",
+                        deny: "Appointment successfully denied!",
+                    }
+                }
+            },
+            manageServices: {
+                title: "Manage Services",
+                subtitle: "Here you can add, delete or modify services."
+            },
+            manageUsers: {
+                title: "Manage User Accounts",
+                subtitle: "Here you can manage the registered users.",
+                table: {
+                    name: "Name",
+                    role: "Role",
+                    email: "Email",
+                    phone: "Phone number",
+                    search: "Search Users",
+                    searchPlaceholder: "Search by first name, last name, email, etc.",
+                    buttons: {
+                        edit: "Edit",
+                        delete: "Delete",
+                    },
+                },
+                modal: {
+                    title: "Edit user data",
+                    textFields: {
+                        labels: {
+                            firstName: "First Name",
+                            lastName: "Last Name",
+                            role: "Role",
+                            email: "Email",
+                            phoneNumber: "Phone Number",
+
+                        }
+                    },
+                    buttons: {
+                        cancel: "Cancel",
+                        save: "Save"
+                    }
+                },
+                deleteModal: {
+                    title: "Delete User",
+                    message: "Are you sure you want to delete this user? This action can not be undone!"
+                },
+            },
+            toast: {
+                error:{
+                    tokenError: "You are not logged in. Please log in again!",
+                    userUpdate:"Failed to update user details, please try again!",
+                    userDelete:"Failed to delete user from the database!",
+                },
+                success:{
+                    userUpdate: "User details updated successfully!",
+                    userDelete:"User successfully deleted from database!",
+                }
+            },
+            manageBusinessHours: {
+                title: "Business Hours",
+                subtitle: "Here you can edit your opening hours on the website globally.",
+                table: {
+                    days: "Days of Week",
+                    open: "Opening Time",
+                    close: "Closing Time",
+                    actions: "Actions",
+                    buttons: {
+                        edit: "Edit",
+                    },
+                },
+                modal: {
+                    title: "Edit Opening Hours",
+                    weekday: "Day of Week",
+                    buttons: {
+                        cancel: "Cancel",
+                        save: "Save"
+                    }
+                },
+                toast: {
+                    tokenError: "You are not logged in. Please log in again.",
+                    updateSuccess: "Business hours updated successfully!",
+                    updateError: "Failed to update business hours!"
+                }
+            },
+        },
+        logout: {
+            toasts: {
+                success: "You have successfully logged out. See-ya!"
             }
         },
         registration: {
             toasts: {
                 success: "Registration successful!",
                 error: "Registration failed!",
-                verificationEmailSent:"A verification email has been sent to your email address. Please check your inbox."
+                verificationEmailSent: "A verification email has been sent to your email address. Please check your inbox."
             }
         },
         login: {
@@ -80,9 +252,7 @@ const messages = {
             alreadyHaveAccount1: "Already have an account?",
             alreadyHaveAccount2: "here."
         },
-        hero: {
-            title: "Garrison's haircraft and barbershop"
-        },
+
         dialog: {
             date: "Date:",
             time: "Time",
@@ -107,28 +277,7 @@ const messages = {
                 requestBook: "Request Appointment"
             }
         },
-        dashboard: {
-            title: "Dashboard",
-            manageEvents: {
-                title: "Manage Reservations",
 
-            },
-            managePendingEvents: {
-                title: "Manage Pending Reservations",
-                subtitle: "Here you can accept or deny the pending appointment booking requests."
-            },
-            manageServices: {
-                title: "Manage Services",
-                subtitle: "Here you can add, delete or modify services."
-            },
-            manageUsers: {
-                title: "Manage User Accounts",
-                subtitle: "Here you can manage the registered users."
-            },
-            toasts: {
-
-            }
-        }
     },
     hu: {
         link: {

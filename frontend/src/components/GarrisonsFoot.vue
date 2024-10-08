@@ -2,6 +2,9 @@
 import { ref, onMounted } from "vue";
 import apiClient from "@/utils/apiClient";
 import { useToast } from "vue-toastification";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const businessHours = ref([]);
 const toast = useToast();
@@ -11,7 +14,7 @@ const fetchBusinessHours = async () => {
     const response = await apiClient.get("/api/business-hours");
     businessHours.value = response.data;
   } catch (error) {
-    toast.error("Error fetching business hours.");
+    toast.error(t("footer.toasts.error"));
     console.error("Error fetching business hours:", error);
   }
 };
@@ -21,13 +24,13 @@ onMounted(fetchBusinessHours);
 
 // Map numbers to day names
 const dayOfWeekMap = {
-  1: "Monday",
-  2: "Tuesday",
-  3: "Wednesday",
-  4: "Thursday",
-  5: "Friday",
-  6: "Saturday",
-  7: "Sunday",
+  1: t("footer.openingHours.days.monday"),
+  2: t("footer.openingHours.days.tuesday"),
+  3: t("footer.openingHours.days.wednesday"),
+  4: t("footer.openingHours.days.thursday"),
+  5: t("footer.openingHours.days.firday"),
+  6: t("footer.openingHours.days.saturday"),
+  7: t("footer.openingHours.days.sunday"),
 };
 </script>
 
@@ -35,30 +38,28 @@ const dayOfWeekMap = {
   <v-footer class="bg-dark-garrisons footer-elevation my-0 py-0">
     <v-container class="w-75">
       <v-row>
-        <!-- Left side for Business Hours -->
-   
-
-      
-
-        <!-- Right side for Links -->
         <v-col cols="5" class="text-left">
-          <h2 class="subtitle-garrisons text-decoration-underline">Important</h2>
+          <h2 class="subtitle-garrisons text-decoration-underline">
+            Important
+          </h2>
           <ul class="bg-dark-garrisons line-height-footer">
             <li class="text-garrisons line-height-item">
-              <span>Bíró Dominik, E.V. - <br> Garrisons Haircraft & Barbershop</span>
+              <span
+                >{{ t("global.owner") }} - <br />{{ t("global.shop") }}</span
+              >
             </li>
             <li class="text-garrisons line-height-item">
-              <span>info@garrisons.hu</span>
+              <span>{{ t("global.email") }}</span>
             </li>
             <li class="text-garrisons line-height-item">
-              <span>06 (30) 512 3213</span>
+              <span>{{ t("global.tel") }}</span>
             </li>
           </ul>
         </v-col>
 
         <v-col cols="2" class="text-center">
           <h1 class="title-garrisons text-decoration-underline">
-            Opening Hours
+            {{ t("footer.openingHours.title") }}
           </h1>
           <ul class="bg-dark-garrisons line-height-footer">
             <li
@@ -71,7 +72,7 @@ const dayOfWeekMap = {
                 class="text-red"
                 v-if="hour.startTime === '00:00' && hour.endTime === '00:00'"
               >
-                CLOSED
+                {{ t("footer.openingHours.closed") }}
               </span>
               <span class="text-green-lighten-1" v-else>
                 {{ hour.startTime }} - {{ hour.endTime }}
@@ -84,22 +85,21 @@ const dayOfWeekMap = {
           ><h2 class="subtitle-garrisons text-decoration-underline">Socials</h2>
           <ul class="bg-dark-garrisons line-height-footer">
             <li class="text-garrisons line-height-item">
-             Facebook<span class="mdi mdi-facebook ps-1"></span>
+              Facebook<span class="mdi mdi-facebook ps-1"></span>
             </li>
             <li class="text-garrisons line-height-item">
               Instagram <span class="mdi mdi-instagram"></span>
             </li>
             <li class="text-garrisons line-height-item">
               Twitter <span class="mdi mdi-twitter"></span>
-            </li>
-          </ul></v-col
-        >
+            </li></ul
+        ></v-col>
       </v-row>
       <v-divider class="mt-5"></v-divider>
       <v-row class="justify-center mt-3 text-caption text-white">
         <p class="text-center mt-1">
-          Nagy Róbert, {{ new Date().getFullYear() }} — garrisons.hu, All rights
-          reserved.
+          {{ t("global.developer") }}, {{ new Date().getFullYear() }} —
+          garrisons.hu, {{ t("footer.rights") }}
         </p>
       </v-row>
     </v-container>

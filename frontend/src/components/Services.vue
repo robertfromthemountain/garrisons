@@ -2,7 +2,7 @@
   <section>
     <div class="d-block justify-center pa-8">
       <h1 class="text-center divider title-garrisons bigger-title">
-        Szolgaltatasok
+        {{ t("guestBooking.services.title") }}
       </h1>
       <div v-if="!loading && services.length > 0">
         <ul class="services-content">
@@ -39,6 +39,9 @@
 <script setup>
 import apiClient from "@/utils/apiClient";
 import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+
+const {t} = useI18n();
 
 const token = sessionStorage.getItem("accessToken");
 const services = ref([]);

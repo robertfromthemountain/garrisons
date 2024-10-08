@@ -170,38 +170,52 @@ function mapBusinessHours(businessHours) {
     <!-- Modal for Login/Register -->
     <v-dialog v-model="showLoginRegisterDialog" max-width="35vw">
       <v-card class="bg-garrisons text-garrisons">
-        <v-card-title>
-          <h2 class="headline title-garrisons py-2 text-center">
-            {{ activeComponent === LoginForm ? "To be able to book, you need to sing in here:" : "Dont have an account? Register here:" }}
-          </h2>
+        <v-card-title class="text-end">
+          <!-- <h3 class="headline text-garrisons py-2 text-center font-weight-regular">
+            {{
+              activeComponent === LoginForm
+                ? "To be able to book, you need to sing in here:"
+                : "Dont have an account? Register here:"
+            }}
+          </h3> -->
+          <v-btn
+            class="text-garrisons"
+            icon="$close"
+            variant="text"
+            density="compact"
+            @click="closeLoginRegisterDialog"
+          >
+          </v-btn>
         </v-card-title>
-
         <v-divider class="mx-3"></v-divider>
-
         <!-- Smooth transition between forms -->
-        <v-card-text class="mb-8">
+        <v-card-text class="mb-3">
           <transition name="fade" mode="out-in">
             <component :is="activeComponent" :showLink="false"></component>
           </transition>
         </v-card-text>
+        <v-btn
+          class="text-garrisons mx-auto mb-10"
+          variant="text"
+          @click="toggleForm"
+        >
+          {{
+            activeComponent === LoginForm
+              ? t("guestBooking.modal.createAccount")
+              : t("guestBooking.modal.haveAccount")
+          }}
+        </v-btn>
+        <!-- <v-divider class="mx-3"></v-divider> -->
 
-        <v-divider class="mx-3"></v-divider>
-
-        <v-card-actions class="ma-2">
+        <!-- <v-card-actions class="ma-2"> -->
+        <!-- <v-spacer></v-spacer>
           <v-btn
             class="text-garrisons bg-red-lighten-1"
             @click="closeLoginRegisterDialog"
           >
             Close
-          </v-btn>
-          <v-spacer></v-spacer>
-          <v-btn
-            class="text-garrisons bg-green"
-            @click="toggleForm"
-          >
-            {{ activeComponent === LoginForm ? "I dont have an account!" : "I already have an account!" }}
-          </v-btn>
-        </v-card-actions>
+          </v-btn> -->
+        <!-- </v-card-actions> -->
       </v-card>
     </v-dialog>
   </div>
@@ -210,7 +224,7 @@ function mapBusinessHours(businessHours) {
 <style>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 1s ease;
+  transition: opacity 0.6s ease;
 }
 
 .fade-enter-from,

@@ -3,7 +3,7 @@
     <v-row>
       <v-col cols="12" md="6" class="vertical-divider">
         <div>
-          <h2 class="about-title">Rólam</h2>
+          <h2 class="about-title">{{ t("intro.about") }}</h2>
           <p class="about-content">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
@@ -16,16 +16,21 @@
       <!-- Szolgáltatások Section -->
       <v-col cols="12" md="6">
         <div class="justify-end">
-          <h2 class="services-title">Szolgáltatások</h2>
+          <h2 class="services-title">{{t('intro.services')}}</h2>
           <ul class="services-content">
-            <li
-              v-for="service in services"
-              :key="service.id"
-              class="d-flex"
-            >
-            <v-col cols="4" class="text-start pa-0 ma-0" no-gutters><span class="mdi mdi-content-cut subtitle-garrisons"></span> {{ service.title }}</v-col>
-            <v-col cols="4" class="text-center pa-0 ma-0" no-gutters><span class="mdi mdi-timer-sand subtitle-garrisons"></span>{{ service.duration }}</v-col>
-            <v-col cols="4" class="text-end pa-0 ma-0" no-gutters><span class="mdi mdi-cash-multiple subtitle-garrisons"></span> {{ service.price }} HUF</v-col>
+            <li v-for="service in services" :key="service.id" class="d-flex">
+              <v-col cols="4" class="text-start pa-0 ma-0" no-gutters
+                ><span class="mdi mdi-content-cut subtitle-garrisons"></span>
+                {{ service.title }}</v-col
+              >
+              <v-col cols="4" class="text-center pa-0 ma-0" no-gutters
+                ><span class="mdi mdi-timer-sand subtitle-garrisons"></span
+                >{{ service.duration }}</v-col
+              >
+              <v-col cols="4" class="text-end pa-0 ma-0" no-gutters
+                ><span class="mdi mdi-cash-multiple subtitle-garrisons"></span>
+                {{ service.price }} HUF</v-col
+              >
             </li>
           </ul>
         </div>
@@ -37,7 +42,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import apiClient from "@/utils/apiClient";
+import { useI18n } from "vue-i18n";
 
+const { t } = useI18n();
 // Define the services array
 const services = ref([]);
 const loading = ref(false);
@@ -78,6 +85,7 @@ const fetchServices = async () => {
   text-align: end;
   color: #d3d2cd;
   font-size: x-large;
+  line-height: 1.4;
   text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
 }
 
@@ -94,7 +102,8 @@ const fetchServices = async () => {
 }
 
 .services-content {
-  font-size: larger;
+  font-size: x-large;
+  line-height: 1.3;
   color: #d3d2cd;
   text-align: start;
   text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);

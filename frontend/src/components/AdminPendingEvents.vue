@@ -19,22 +19,21 @@
         <tr>
           <!-- <th>ID</th> -->
           <!-- <th>Service ID</th> -->
-          <th><v-icon class="me-2">mdi-content-cut</v-icon>Service</th>
+          <th><v-icon class="me-2">mdi-content-cut</v-icon>{{t("dashboard.managePendingEvents.table.service")}}</th>
           <th>
-            <v-icon class="me-2">mdi-account-circle-outline</v-icon>Booker
+            <v-icon class="me-2">mdi-account-circle-outline</v-icon>{{t("dashboard.managePendingEvents.table.booker")}}
           </th>
-          <th><v-icon class="me-2">mdi-calendar-outline</v-icon>Date</th>
-          <th><v-icon class="me-2">mdi-calendar-start-outline</v-icon>Start Time</th>
-          <th><v-icon class="me-2">mdi-calendar-end-outline</v-icon>End Time</th>
-          <th><v-icon class="me-2">mdi-cog-outline</v-icon>Actions</th>
+          <th><v-icon class="me-2">mdi-calendar-outline</v-icon>{{t("dashboard.managePendingEvents.table.date")}}</th>
+          <th><v-icon class="me-2">mdi-calendar-start-outline</v-icon>{{t("dashboard.managePendingEvents.table.start")}}</th>
+          <th><v-icon class="me-2">mdi-calendar-end-outline</v-icon>{{t("dashboard.managePendingEvents.table.end")}}</th>
+          <th><v-icon class="me-2">mdi-cog-outline</v-icon>{{t("dashboard.managePendingEvents.table.actions")}}</th>
         </tr>
       </thead>
       <tbody>
         <template v-if="pendingEvents.length === 0">
           <tr>
             <td colspan="6" class="text-center">
-              There are no pending events at the moment. Take a break, grab some
-              coffee, and wait for the next booking to come in!
+             {{ t("dashboard.managePendingEvents.noEvents") }}
             </td>
           </tr>
         </template>
@@ -55,7 +54,7 @@
                 :disabled="loading"
                 @click="confirmPendingEvent(event.id)"
               >
-                <v-icon class="pe-2">mdi-book-check-outline</v-icon>Accept
+                <v-icon class="pe-2">mdi-book-check-outline</v-icon>{{t("dashboard.managePendingEvents.table.buttons.accept")}}
               </v-btn>
               <v-btn
                 density="compact"
@@ -63,7 +62,7 @@
                 :disabled="loading"
                 @click="openDeleteModal(event)"
               >
-                <v-icon class="pe-2">mdi-book-cancel-outline</v-icon>Deny
+                <v-icon class="pe-2">mdi-book-cancel-outline</v-icon>{{t("dashboard.managePendingEvents.table.buttons.deny")}}
               </v-btn>
             </td>
           </tr>
@@ -75,8 +74,8 @@
     <ConfirmDeleteModal
       :isOpen="isDeleteModalOpen"
       :selectedEventId="selectedEventId"
-      title="Delete Pending Reservation"
-      message="Are you sure you want to deny this pending reservation?"
+      :title="t('dashboard.managePendingEvents.deleteModal.title')"
+      :message="t('dashboard.managePendingEvents.deleteModal.message')"
       @cancel="closeDeleteModal"
       @confirm="denyPendingEvent"
       @update:isOpen="(val) => (isDeleteModalOpen = val)"
@@ -150,7 +149,7 @@ const handleError = (customMessage) => {
 // Fetch all pending events from the backend
 const fetchPendingEvents = async () => {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.managePendingEvents.toast.error.token"), "error");
     return;
   }
   loading.value = true;
@@ -173,7 +172,7 @@ const fetchPendingEvents = async () => {
 const confirmPendingEvent = async (id) => {
   console.log(id);
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.managePendingEvents.toast.error.token"), "error");
     return;
   }
   loading.value = true;
@@ -187,11 +186,11 @@ const confirmPendingEvent = async (id) => {
 
     // Check if the response is successful
     if (response.status === 200) {
-      showToast(response.data.message || "Event successfully confirmed!"); // Show success message
+      showToast(response.data.message || t("dashboard.managePendingEvents.toast.success.confirm")); // Show success message
       fetchPendingEvents(); // Refresh the list of pending events
     } else {
       throw new Error(
-        response.data.message || "Failed to confirm event. Please try again."
+        response.data.message || t("dashboard.managePendingEvents.toast.error.confirm")
       );
     }
   } catch (error) {
@@ -223,12 +222,12 @@ const denyPendingEvent = async () => {
   console.log("Selected Event ID:", id); // Check if the ID is logged correctly
 
   if (!id) {
-    handleError("No event selected to deny.");
+    handleError(t("dashboard.managePendingEvents.toast.error.noEvent"));
     return;
   }
 
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.managePendingEvents.toast.error.token"), "error");
     return;
   }
 
@@ -242,12 +241,12 @@ const denyPendingEvent = async () => {
     );
 
     if (response.status === 200) {
-      showToast("Event successfully denied!");
+      showToast(t("dashboard.managePendingEvents.toast.success.deny"));
       fetchPendingEvents(); // Refresh pending events
       closeDeleteModal(); // Close modal
     } else {
       throw new Error(
-        response.data.message || "Failed to deny event. Try again later."
+        response.data.message || t("dashboard.managePendingEvents.toast.error.deny")
       );
     }
   } catch (error) {
