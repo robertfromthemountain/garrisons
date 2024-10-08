@@ -15,16 +15,30 @@
       <thead class="bg-garrisons">
         <tr>
           <!-- <th>ID</th> -->
-          <th><v-icon class="me-2">mdi-label-outline</v-icon>Title</th>
-          <th><v-icon class="me-2">mdi-cash-multiple</v-icon>Price</th>
-          <th><v-icon class="me-2">mdi-timer-outline</v-icon>Duration</th>
-          <th><v-icon class="me-2">mdi-palette</v-icon>Color</th>
+          <th>
+            <v-icon class="me-2">mdi-label-outline</v-icon
+            >{{ t("dashboard.manageServices.table.title") }}
+          </th>
+          <th>
+            <v-icon class="me-2">mdi-cash-multiple</v-icon
+            >{{ t("dashboard.manageServices.table.price") }}
+          </th>
+          <th>
+            <v-icon class="me-2">mdi-timer-outline</v-icon
+            >{{ t("dashboard.manageServices.table.duration") }}
+          </th>
+          <th>
+            <v-icon class="me-2">mdi-palette</v-icon
+            >{{ t("dashboard.manageServices.table.color") }}
+          </th>
           <th>
             <v-text-field
               v-model="searchQuery"
-              label="Search Services"
+              :label="t('dashboard.manageServices.table.search')"
               density="compact"
-              placeholder="Search by title, price, or duration"
+              :placeholder="
+                t('dashboard.manageServices.table.searchPlaceholder')
+              "
               append-inner-icon="mdi-magnify"
             ></v-text-field>
           </th>
@@ -60,7 +74,8 @@
               :disabled="loading"
               @click="openEditModal(service)"
             >
-              <v-icon class="pe-2">mdi-pencil</v-icon>Edit
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageServices.table.buttons.edit") }}
             </v-btn>
             <v-btn
               density="compact"
@@ -68,7 +83,8 @@
               :disabled="loading"
               @click="openDeleteModal(service.id)"
             >
-              <v-icon class="pe-2">mdi-trash-can-outline</v-icon>Delete
+              <v-icon class="pe-2">mdi-trash-can-outline</v-icon
+              >{{ t("dashboard.manageServices.table.buttons.delete") }}
             </v-btn>
           </td>
         </tr>
@@ -83,7 +99,8 @@
               @click="openAddModal"
               :disabled="loading"
             >
-              <v-icon class="pe-2">mdi-plus</v-icon>Add Service
+              <v-icon class="pe-2">mdi-plus</v-icon
+              >{{ t("dashboard.manageServices.table.buttons.add") }}
             </v-btn>
           </td>
         </tr>
@@ -95,14 +112,17 @@
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
-            <span class="mdi mdi-pencil-box"></span> Edit Service
+            <span class="mdi mdi-pencil-box"></span
+            >{{ t("dashboard.manageServices.editModal.title") }}
           </h2>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
           <v-text-field
             density="compact"
-            label="Title"
+            :label="
+              t('dashboard.manageServices.editModal.textFields.labels.title')
+            "
             v-model="editServiceData.title"
             prepend-inner-icon="mdi-label-outline"
             clearable
@@ -110,7 +130,9 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Price"
+            :label="
+              t('dashboard.manageServices.editModal.textFields.labels.price')
+            "
             v-model="editServiceData.price"
             prepend-inner-icon="mdi-currency-usd"
             type="number"
@@ -118,7 +140,9 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Duration (in minutes)"
+            :label="
+              t('dashboard.manageServices.editModal.textFields.labels.duration')
+            "
             v-model="editServiceData.duration"
             prepend-inner-icon="mdi-timer-outline"
             type="number"
@@ -126,7 +150,7 @@
             required
           ></v-text-field>
           <!-- New Color Picker -->
-          <p>Color of the service:</p>
+          <p>{{ t("dashboard.manageServices.editModal.colorLabel") }}</p>
           <v-color-picker
             class="mx-auto bg-dark-garrisons"
             v-model="editServiceData.backgroundColor"
@@ -142,7 +166,7 @@
             class="bg-red-darken-1 text-garrisons ms-2"
             @click="closeEditModal"
           >
-            Cancel
+            {{ t("dashboard.manageServices.buttons.cancel") }}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
@@ -152,7 +176,7 @@
               !editServiceData.title || !editServiceData.duration || loading
             "
           >
-            Save
+            {{ t("dashboard.manageServices.buttons.save") }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -163,14 +187,17 @@
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
           <h2 class="headline title-garrisons">
-            <span class="mdi mdi-plus"></span> Add New Service
+            <span class="mdi mdi-plus"></span
+            >{{ t("dashboard.manageServices.addModal.title") }}
           </h2>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
           <v-text-field
             density="compact"
-            label="Title"
+            :label="
+              t('dashboard.manageServices.addModal.textFields.labels.title')
+            "
             v-model="newService.title"
             prepend-inner-icon="mdi-label-outline"
             clearable
@@ -178,7 +205,9 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Price"
+            :label="
+              t('dashboard.manageServices.addModal.textFields.labels.price')
+            "
             v-model="newService.price"
             prepend-inner-icon="mdi-currency-usd"
             type="number"
@@ -187,7 +216,9 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            label="Duration (in minutes)"
+            :label="
+              t('dashboard.manageServices.addModal.textFields.labels.duration')
+            "
             v-model="newService.duration"
             prepend-inner-icon="mdi-timer-outline"
             type="number"
@@ -197,7 +228,9 @@
           <!-- New Color Picker -->
           <v-color-picker
             v-model="newService.backgroundColor"
-            label="Select Background Color"
+            :label="
+              t('dashboard.manageServices.addModal.textFields.labels.color')
+            "
             mode="hexa"
             canvas-height="150"
             hide-mode-switch
@@ -208,7 +241,7 @@
             class="bg-red-darken-1 text-garrisons ms-2"
             @click="closeAddModal"
           >
-            Cancel
+            {{ t("dashboard.manageServices.addModal.buttons.cancel") }}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
@@ -216,7 +249,7 @@
             @click="addService"
             :disabled="!newService.title || !newService.duration || loading"
           >
-            Add
+            {{ t("dashboard.manageServices.addModal.buttons.add") }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -226,8 +259,8 @@
     <ConfirmDeleteModal
       :isOpen="isDeleteModalOpen"
       :selectedEventId="selectedServiceId"
-      title="Delete Service"
-      message="Are you sure you want to delete this service? This action cannot be undone."
+      :title="t('dashboard.manageServices.deleteModal.title')"
+      :message="t('dashboard.manageServices.deleteModal.message')"
       @cancel="closeDeleteModal"
       @confirm="confirmDelete"
       @update:isOpen="(val) => (isDeleteModalOpen = val)"
@@ -277,7 +310,7 @@ const toast = useToast();
 // Fetch services from backend
 const fetchServices = async () => {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.toast.error.tokenError"), "error");
     return;
   }
   loading.value = true;
@@ -330,7 +363,7 @@ const closeDeleteModal = () => {
 const confirmDelete = async (id) => {
   console.log("Service ID to delete:", id);
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast(t("dashboard.toast.error.tokenError"), "error");
     return;
   }
   loading.value = true;
@@ -339,10 +372,10 @@ const confirmDelete = async (id) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     services.value = services.value.filter((service) => service.id !== id);
-    toast.success("Service deleted successfully!");
+    toast.success(t('dashboard.toast.success.serviceDelete'));
     closeDeleteModal();
   } catch (error) {
-    toast.error("Failed to delete service.");
+    toast.error(t('dashboard.toast.error.serviceDelete'));
     console.error("Error deleting service:", error);
   } finally {
     loading.value = false;
@@ -352,7 +385,7 @@ const confirmDelete = async (id) => {
 // Save edited service data from modal
 const saveEdit = async () => {
   if (!token) {
-    toast.error("You are not logged in. Please log in again.");
+    toast.error(t('dashboard.toast.error.tokenError'));
     return;
   }
   loading.value = true;
@@ -369,9 +402,9 @@ const saveEdit = async () => {
     );
     services.value[index] = { ...editServiceData.value }; // Update the service list
     isEditModalOpen.value = false;
-    toast.success("Service updated successfully!");
+    toast.success(t('dashboard.toast.success.serviceUpdate'));
   } catch (error) {
-    toast.error("Failed to update service.");
+    toast.error(t('dashboard.toast.error.serviceUpdate'));
     console.error("Error updating service:", error);
   } finally {
     loading.value = false;
@@ -381,7 +414,7 @@ const saveEdit = async () => {
 // Add a new service from modal
 const addService = async () => {
   if (!token) {
-    toast.error("You are not logged in. Please log in again.");
+    toast.error(t('dashboard.toast.error.tokenError'));
     return;
   }
   loading.value = true;
@@ -394,10 +427,10 @@ const addService = async () => {
       }
     );
     services.value.push(response.data); // Add new service to the list
-    toast.success("New service added successfully!");
+    toast.success(t('dashboard.toast.success.serviceAdd'));
     closeAddModal();
   } catch (error) {
-    toast.error("Error adding service");
+    toast.error(t('dashboard.toast.error.serviceAdd'));
     console.error("Error adding service:", error);
   } finally {
     loading.value = false;

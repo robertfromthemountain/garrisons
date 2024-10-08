@@ -97,7 +97,55 @@ const messages = {
             },
             manageServices: {
                 title: "Manage Services",
-                subtitle: "Here you can add, delete or modify services."
+                subtitle: "Here you can add, delete or modify services.",
+                table: {
+                    title: "Title",
+                    price: "Price",
+                    duration: "Duration",
+                    color: "Color",
+                    search: "Search Services",
+                    searchPlaceholder: "Search by title, price, or duration",
+                    buttons: {
+                        edit: "Edit",
+                        delete: "Delete",
+                        add: "Add Service"
+                    },
+                },
+                editModal: {
+                    title: "Edit Service",
+                    textFields: {
+                        labels: {
+                            title: "Title",
+                            price: "Price",
+                            duration: "Duration (in minutes)",
+
+                        }
+                    },
+                    colorLabel: "Color of the service:"
+                },
+                addModal: {
+                    title: "Add New Service",
+                    textFields: {
+                        labels: {
+                            title: "Title",
+                            price: "Price",
+                            duration: "Duration (in minutes)",
+                            color: "Select Background Color"
+                        }
+                    },
+                    buttons: {
+                        cancel: "Cancel",
+                        add: "Add"
+                    }
+                },
+                deleteModal: {
+                    title: "Delete Service",
+                    message: "Are you sure you want to delete this service? This action cannot be undone."
+                },
+                buttons: {
+                    cancel: "Cancel",
+                    save: "Save"
+                }
             },
             manageUsers: {
                 title: "Manage User Accounts",
@@ -137,14 +185,20 @@ const messages = {
                 },
             },
             toast: {
-                error:{
+                error: {
                     tokenError: "You are not logged in. Please log in again!",
-                    userUpdate:"Failed to update user details, please try again!",
-                    userDelete:"Failed to delete user from the database!",
+                    userUpdate: "Failed to update user details, please try again!",
+                    userDelete: "Failed to delete user from the database!",
+                    serviceDelete: "Failed to delete service, please try again!",
+                    serviceUpdate: "Failed to update service, please try again!",
+                    serviceAdd: "Failed to create new servce, please try again!",
                 },
-                success:{
+                success: {
                     userUpdate: "User details updated successfully!",
-                    userDelete:"User successfully deleted from database!",
+                    userDelete: "User successfully deleted from database!",
+                    serviceDelete: "Service deleted successfully!",
+                    serviceUpdate: "Service updated successfully!",
+                    serviceAdd: "New service added successfully!",
                 }
             },
             manageBusinessHours: {
