@@ -52,6 +52,15 @@
           <v-icon left>mdi-account-group</v-icon>
           Users
         </v-list-item>
+
+        <v-list-item
+          v-if="isLoggedIn && userRole === 'admin'"
+          class="list-item-custom"
+          :to="{ name: 'dashboard-managePictures' }"
+        >
+          <v-icon left>mdi-account-group</v-icon>
+          Manage Pictures
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 

@@ -10,6 +10,7 @@ import ManageEventsView from '@/views/ManageEventsView.vue'
 import ManagePendingView from '@/views/ManagePendingView.vue'
 import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
+import ManagePicturesView from '@/views/ManagePicturesView.vue'
 import ManageBusinessHoursView from '@/views/ManageBusinessHoursView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
 import NotFound from "@/components/NotFound.vue"
@@ -88,6 +89,12 @@ const router = createRouter({
           path: 'businessHours',
           name: 'dashboard-businessHours',
           component: ManageBusinessHoursView,
+          meta: { requiresAuth: true, role: 'admin' },
+        },
+        {
+          path: 'managePictures',
+          name: 'dashboard-managePictures',
+          component: ManagePicturesView,
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]
