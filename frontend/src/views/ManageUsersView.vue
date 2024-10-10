@@ -9,13 +9,11 @@
   
   <script>
   import AdminUsers from '@/components/AdminUsers.vue';
-  import UsersDataTable from '@/components/UsersDataTable.vue';
   import { useI18n } from 'vue-i18n';
   export default {
     name: 'ManageUsersView',
     components:{
       AdminUsers,
-      UsersDataTable,
     },
     setup() {
     const { t } = useI18n();

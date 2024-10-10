@@ -71,8 +71,11 @@ export function useLogin() {
                     case 401:
                         toast.error(t("login.toasts.invalidCredentials"));
                         break;
-                    case 602:
-                        toast.error(t("login.toasts.verifyEmail")); // Display message to verify email
+                    case 603:
+                        toast.error(t("login.toasts.verifyEmail"));
+                        break;
+                    case 604:
+                        toast.error(t("login.toasts.bannedUser"));
                         break;
                     case 404:
                         toast.error(t("login.toasts.userNotFound"));

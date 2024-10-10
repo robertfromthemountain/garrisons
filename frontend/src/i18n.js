@@ -155,6 +155,7 @@ const messages = {
                     role: "Role",
                     email: "Email",
                     phone: "Phone number",
+                    status: "Status",
                     search: "Search Users",
                     searchPlaceholder: "Search by first name, last name, email, etc.",
                     buttons: {
@@ -171,7 +172,7 @@ const messages = {
                             role: "Role",
                             email: "Email",
                             phoneNumber: "Phone Number",
-
+                            status: "Status"
                         }
                     },
                     buttons: {
@@ -249,7 +250,8 @@ const messages = {
                 serverError: "Server error. Please try again later.",
                 genericError: "Login failed! Please try again.",
                 networkError: "Network error. Please check your connection.",
-                verifyEmail:"Please verify your email to activate your account."
+                verifyEmail:"Please verify your email to activate your account.",
+                bannedUser:"You are banned from the site. Please contact the owner."
             }
         },
         link: {

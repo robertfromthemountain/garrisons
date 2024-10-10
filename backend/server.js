@@ -393,7 +393,6 @@ app.get('/verify-token', (req, res) => {
 
 
 // Login endpoint
-// Login endpoint
 app.post('/login', async (req, res) => {
     console.log('Login request for email:', req.body.email);
     const { email, password } = req.body;
@@ -403,55 +402,56 @@ app.post('/login', async (req, res) => {
         db.query(sqlSelect, [email], async (err, results) => {
             if (err) {
                 console.error(err);
-                res.status(500).send('Database error');
-                return;
+                return res.status(500).send('Database error');
             }
 
             if (results.length > 0) {
                 const user = results[0];
 
-                // First, check if the password is correct
+                // Check the password first
                 const validPassword = await bcrypt.compare(password, user.password);
 
                 if (validPassword) {
-                    // Then check if the user's status is 'confirmed'
-                    if (user.status !== 'confirmed') {
-                        return res.status(602).json({ message: 'Please verify your email to activate your account.' });
+                    // Check user's status
+                    if (user.status === 'pending') {
+                        return res.status(603).json({ message: 'Please verify your email to activate your account.' });
+                    } else if (user.status === 'banned') {
+                        return res.status(604).json({ message: 'Your account has been banned. Contact support for further assistance.' });
+                    } else if (user.status === 'confirmed') {
+                        // If password is valid and user is confirmed, generate JWT token
+                        const token = jwt.sign(
+                            {
+                                userId: user.id,
+                                email: user.email,
+                                firstName: user.firstName,
+                                lastName: user.lastName,
+                                phoneNumber: user.phoneNumber,
+                                role: user.role,
+                            },
+                            process.env.JWT_SECRET,
+                            { expiresIn: '1h' }
+                        );
+
+                        console.log("User logged in with role:", user.role);
+                        return res.json({ token, role: user.role });
+                    } else {
+                        // Handle unexpected status
+                        return res.status(400).json({ message: 'Unexpected account status. Please contact support.' });
                     }
-
-                    // If password is valid and user is confirmed, generate JWT token
-                    const token = jwt.sign(
-                        {
-                            userId: user.id,
-                            email: user.email,
-                            firstName: user.firstName,
-                            lastName: user.lastName,
-                            phoneNumber: user.phoneNumber,
-                            role: user.role,
-                        },
-                        process.env.JWT_SECRET,
-                        { expiresIn: '1h' }
-                    );
-
-                    console.log("User logged in with role:", user.role);
-                    res.json({ token, role: user.role });
                 } else {
-                    // Password is incorrect
-                    res.status(401).send('Invalid credentials');
+                    // Invalid password
+                    return res.status(401).send('Invalid credentials');
                 }
-
             } else {
                 // User not found
-                res.status(404).send('User not found');
+                return res.status(404).send('User not found');
             }
         });
     } catch (error) {
         console.error(error);
-        res.status(500).send('Server error');
+        return res.status(500).send('Server error');
     }
 });
-
-
 
 // Get confirmed events from the unified events table
 app.get('/api/getEvents', (req, res) => {
@@ -1087,16 +1087,18 @@ app.get('/api/users', authenticateToken, isAdmin, (req, res) => {
     });
 });
 
+
 // UPDATE a user
 app.put('/api/users/:id', authenticateToken, isAdmin, (req, res) => {
     const { id } = req.params;
-    const { firstName, lastName, role, email, phoneNumber } = req.body; // Remove password from the body
-    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ? WHERE id = ?'; // No password update
-    db.query(sql, [firstName, lastName, role, email, phoneNumber, id], (err, result) => {
+    const { firstName, lastName, role, email, phoneNumber, status } = req.body;
+    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ?, status = ? WHERE id = ?';
+    db.query(sql, [firstName, lastName, role, email, phoneNumber, status, id], (err, result) => {
         if (err) return res.status(500).send(err);
         res.json({ message: 'User updated successfully' });
     });
 });
+
 
 // DELETE a user
 app.delete('/api/users/:id', authenticateToken, isAdmin, (req, res) => {

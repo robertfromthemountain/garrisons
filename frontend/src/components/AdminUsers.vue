@@ -15,19 +15,23 @@
         <tr>
           <th>
             <v-icon class="me-2">mdi-account-outline</v-icon>
-            {{t("dashboard.manageUsers.table.name")}}
+            {{ t("dashboard.manageUsers.table.name") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-security</v-icon>
-            {{t("dashboard.manageUsers.table.role")}}
+            {{ t("dashboard.manageUsers.table.role") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-email-outline</v-icon>
-            {{t("dashboard.manageUsers.table.email")}}
+            {{ t("dashboard.manageUsers.table.email") }}
           </th>
           <th>
             <v-icon class="me-2">mdi-phone-outline</v-icon>
-            {{t("dashboard.manageUsers.table.phone")}}
+            {{ t("dashboard.manageUsers.table.phone") }}
+          </th>
+          <th>
+            <v-icon class="me-2">mdi-information-outline</v-icon>
+            {{ t("dashboard.manageUsers.table.status") }}
           </th>
           <th>
             <v-text-field
@@ -49,6 +53,7 @@
           <td>{{ user.role }}</td>
           <td>{{ user.email }}</td>
           <td>{{ user.phoneNumber }}</td>
+          <td>{{ user.status }}</td>
           <td>
             <v-btn
               density="compact"
@@ -56,7 +61,8 @@
               @click="openEditModal(user)"
               :disabled="loading"
             >
-              <v-icon class="pe-2">mdi-pencil</v-icon>{{t("dashboard.manageUsers.table.buttons.edit")}}
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageUsers.table.buttons.edit") }}
             </v-btn>
             <v-btn
               density="compact"
@@ -64,7 +70,8 @@
               @click="openDeleteModal(user.id)"
               :disabled="loading"
             >
-              <v-icon class="pe-2">mdi-trash-can-outline</v-icon>{{t("dashboard.manageUsers.table.buttons.delete")}}
+              <v-icon class="pe-2">mdi-trash-can-outline</v-icon
+              >{{ t("dashboard.manageUsers.table.buttons.delete") }}
             </v-btn>
           </td>
         </tr>
@@ -84,7 +91,9 @@
         <v-card-text>
           <v-text-field
             density="compact"
-            :label="t('dashboard.manageUsers.modal.textFields.labels.firstName')"
+            :label="
+              t('dashboard.manageUsers.modal.textFields.labels.firstName')
+            "
             v-model="editUserData.firstName"
             prepend-inner-icon="mdi-account-outline"
             clearable
@@ -117,13 +126,23 @@
           ></v-text-field>
           <v-text-field
             density="compact"
-            :label="t('dashboard.manageUsers.modal.textFields.labels.phoneNumber')"
+            :label="
+              t('dashboard.manageUsers.modal.textFields.labels.phoneNumber')
+            "
             v-model="editUserData.phoneNumber"
             prepend-inner-icon="mdi-phone-outline"
             type="tel"
             clearable
             required
           ></v-text-field>
+          <v-select
+            :label="t('dashboard.manageUsers.modal.textFields.labels.status')"
+            v-model="editUserData.status"
+            :items="statuses"
+            prepend-inner-icon="mdi-information-outline"
+            density="compact"
+            required
+          ></v-select>
         </v-card-text>
         <v-card-actions>
           <v-btn
@@ -132,7 +151,7 @@
             :disabled="loading"
             @click="closeEditModal"
           >
-            {{t("dashboard.manageUsers.modal.buttons.cancel")}}
+            {{ t("dashboard.manageUsers.modal.buttons.cancel") }}
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn
@@ -148,7 +167,7 @@
             "
             @click="saveEdit"
           >
-          {{t("dashboard.manageUsers.modal.buttons.save")}}
+            {{ t("dashboard.manageUsers.modal.buttons.save") }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -183,12 +202,14 @@ const selectedUserId = ref(null);
 const isEditModalOpen = ref(false);
 const loading = ref(false);
 const roles = ref(["admin", "user"]);
+const statuses = ref(["pending", "confirmed", "banned"]); // Add statuses for dropdown
 const editUserData = ref({
   id: null,
   firstName: "",
   lastName: "",
   email: "",
   phoneNumber: "",
+  status: "",
 });
 const toast = useToast();
 
