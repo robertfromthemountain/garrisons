@@ -47,14 +47,30 @@
           md="3"
         >
           <div class="image-container">
-            <v-card height="200" width="200" class="relative-position">
-              <v-img
-                :src="image.image_path"
-                height="100%"
-                width="100%"
-                class="fill-height"
-                cover
-              ></v-img>
+            <v-card
+              height="300"
+              width="300"
+              class="relative-position"
+              color="#201b18"
+            >
+              <template v-if="loading">
+                <div class="d-flex justify-center align-center h-100">
+                  <v-progress-circular
+                    indeterminate
+                    color="#8f6a48"
+                    size="30"
+                  ></v-progress-circular>
+                </div>
+              </template>
+              <template v-else>
+                <v-img
+                  :src="image.image_path"
+                  height="100%"
+                  width="100%"
+                  class="fill-height"
+                  cover
+                ></v-img>
+              </template>
 
               <!-- Overlay with Delete Button (Using CSS hover) -->
               <div class="overlay">
@@ -161,6 +177,7 @@ const uploadImages = async () => {
 
 // Function to fetch images from the backend
 const fetchImages = async () => {
+  loading.value = true;
   try {
     const response = await apiClient.get(`/api/images`, {
       params: {
@@ -173,6 +190,10 @@ const fetchImages = async () => {
     totalPages.value = Math.ceil(totalImages.value / itemsPerPage);
   } catch (error) {
     toast.error("Error fetching images.");
+  } finally {
+    setTimeout(() => {
+      loading.value = false; // Simulate a delay before displaying the images
+    }, 300); // 1.5 sec delay for loading
   }
 };
 
@@ -224,5 +245,4 @@ onMounted(fetchImages);
 .image-container:hover .overlay {
   opacity: 1;
 }
-
 </style>

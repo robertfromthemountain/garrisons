@@ -75,7 +75,7 @@ const fetchServices = async () => {
 <style scoped>
 .about-title {
   font-size: xx-large;
-  color: #6a4e35;
+  color: #8f6a48;
   text-shadow: 6px 6px 12px rgba(0, 0, 0, 0.8);
   text-align: end;
   margin-bottom: 20px;
@@ -95,7 +95,7 @@ const fetchServices = async () => {
 
 .services-title {
   font-size: xx-large;
-  color: #6a4e35;
+  color: #8f6a48;
   text-shadow: 6px 6px 12px rgba(0, 0, 0, 0.8);
   text-align: start;
   margin-bottom: 20px;

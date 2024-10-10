@@ -14,7 +14,7 @@
           :to="{ name: 'dashboard-events' }"
         >
           <v-icon left>mdi-calendar-check</v-icon>
-          {{ t("dashboard.manageEvents.title") }}
+          Reservations
         </v-list-item>
 
         <v-list-item
@@ -59,7 +59,7 @@
           :to="{ name: 'dashboard-managePictures' }"
         >
           <v-icon left>mdi-account-group</v-icon>
-          Manage Pictures
+            Pictures
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
