@@ -1,5 +1,5 @@
 <script setup>
-import { useLogin } from "@/composables/login.js";
+import { useLogin } from "@/composables/login";
 
 const {
   email,

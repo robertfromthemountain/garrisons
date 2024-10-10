@@ -1,4 +1,7 @@
 import axios from 'axios';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 // Create Axios instance with base settings
 const apiClient = axios.create({
@@ -34,7 +37,9 @@ apiClient.interceptors.response.use(
         // Clear stored tokens and redirect to the login page if refresh fails
         sessionStorage.removeItem('accessToken');
         sessionStorage.removeItem('role');
-        window.location.href = '/login'; // Redirect to the login page
+
+        // Redirect to the login page using Vue Router
+        router.push('/login');
 
         return Promise.reject(err);
       }

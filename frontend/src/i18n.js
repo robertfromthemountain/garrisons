@@ -248,7 +248,8 @@ const messages = {
                 userNotFound: "User not found. Please check your email or register.",
                 serverError: "Server error. Please try again later.",
                 genericError: "Login failed! Please try again.",
-                networkError: "Network error. Please check your connection."
+                networkError: "Network error. Please check your connection.",
+                verifyEmail:"Please verify your email to activate your account."
             }
         },
         link: {

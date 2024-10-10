@@ -45,9 +45,9 @@ export function useLogin() {
             if (response.data.token && response.data.role) {
 
                 sessionStorage.setItem('accessToken', response.data.token);
-                console.log("ITT VAN A toke:", response.data.token);
+                console.log("Received token:", response.data.token);
                 sessionStorage.setItem('role', response.data.role);
-                console.log("ITT VAN A role:", response.data.role);
+                console.log("Received role:", response.data.role);
 
                 store.dispatch('login', { token: response.data.token, role: response.data.role });
                 toast.success(t("login.toasts.success"));
@@ -58,7 +58,7 @@ export function useLogin() {
                     router.push('/'); // Redirect user to homepage or wherever it is now
                 } else {
                     router.push('/login'); // Fallback for any unexpected roles
-                    toast.error("Itt valami nagy baj van")
+                    toast.error("Unexpected role error");
                 }
             } else {
                 throw new Error('No token or role received');
@@ -70,6 +70,9 @@ export function useLogin() {
                 switch (error.response.status) {
                     case 401:
                         toast.error(t("login.toasts.invalidCredentials"));
+                        break;
+                    case 602:
+                        toast.error(t("login.toasts.verifyEmail")); // Display message to verify email
                         break;
                     case 404:
                         toast.error(t("login.toasts.userNotFound"));

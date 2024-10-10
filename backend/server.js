@@ -257,7 +257,7 @@ app.post('/register', async (req, res) => {
 
     try {
         // Check if email already exists in the `users` table
-        const emailCheckQuery = 'SELECT * from users WHERE email = ?';
+        const emailCheckQuery = 'SELECT * FROM users WHERE email = ?';
         db.query(emailCheckQuery, [email], async (err, results) => {
             if (err) {
                 console.error(err);
@@ -268,41 +268,28 @@ app.post('/register', async (req, res) => {
                 return res.status(400).json({ message: 'Email is already registered in the system' });
             }
 
-            // Check if email is already pending verification
-            const pendingEmailCheckQuery = 'SELECT * from pending_users WHERE pending_email = ?';
-            db.query(pendingEmailCheckQuery, [email], async (err, pendingResults) => {
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Generate verification token
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+
+            // Insert the user into the `users` table with 'pending' status
+            const sqlInsert = `INSERT INTO users (firstName, lastName, email, phoneNumber, password, status, verification_token) VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
+            db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword, verificationToken], (err, insertResult) => {
                 if (err) {
                     console.error(err);
-                    return res.status(500).json({ message: 'Database error' });
+                    return res.status(500).json({ message: 'Database error during registration' });
                 }
 
-                if (pendingResults.length > 0) {
-                    return res.status(400).json({ message: 'Email is already pending verification.' });
-                }
-
-                // Hash the password
-                const hashedPassword = await bcrypt.hash(password, 10);
-
-                // Generate verification token
-                const verificationToken = crypto.randomBytes(32).toString('hex');
-
-                // Insert the user into the `pending_users` table
-                const sqlInsert = `INSERT INTO pending_users (pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password, verification_token) VALUES (?, ?, ?, ?, ?, ?)`;
-                db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword, verificationToken], (err, insertResult) => {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).json({ message: 'Database error during registration' });
-                    }
-
-                    // Send the verification email
-                    const verificationLink = `http://localhost:5000/verify-email?token=${verificationToken}`;
-                    const fullName = firstName + " " + lastName;
-                    const mailOptions = {
-                        from: 'noreply@yourapp.com',
-                        to: email,
-                        subject: 'Please verify your email',
-                        // html: `<p>Hello ${firstName},</p><p>Please verify your email by clicking the following link: <a href="${verificationLink}">Verify Email</a></p>`
-                        html: `
+                // Send the verification email
+                const verificationLink = `http://localhost:5000/verify-email?token=${verificationToken}`;
+                const fullName = firstName + " " + lastName;
+                const mailOptions = {
+                    from: 'noreply@yourapp.com',
+                    to: email,
+                    subject: 'Please verify your email',
+                    html: `
                             <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
     <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
         <h2 style="color: #8f6a48;">Welcome to Garrison's Haircraft & Barbershop! Please Verify Your Email</h2>
@@ -335,16 +322,15 @@ app.post('/register', async (req, res) => {
 </div>
 
                             `
-                    };
+                };
 
-                    transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            console.error('Error sending verification email:', error);
-                            return res.status(500).json({ message: 'Error sending verification email' });
-                        }
+                transporter.sendMail(mailOptions, (error, info) => {
+                    if (error) {
+                        console.error('Error sending verification email:', error);
+                        return res.status(500).json({ message: 'Error sending verification email' });
+                    }
 
-                        res.status(201).json({ message: 'Verification email sent' });
-                    });
+                    res.status(201).json({ message: 'Verification email sent' });
                 });
             });
         });
@@ -354,7 +340,6 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
 // Email verification
 app.get('/verify-email', (req, res) => {
     const { token } = req.query;
@@ -363,9 +348,9 @@ app.get('/verify-email', (req, res) => {
         return res.status(400).send('Invalid verification link');
     }
 
-    // Find the user with the verification token
-    const findPendingUserQuery = 'SELECT * FROM pending_users WHERE verification_token = ?';
-    db.query(findPendingUserQuery, [token], (err, results) => {
+    // Find the user with the verification token in the `users` table
+    const findUserQuery = 'SELECT * FROM users WHERE verification_token = ? AND status = "pending"';
+    db.query(findUserQuery, [token], (err, results) => {
         if (err) {
             console.error('Database error:', err);
             return res.status(500).send('Database error');
@@ -375,26 +360,15 @@ app.get('/verify-email', (req, res) => {
             return res.status(400).send('Invalid or expired token');
         }
 
-        const { pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password } = results[0];
-
-        // Move the user from `pending_users` to `users` table
-        const insertUserQuery = 'INSERT INTO users (firstName, lastName, email, phoneNumber, password) VALUES (?, ?, ?, ?, ?)';
-        db.query(insertUserQuery, [pending_firstName, pending_lastName, pending_email, pending_phoneNumber, pending_password], (err, insertResult) => {
+        // Update user status to 'confirmed' and clear the verification token
+        const updateUserQuery = 'UPDATE users SET status = "confirmed", verification_token = NULL WHERE verification_token = ?';
+        db.query(updateUserQuery, [token], (err, updateResult) => {
             if (err) {
                 console.error('Database error:', err);
                 return res.status(500).send('Database error during account activation');
             }
 
-            // Remove the user from `pending_users` after successful verification
-            const deletePendingUserQuery = 'DELETE FROM pending_users WHERE verification_token = ?';
-            db.query(deletePendingUserQuery, [token], (err, deleteResult) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).send('Database error');
-                }
-
-                res.status(200).send('Email successfully verified. Your account is now active.');
-            });
+            res.status(200).send('Email successfully verified. Your account is now active.');
         });
     });
 });
@@ -419,9 +393,11 @@ app.get('/verify-token', (req, res) => {
 
 
 // Login endpoint
+// Login endpoint
 app.post('/login', async (req, res) => {
     console.log('Login request for email:', req.body.email);
     const { email, password } = req.body;
+
     try {
         const sqlSelect = 'SELECT * FROM users WHERE email = ?';
         db.query(sqlSelect, [email], async (err, results) => {
@@ -430,30 +406,42 @@ app.post('/login', async (req, res) => {
                 res.status(500).send('Database error');
                 return;
             }
+
             if (results.length > 0) {
                 const user = results[0];
+
+                // First, check if the password is correct
                 const validPassword = await bcrypt.compare(password, user.password);
+
                 if (validPassword) {
+                    // Then check if the user's status is 'confirmed'
+                    if (user.status !== 'confirmed') {
+                        return res.status(602).json({ message: 'Please verify your email to activate your account.' });
+                    }
+
+                    // If password is valid and user is confirmed, generate JWT token
                     const token = jwt.sign(
                         {
-                            // ITT ADOM HOZZA A TOKENHEZ A DOLGOKAT
                             userId: user.id,
                             email: user.email,
                             firstName: user.firstName,
                             lastName: user.lastName,
                             phoneNumber: user.phoneNumber,
-                            role: user.role
+                            role: user.role,
                         },
                         process.env.JWT_SECRET,
                         { expiresIn: '1h' }
                     );
-                    console.log("SZIAHELO", user.role);
+
+                    console.log("User logged in with role:", user.role);
                     res.json({ token, role: user.role });
                 } else {
+                    // Password is incorrect
                     res.status(401).send('Invalid credentials');
                 }
 
             } else {
+                // User not found
                 res.status(404).send('User not found');
             }
         });
@@ -462,6 +450,8 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Server error');
     }
 });
+
+
 
 // Get confirmed events from the unified events table
 app.get('/api/getEvents', (req, res) => {
