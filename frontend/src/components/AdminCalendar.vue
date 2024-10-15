@@ -139,6 +139,7 @@ function formatDate(date) {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
+    timeZone: "UTC",
   }).format(parsedDate);
 }
 
@@ -154,6 +155,7 @@ function formatTime(time) {
   return new Intl.DateTimeFormat("hu-HU", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   }).format(parsedTime);
 }
 
@@ -471,7 +473,7 @@ async function confirmModifications() {
     return;
   }
 
-console.log("ModifiedEventek:", modifiedEvents.value);
+  console.log("ModifiedEventek:", modifiedEvents.value);
 
   try {
     await apiClient.post(

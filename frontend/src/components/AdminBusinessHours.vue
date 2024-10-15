@@ -11,7 +11,12 @@
     ></v-progress-linear>
 
     <!-- Display Services Table -->
-    <v-table height="100vh" fixed-header class="bg-garrisons mt-5">
+    <v-table
+      v-if="mdAndUp"
+      height="100vh"
+      fixed-header
+      class="bg-garrisons mt-5"
+    >
       <thead class="bg-garrisons">
         <tr>
           <th>
@@ -55,6 +60,51 @@
       </tbody>
     </v-table>
 
+    <!-- Display Business Hours Cards for smaller screens (sm and down) -->
+    <v-row v-if="smAndDown" class="d-flex justify-start px-10 my-10">
+      <v-col
+        cols="6"
+        xs="4"
+        sm="4"
+        v-for="businessHour in filteredBusinessHours"
+        :key="businessHour.id"
+      >
+        <v-card class="bg-dark-garrisons elevation-5">
+          <v-card-title>
+            <v-icon class="me-1 text-garrisons-2">mdi-calendar-today</v-icon
+            >{{ dayOfWeekMap[businessHour.daysOfWeek] }}
+          </v-card-title>
+          <v-card-text>
+            <div>
+              <v-icon class="me-1">mdi-clock-start</v-icon
+              >{{
+                t("dashboard.manageBusinessHours.table.open") +
+                ": " +
+                businessHour.startTime
+              }}<br />
+              <v-icon class="me-1">mdi-clock-end</v-icon
+              >{{
+                t("dashboard.manageBusinessHours.table.close") +
+                ": " +
+                businessHour.endTime
+              }}
+            </div>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions class="d-flex justify-center">
+            <v-btn
+              density="compact"
+              class="btn-garrisons text-garrisons"
+              @click="openEditModal(businessHour)"
+            >
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageBusinessHours.table.buttons.edit") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
     <!-- Edit Business Hours Dialog -->
     <v-dialog v-model="isEditModalOpen" max-width="400px">
       <v-card class="bg-garrisons text-garrisons">
@@ -85,8 +135,9 @@
           ></v-text-field>
 
           <v-dialog v-model="startTimeDialog" max-width="350">
-            <v-card>
+            <v-card class="bg-garrisons mx-auto">
               <v-time-picker
+                class="bg-garrisons"
                 v-model="tempStartTime"
                 full-width
                 format="24hr"
@@ -113,8 +164,9 @@
           ></v-text-field>
 
           <v-dialog v-model="endTimeDialog" max-width="350">
-            <v-card>
+            <v-card class="bg-garrisons mx-auto">
               <v-time-picker
+                class="bg-garrisons"
                 v-model="tempEndTime"
                 full-width
                 format="24hr"
@@ -159,6 +211,7 @@ import apiClient from "@/utils/apiClient";
 import { useToast } from "vue-toastification";
 import { useI18n } from "vue-i18n";
 import { VTimePicker } from "vuetify/lib/labs/components.mjs";
+import { useDisplay } from "vuetify";
 
 // Initialize required refs
 const { t } = useI18n();
@@ -166,6 +219,7 @@ const token = sessionStorage.getItem("accessToken");
 const businessHours = ref([]);
 const isEditModalOpen = ref(false);
 const loading = ref(false);
+const { mdAndUp, smAndDown } = useDisplay();
 const searchQuery = ref("");
 const editBusinessHourData = ref({
   id: null,

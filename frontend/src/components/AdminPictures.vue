@@ -19,6 +19,7 @@
               v-model="images"
               label="Click here to select images"
               accept="image/*"
+              density="compact"
               :multiple="true"
               :disabled="loading"
             ></v-file-input>
@@ -26,6 +27,7 @@
             <v-btn
               :disabled="loading || !images.length"
               type="submit"
+              density="compact"
               class="bg-green text-garrisons"
             >
               Upload Images
@@ -42,15 +44,20 @@
         <v-col
           v-for="(image, index) in displayedImages"
           :key="index"
-          cols="12"
-          sm="6"
+          cols="6"
+          xs="6"
+          sm="4"
           md="3"
+          lg="3"
+          xl="3"
+          xxl="2"
+          class="d-flex justify-center"
         >
-          <div class="image-container">
+          <div class="d-flex justify-center">
             <v-card
-              height="300"
-              width="300"
-              class="relative-position"
+              :height="cardHeight"
+              :width="cardWidth"
+              class="relative-position image-container"
               color="#201b18"
             >
               <template v-if="loading">
@@ -110,10 +117,11 @@
 </template>
   
   <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import apiClient from "@/utils/apiClient";
 import { useToast } from "vue-toastification";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue"; // Import the confirm modal component
+import { useDisplay } from "vuetify";
 
 // Access token for authorization
 const token = sessionStorage.getItem("accessToken");
@@ -127,6 +135,26 @@ const totalImages = ref(0);
 const itemsPerPage = 16; // Maximum 16 images per page
 const isDeleteModalOpen = ref(false);
 const selectedImageId = ref(null); // Track the selected image for deletion
+const { xs, sm, md, lg, xl, xxl } = useDisplay();
+
+// Function to determine card height and width dynamically based on screen size
+const cardHeight = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "175"; // Medium screens
+  if (md.value) return "200"; // Medium screens
+  if (lg.value) return "250"; // Large screens
+  if (xl.value || xxl.value) return "250"; // Extra-large screens
+  return "250"; // Fallback
+});
+
+const cardWidth = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "175"; // Medium screens
+  if (md.value) return "200"; // Medium screens
+  if (lg.value) return "250"; // Large screens
+  if (xl.value || xxl.value) return "250"; // Extra-large screens
+  return "250"; // Fallback
+});
 
 // Function to upload multiple images
 const uploadImages = async () => {

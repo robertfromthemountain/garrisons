@@ -5,14 +5,18 @@
       <v-col
         v-for="(image, index) in images"
         :key="index"
-        cols="12"
-        sm="6"
-        md="3"
-        class=""
+        cols="6"
+        xs="6"
+        sm="4"
+        md="4"
+        lg="3"
+        xl="3"
+        xxl="2"
+        class="d-flex justify-center"
       >
         <v-card
-          height="300"
-          width="300"
+          :height="cardHeight"
+          :width="cardWidth"
           @click="openLightbox(index)"
           :disabled="loading"
           color="#201b18"
@@ -88,7 +92,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
+import { useDisplay } from "vuetify";
 import apiClient from "@/utils/apiClient";
 
 // Reactive state variables
@@ -97,7 +102,7 @@ const currentPage = ref(1);
 const totalPages = ref(1);
 const totalImages = ref(0);
 const itemsPerPage = 16; // Maximum 16 images per page (4 rows x 4 images per row)
-
+const { xs, sm, md, lg, xl, xxl } = useDisplay();
 // Lightbox-related variables
 const isLightboxOpen = ref(false);
 const currentImageIndex = ref(0);
@@ -105,6 +110,25 @@ const currentImage = ref("");
 
 // Loading state for skeletons
 const loading = ref(true);
+
+// Function to determine card height and width dynamically based on screen size
+const cardHeight = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "200"; // Medium screens
+  if (md.value) return "250"; // Medium screens
+  if (lg.value) return "300"; // Large screens
+  if (xl.value || xxl.value) return "350"; // Extra-large screens
+  return "300"; // Fallback
+});
+
+const cardWidth = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "200"; // Medium screens
+  if (md.value) return "250"; // Medium screens
+  if (lg.value) return "300"; // Large screens
+  if (xl.value || xxl.value) return "350"; // Extra-large screens
+  return "300"; // Fallback
+});
 
 // Function to fetch images from the backend
 const fetchImages = async () => {

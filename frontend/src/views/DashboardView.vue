@@ -13,7 +13,7 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-events' }"
         >
-          <v-icon left>mdi-calendar-check</v-icon>
+          <v-icon left class="text-garrisons-2">mdi-calendar-check</v-icon>
           Reservations
         </v-list-item>
 
@@ -22,7 +22,7 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-pendings' }"
         >
-          <v-icon left>mdi-calendar-alert</v-icon>
+          <v-icon left class="text-garrisons-2">mdi-calendar-alert</v-icon>
           Pending Events
         </v-list-item>
 
@@ -31,7 +31,7 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-services' }"
         >
-          <v-icon left>mdi-content-cut</v-icon>
+          <v-icon left class="text-garrisons-2">mdi-content-cut</v-icon>
           Services
         </v-list-item>
 
@@ -40,7 +40,9 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-businessHours' }"
         >
-          <v-icon left>mdi-calendar-clock-outline</v-icon>
+          <v-icon left class="text-garrisons-2"
+            >mdi-calendar-clock-outline</v-icon
+          >
           Business Hours
         </v-list-item>
 
@@ -49,7 +51,7 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-users' }"
         >
-          <v-icon left>mdi-account-group</v-icon>
+          <v-icon left class="text-garrisons-2">mdi-account-group</v-icon>
           Users
         </v-list-item>
 
@@ -58,8 +60,8 @@
           class="list-item-custom"
           :to="{ name: 'dashboard-managePictures' }"
         >
-          <v-icon left>mdi-account-group</v-icon>
-            Pictures
+          <v-icon left class="text-garrisons-2">mdi-camera-plus-outline</v-icon>
+          Pictures
         </v-list-item>
       </v-list>
     </v-navigation-drawer>

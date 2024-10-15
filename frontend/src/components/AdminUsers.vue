@@ -10,7 +10,12 @@
       class="mb-4"
     ></v-progress-linear>
     <!-- Display Users Table -->
-    <v-table height="100vh" fixed-header class="bg-garrisons mt-5">
+    <v-table
+      v-if="mdAndUp && !smAndDown"
+      height="100vh"
+      fixed-header
+      class="bg-garrisons mt-5"
+    >
       <thead class="bg-garrisons">
         <tr>
           <th>
@@ -54,7 +59,7 @@
           <td>{{ user.email }}</td>
           <td>{{ user.phoneNumber }}</td>
           <td>{{ user.status }}</td>
-          <td>
+          <td class="d-flex align-center">
             <v-btn
               density="compact"
               class="btn-garrisons text-garrisons text-start"
@@ -77,6 +82,67 @@
         </tr>
       </tbody>
     </v-table>
+
+    <!-- Display User Cards for smAndDown -->
+    <v-row v-if="smAndDown && !mdAndUp" class="d-flex justify-start px-10 my-5">
+      <v-col
+        cols="12"
+        xs="12"
+        sm="6"
+        v-for="user in filteredUsers"
+        :key="user.id"
+      >
+        <v-card class="bg-dark-garrisons elevation-5">
+          <v-card-title>
+            <v-icon class="me-1 text-garrisons-2">mdi-account-outline</v-icon
+            ><span class="text-garrisons">{{
+              user.firstName + " " + user.lastName
+            }}</span>
+          </v-card-title>
+          <v-card-subtitle>
+            <v-icon class="me-1 text-garrisons-3">mdi-security</v-icon
+            >{{ user.role }}
+          </v-card-subtitle>
+          <v-card-text>
+            <div class="mb-1">
+              <v-icon class="me-1 text-garrisons-3">mdi-email-outline</v-icon
+              ><span class="text-garrisons">{{ user.email }}</span>
+            </div>
+            <div class="mb-1">
+              <v-icon class="me-1 text-garrisons-3">mdi-phone-outline</v-icon
+              ><span class="text-garrisons">{{ user.phoneNumber }}</span>
+            </div>
+            <div>
+              <v-icon class="me-1 text-garrisons-3"
+                >mdi-information-outline</v-icon
+              ><span class="text-garrisons">{{ user.status }}</span>
+            </div>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-btn
+              density="compact"
+              class="bg-green text-garrisons ms-2"
+              :disabled="loading"
+              @click="openEditModal(user)"
+            >
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageUsers.table.buttons.edit") }}
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn
+              density="compact"
+              class="bg-red-darken-1 text-garrisons"
+              :disabled="loading"
+              @click="openDeleteModal(user.id)"
+            >
+              <v-icon class="pe-2">mdi-trash-can-outline</v-icon
+              >{{ t("dashboard.manageUsers.table.buttons.delete") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Edit User Dialog -->
     <v-dialog v-model="isEditModalOpen" max-width="400px">
@@ -192,6 +258,7 @@ import apiClient from "@/utils/apiClient";
 import { useToast } from "vue-toastification";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
 import { useI18n } from "vue-i18n";
+import { useDisplay } from "vuetify";
 
 const { t } = useI18n();
 const token = sessionStorage.getItem("accessToken");
@@ -201,6 +268,7 @@ const isDeleteModalOpen = ref(false);
 const selectedUserId = ref(null);
 const isEditModalOpen = ref(false);
 const loading = ref(false);
+const { mdAndUp, smAndDown } = useDisplay();
 const roles = ref(["admin", "user"]);
 const statuses = ref(["pending", "confirmed", "banned"]); // Add statuses for dropdown
 const editUserData = ref({

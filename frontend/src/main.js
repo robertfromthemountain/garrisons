@@ -5,6 +5,7 @@ import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
 import * as components from 'vuetify/components';
 import * as directives from 'vuetify/directives';
+import { aliases, mdi } from 'vuetify/iconsets/mdi';
 
 import App from './App.vue';
 import axios from 'axios';
@@ -27,12 +28,27 @@ const vuetify = createVuetify({
   directives,
   icons: {
     iconfont: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+    },
   },
   theme: {
     defaultTheme: store.getters['theme/currentTheme'],
   },
   typography: {
     fontFamily: 'Bebas Neue, sans-serif',
+  },
+  breakpoint: {
+    thresholds: {
+      xs: 600,
+      sm: 960,
+      md: 1280,
+      lg: 1920,
+      xl: 2560,
+      xxl: 5120,
+    },
+    scrollBarWidth: 12,
   },
 });
 

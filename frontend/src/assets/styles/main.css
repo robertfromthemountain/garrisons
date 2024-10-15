@@ -39,6 +39,14 @@ body {
     background-color: #6a4e35;
 }
 
+.text-garrisons-2{
+    color: #8f6a48;
+}
+
+.text-garrisons-3{
+    color: #6a4e35;
+}
+
 .text-garrisons {
     color: #d3d2cd;
     text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);

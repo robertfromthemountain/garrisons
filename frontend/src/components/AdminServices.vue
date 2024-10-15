@@ -11,7 +11,12 @@
       class="mb-4"
     ></v-progress-linear>
     <!-- Display Services Table -->
-    <v-table height="100vh" fixed-header class="bg-garrisons mt-5">
+    <v-table
+      v-if="mdAndUp"
+      height="100vh"
+      fixed-header
+      class="bg-garrisons mt-5"
+    >
       <thead class="bg-garrisons">
         <tr>
           <!-- <th>ID</th> -->
@@ -67,7 +72,7 @@
             ></span>
             {{ getColorName(service.backgroundColor) }}
           </td>
-          <td>
+          <td class="d-flex align-center">
             <v-btn
               density="compact"
               class="btn-garrisons text-garrisons text-start"
@@ -106,6 +111,76 @@
         </tr>
       </tbody>
     </v-table>
+
+    <!-- Display Services Cards for smaller screens (sm and down) -->
+    <v-row v-if="smAndDown" class="d-flex justify-start px-10 my-5">
+      <v-col
+        cols="12"
+        xs="12"
+        sm="6"
+        v-for="service in filteredServices"
+        :key="service.id"
+      >
+        <v-card class="bg-dark-garrisons elevation-5">
+          <v-card-title>
+            <v-icon class="me-1 text-garrisons-2">mdi-label-outline</v-icon
+            >{{ service.title }}
+          </v-card-title>
+          <v-card-text>
+            <div class="d-flex align-center justify-space-between">
+              <v-icon class="me-1 text-garrisons-3 mb-1"
+                >mdi-cash-multiple</v-icon
+              >{{ service.price === null ? "-" : service.price }}
+              <v-spacer></v-spacer>
+              <v-icon class="me-1" :color="service.backgroundColor"
+                >mdi-palette</v-icon
+              >
+              {{ getColorName(service.backgroundColor) }}
+            </div>
+            <div>
+              <v-icon class="me-1 text-garrisons-3 mb-1"
+                >mdi-timer-outline</v-icon
+              >{{ service.duration }} minutes
+            </div>
+          </v-card-text>
+          <v-divider></v-divider>
+          <v-card-actions>
+            <v-btn
+              density="compact"
+              class="bg-red-darken-1 text-garrisons"
+              :disabled="loading"
+              @click="openDeleteModal(service.id)"
+            >
+              <v-icon class="pe-2">mdi-trash-can-outline</v-icon
+              >{{ t("dashboard.manageServices.table.buttons.delete") }}
+            </v-btn>
+            <v-spacer></v-spacer>
+            <v-btn
+              density="compact"
+              class="bg-green text-garrisons"
+              :disabled="loading"
+              @click="openEditModal(service)"
+            >
+              <v-icon class="pe-2">mdi-pencil</v-icon
+              >{{ t("dashboard.manageServices.table.buttons.edit") }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Sticky Add Service Button for smaller screens (sm and down) -->
+    <div v-if="smAndDown" class="d-flex justify-center mt-10 mb-5 fixed-bottom">
+      <v-btn
+        density="compact"
+        class="bg-green text-garrisons text-center"
+        @click="openAddModal"
+        :disabled="loading"
+      >
+        <v-icon class="pe-2">mdi-plus</v-icon
+        >{{ t("dashboard.manageServices.table.buttons.add") }}
+      </v-btn>
+    </div>
 
     <!-- Edit Service Dialog -->
     <v-dialog v-model="isEditModalOpen" max-width="400px">
@@ -234,6 +309,7 @@
             mode="hexa"
             canvas-height="150"
             hide-mode-switch
+            class="bg-dark-garrisons mx-auto"
           ></v-color-picker>
         </v-card-text>
         <v-card-actions>
@@ -275,6 +351,7 @@ import { useToast } from "vue-toastification";
 import ConfirmDeleteModal from "@/components/ConfirmDeleteModal.vue";
 import { useI18n } from "vue-i18n";
 import namer from "color-namer"; // Import color-namer
+import { useDisplay } from "vuetify";
 
 // Utility function to get color name using color-namer
 const getColorName = (hex) => {
@@ -288,6 +365,7 @@ const services = ref([]);
 const searchQuery = ref("");
 const isEditing = ref({}); // Track which row is being edited
 const loading = ref(false);
+const { mdAndUp, smAndDown } = useDisplay();
 const editServiceData = ref({
   id: null,
   title: "",
@@ -372,10 +450,10 @@ const confirmDelete = async (id) => {
       headers: { Authorization: `Bearer ${token}` },
     });
     services.value = services.value.filter((service) => service.id !== id);
-    toast.success(t('dashboard.toast.success.serviceDelete'));
+    toast.success(t("dashboard.toast.success.serviceDelete"));
     closeDeleteModal();
   } catch (error) {
-    toast.error(t('dashboard.toast.error.serviceDelete'));
+    toast.error(t("dashboard.toast.error.serviceDelete"));
     console.error("Error deleting service:", error);
   } finally {
     loading.value = false;
@@ -385,7 +463,7 @@ const confirmDelete = async (id) => {
 // Save edited service data from modal
 const saveEdit = async () => {
   if (!token) {
-    toast.error(t('dashboard.toast.error.tokenError'));
+    toast.error(t("dashboard.toast.error.tokenError"));
     return;
   }
   loading.value = true;
@@ -402,9 +480,9 @@ const saveEdit = async () => {
     );
     services.value[index] = { ...editServiceData.value }; // Update the service list
     isEditModalOpen.value = false;
-    toast.success(t('dashboard.toast.success.serviceUpdate'));
+    toast.success(t("dashboard.toast.success.serviceUpdate"));
   } catch (error) {
-    toast.error(t('dashboard.toast.error.serviceUpdate'));
+    toast.error(t("dashboard.toast.error.serviceUpdate"));
     console.error("Error updating service:", error);
   } finally {
     loading.value = false;
@@ -414,7 +492,7 @@ const saveEdit = async () => {
 // Add a new service from modal
 const addService = async () => {
   if (!token) {
-    toast.error(t('dashboard.toast.error.tokenError'));
+    toast.error(t("dashboard.toast.error.tokenError"));
     return;
   }
   loading.value = true;
@@ -427,10 +505,10 @@ const addService = async () => {
       }
     );
     services.value.push(response.data); // Add new service to the list
-    toast.success(t('dashboard.toast.success.serviceAdd'));
+    toast.success(t("dashboard.toast.success.serviceAdd"));
     closeAddModal();
   } catch (error) {
-    toast.error(t('dashboard.toast.error.serviceAdd'));
+    toast.error(t("dashboard.toast.error.serviceAdd"));
     console.error("Error adding service:", error);
   } finally {
     loading.value = false;
