@@ -1,43 +1,64 @@
 <template>
-  <section class="mx-auto w-50 mt-10 intro">
+  <section class="mx-auto w-50 my-12 intro" min-height="50vh">
     <v-row>
-      <v-col cols="12" md="6" class="vertical-divider">
+      <!-- Intro Section -->
+      <v-col cols="12" lg="6" class="vertical-divider">
         <div>
-          <h2 class="about-title">{{ t("intro.about") }}</h2>
-          <p class="about-content">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat.
-          </p>
+          <v-skeleton-loader
+            v-if="loading"
+            type="article"
+            class="skeleton-loader"
+          ></v-skeleton-loader>
+          <div v-else class="float-right-animation">
+            <h2 class="about-title">{{ t("intro.about") }}</h2>
+            <p class="about-content">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+              eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
+              enim ad minim veniam, quis nostrud exercitation ullamco laboris
+              nisi ut aliquip ex ea commodo consequat.
+            </p>
+          </div>
         </div>
       </v-col>
 
-      <!-- Szolgáltatások Section -->
-      <v-col cols="12" md="6">
+      <!-- Services Section -->
+      <v-col cols="12" lg="6">
         <div class="justify-end">
-          <h2 class="services-title">{{t('intro.services')}}</h2>
-          <ul class="services-content">
-            <li v-for="service in services" :key="service.id" class="d-flex">
-              <v-col cols="4" class="text-start pa-0 ma-0" no-gutters
-                ><span class="mdi mdi-content-cut subtitle-garrisons"></span>
-                {{ service.title }}</v-col
-              >
-              <v-col cols="4" class="text-center pa-0 ma-0" no-gutters
-                ><span class="mdi mdi-timer-sand subtitle-garrisons"></span
-                >{{ service.duration }}</v-col
-              >
-              <v-col cols="4" class="text-end pa-0 ma-0" no-gutters
-                ><span class="mdi mdi-cash-multiple subtitle-garrisons"></span>
-                {{ service.price }} HUF</v-col
-              >
-            </li>
-          </ul>
+          <v-skeleton-loader
+            v-if="loading"
+            type="article"
+            class="skeleton-loader"
+          ></v-skeleton-loader>
+          <div v-else class="float-left-animation">
+            <h2 class="services-title text-center text-lg-left">{{ t("intro.services") }}</h2>
+            <ul class="services-content">
+              <div v-for="service in services" :key="service.id">
+                <li class="d-flex">
+                  <v-col cols="4" class="text-start pa-0 ma-0" no-gutters>
+                    <span class="mdi mdi-content-cut subtitle-garrisons"></span>
+                    {{ service.title }}
+                  </v-col>
+                  <v-col cols="4" class="text-center pa-0 ma-0" no-gutters>
+                    <span class="mdi mdi-timer-sand subtitle-garrisons"></span>
+                    {{ service.duration }}
+                  </v-col>
+                  <v-col cols="4" class="text-end pa-0 ma-0" no-gutters>
+                    <span
+                      class="mdi mdi-cash-multiple subtitle-garrisons"
+                    ></span>
+                    {{ service.price }} HUF
+                  </v-col>
+                </li>
+                <v-divider></v-divider>
+              </div>
+            </ul>
+          </div>
         </div>
       </v-col>
     </v-row>
   </section>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from "vue";
@@ -107,5 +128,46 @@ const fetchServices = async () => {
   color: #d3d2cd;
   text-align: start;
   text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.8);
+}
+
+.skeleton-loader {
+  width: 100%;
+  height: 300px;
+  margin-bottom: 20px;
+  background-color: #26211e;
+}
+
+/* Parent containers need to have overflow hidden to prevent content visibility outside */
+.vertical-divider,
+.justify-end {
+  overflow: hidden; /* Hide content that moves outside the container */
+}
+
+/* Animation for floating from the left */
+.float-left-animation {
+  opacity: 0;
+  transform: translateX(-100%);
+  animation: float-left 1s forwards;
+}
+
+@keyframes float-left {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation for floating from the right */
+.float-right-animation {
+  opacity: 0;
+  transform: translateX(100%);
+  animation: float-right 1s forwards;
+}
+
+@keyframes float-right {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 </style>

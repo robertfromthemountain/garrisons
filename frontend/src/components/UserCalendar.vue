@@ -1,6 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
-// import { useStore } from "vuex";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
 import apiClient from "@/utils/apiClient";
 import { useI18n } from "vue-i18n";
@@ -10,13 +9,13 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
+import { useDisplay } from "vuetify";
 
 // i18n and toast
 const { locale, t } = useI18n();
 const toast = useToast();
 
-// Vuex Store
-// const store = useStore();
+const { xs, sm, md, lg, xl, xxl, smAndDown, mdAndUp } = useDisplay();
 
 // Show toast function
 const showToast = (message, type = "success") => {
@@ -51,6 +50,31 @@ const token = sessionStorage.getItem("accessToken");
 // Get the role from sessionStorage
 const isAdmin = sessionStorage.getItem("role") === "admin";
 
+// Reference to the FullCalendar instance
+const calendarRef = ref(null);
+
+const reactiveAspectRatio = computed(() => {
+  if (xs.value) return 0.6; // Small screens
+  if (sm.value) return 1; // Medium screens
+  if (md.value) return 1.5; // Medium screens
+  if (lg.value) return 2; // Large screens
+  if (xl.value || xxl.value) return 2; // Extra-large screens
+  return 2; // Fallback
+});
+
+const reactiveInitialView = computed(() => {
+  if (xs.value) return "timeGridDay"; // Small screens
+  return "timeGridWeek"; // Fallback
+});
+
+// Watch the computed reactiveInitialView for changes and use changeView
+watch(reactiveInitialView, (newView) => {
+  if (calendarRef.value) {
+    // Use FullCalendar API to change the view
+    calendarRef.value.getApi().changeView(newView);
+  }
+});
+
 // Calendar Options
 const calendarOptions = reactive({
   timeZone: "UTC",
@@ -59,10 +83,11 @@ const calendarOptions = reactive({
   locale: locale.value,
   plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
   slotEventOverlap: false,
-  initialView: "timeGridWeek",
+  initialView: reactiveInitialView.value,
   slotDuration: "00:15:00",
   slotMinTime: "08:00:00",
   slotMaxTime: "17:00:00",
+  aspectRatio: reactiveAspectRatio,
   editable: false,
   nowIndicator: true,
   headerToolbar: {
@@ -186,9 +211,14 @@ function handleDateClick(arg) {
 
 // Lifecycle Hook
 onMounted(async () => {
-  fetchUserId();
-  fetchAllEvents();
-  fetchServices();
+  if (calendarRef.value) {
+    // Set the initial view when the component is mounted
+    calendarRef.value.getApi().changeView(reactiveInitialView.value);
+    console.log(`Initial view set to: ${reactiveInitialView.value}`);
+  }
+  await fetchUserId();
+  await fetchAllEvents();
+  await fetchServices();
 
   const businessHoursData = await fetchBusinessHours();
 
@@ -420,14 +450,14 @@ async function finalizeBooking() {
 </script>
 
 <template>
-  <div class="pa-8 rounded elevation-5">
+  <div class="">
     <v-progress-linear
       v-if="loading"
       indeterminate
       color="primary"
       class="mb-4"
     ></v-progress-linear>
-    <FullCalendar :options="calendarOptions" class="h-auto" />
+    <FullCalendar ref="calendarRef" :options="calendarOptions" class="h-auto" />
 
     <v-dialog v-model="showFirstDialog" max-width="600">
       <v-card class="bg-garrisons text-garrisons">

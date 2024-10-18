@@ -1,15 +1,25 @@
 <script setup>
 import Services from "@/components/Services.vue";
 import UserCalendar from "@/components/UserCalendar.vue";
+import { useDisplay } from "vuetify";
+
+const { smAndDown } = useDisplay();
 </script>
 
 <template>
-  <div class="py-12 bg-garrisons">
-    <div class="d-flex justify-center">
+  <div class="">
+    <div>
+      <h1 class="text-center title-garrisons">Book an Appointment</h1>
+      <p class="text-center subtitle-garrisons">
+        Click into the calendar to start the booking process!
+      </p>
+      <v-divider></v-divider>
+    </div>
+    <div class="d-lg-flex">
       <v-col cols="12" lg="4">
         <Services></Services>
       </v-col>
-      <v-col cols="12" lg="5">
+      <v-col cols="12" lg="8" class="pa-5">
         <UserCalendar></UserCalendar>
       </v-col>
     </div>

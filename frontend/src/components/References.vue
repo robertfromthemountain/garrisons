@@ -1,31 +1,39 @@
 <template>
-  <section fluid class="mx-auto mt-10 references-bg-color">
-    <v-row class="d-flex justify-center">
+  <section fluid class="mx-auto my-12 references-bg-color">
+
+    <v-row v-if="loading" class="d-flex justify-center">
+      <v-skeleton-loader
+          type="text"
+          class="title-skeleton-loader"
+        ></v-skeleton-loader>
+    </v-row>
+
+    <v-row v-else class="d-flex justify-center">
       <h2 class="references-title">{{ t("references.title") }}</h2>
     </v-row>
 
     <v-row class="mb-10">
-      <v-sheet class="mx-auto" max-width="80vw">
+      <v-sheet class="mx-auto" max-width="95vw">
         <v-slide-group class="px-4 bg-garrisons" show-arrows>
           <v-slide-group-item
             v-for="(reference, index) in references"
             :key="index"
           >
             <v-card
-              class="mx-3 elevation-5 references-border"
-              color="#201b18"
+              class="mx-3 elevation-5 references-border bg-garrisons"
               height="300"
               width="300"
               :disabled="loading"
               @click="openLightbox(index)"
             >
               <template v-if="loading">
-                <div class="d-flex justify-center align-center h-100">
+                <div class="d-flex justify-center align-center h-100 bg-grey">
                   <v-progress-circular
                     indeterminate
                     color="#8f6a48"
                     size="30"
                   ></v-progress-circular>
+                  <!-- <v-skeleton-loader type="image" width="100%" height="100%"></v-skeleton-loader> -->
                 </div>
               </template>
               <template v-else>
@@ -184,5 +192,11 @@ onMounted(fetchReferences);
 
 .next-arrow {
   right: 10px;
+}
+
+.title-skeleton-loader {
+  width: 11vw;
+  height: 100px;
+  background-color: #26211e;
 }
 </style>

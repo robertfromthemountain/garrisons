@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, onMounted } from "vue";
+import { ref, reactive, computed, watch, onMounted } from "vue";
 // import { useStore } from "vuex";
 import FullCalendar from "@fullcalendar/vue3";
 // import axios from "axios";
@@ -11,13 +11,12 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
+import { useDisplay } from "vuetify";
 
 // i18n and toast
 const { locale, t } = useI18n();
 const toast = useToast();
-
-// Vuex Store
-// const store = useStore();
+const { xs, sm, md, lg, xl, xxl, smAndDown } = useDisplay();
 
 // Show toast function
 const showToast = (message, type = "success") => {
@@ -57,6 +56,31 @@ const pickedStart = ref(null);
 const pickedEnd = ref(null);
 const pickedDuration = ref(0);
 
+// Reference to the FullCalendar instance
+const calendarRef = ref(null);
+
+const reactiveAspectRatio = computed(() => {
+  if (xs.value) return 0.6; // Small screens
+  if (sm.value) return 1; // Medium screens
+  if (md.value) return 1.5; // Medium screens
+  if (lg.value) return 2; // Large screens
+  if (xl.value || xxl.value) return 2.5; // Extra-large screens
+  return 2.5; // Fallback
+});
+
+const reactiveInitialView = computed(() => {
+  if (xs.value) return "timeGridDay"; // Small screens
+  return "timeGridWeek"; // Fallback
+});
+
+// Watch the computed reactiveInitialView for changes and use changeView
+watch(reactiveInitialView, (newView) => {
+  if (calendarRef.value) {
+    // Use FullCalendar API to change the view
+    calendarRef.value.getApi().changeView(newView);
+  }
+});
+
 // Calendar Options
 const calendarOptions = reactive({
   timeZone: "UTC",
@@ -66,7 +90,7 @@ const calendarOptions = reactive({
   plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
   slotEventOverlap: false,
   allDaySlot: false,
-  initialView: "timeGridWeek",
+  initialView: reactiveInitialView.value,
   slotDuration: "00:15:00",
   slotMinTime: "08:00:00",
   slotMaxTime: "17:00:00",
@@ -76,13 +100,35 @@ const calendarOptions = reactive({
   eventDrop: handleEventDrop,
   eventClick: handleEventClick,
   // eventResize: handleEventResize,
-  aspectRatio: 2.5,
+  aspectRatio: reactiveAspectRatio,
   nowIndicator: true,
-  headerToolbar: {
-    left: "prev",
-    center: "title",
-    right: "today,next",
+  customButtons: {
+    editCalendar: {
+      text: "Edit Calendar",
+      click() {
+        enableModification(); // Enable editing mode
+      },
+    },
+    saveChanges: {
+      text: "Save",
+      click() {
+        showModificationModal(); // Save modifications
+      },
+    },
+    cancelChanges: {
+      text: "Cancel",
+      click() {
+        resetModifications(); // Discard modifications
+      },
+    },
   },
+  headerToolbar: computed(() => ({
+    left: !modifying.value ? "editCalendar" : "",
+    center: !xs.value ? "title" : "",
+    right: modifying.value
+      ? "saveChanges,cancelChanges" // Show Save/Cancel in editing mode
+      : "prev,today,next", // Default buttons when not editing
+  })),
   footerToolbar: {
     left: "",
     center: "",
@@ -293,9 +339,15 @@ function clearSelectedEvent() {
 
 // Lifecycle Hook
 onMounted(async () => {
-  fetchUserId();
-  fetchAllEvents();
-  fetchServices();
+  if (calendarRef.value) {
+    // Set the initial view when the component is mounted
+    calendarRef.value.getApi().changeView(reactiveInitialView.value);
+    console.log(`Initial view set to: ${reactiveInitialView.value}`);
+  }
+
+  await fetchUserId();
+  await fetchAllEvents();
+  await fetchServices();
 
   const businessHoursData = await fetchBusinessHours();
 
@@ -640,7 +692,7 @@ async function finalizeBooking() {
       class="mb-4"
     ></v-progress-linear>
     <!-- Modification controls -->
-    <div v-if="!modifying" class="d-flex align-center justify-start">
+    <!-- <div v-if="!modifying" class="d-flex align-center justify-start">
       <v-btn
         density="comfortable"
         :disabled="loading"
@@ -650,8 +702,8 @@ async function finalizeBooking() {
         <v-icon class="pe-2">mdi-pencil</v-icon>
         {{ t("button.calendarEdit") }}
       </v-btn>
-    </div>
-    <div v-if="modifying" class="d-flex align-center justify-start">
+    </div> -->
+    <!-- <div v-if="modifying" class="d-flex align-center justify-start">
       <v-btn
         density="comfortable"
         :disabled="loading"
@@ -671,9 +723,9 @@ async function finalizeBooking() {
         <v-icon class="pe-2">mdi-content-save-all</v-icon>
         {{ t("dialog.button.save") }}
       </v-btn>
-    </div>
+    </div> -->
 
-    <FullCalendar :options="calendarOptions" class="h-auto" />
+    <FullCalendar ref="calendarRef" :options="calendarOptions" class="h-auto" />
 
     <!-- Modal for Confirming Modifications -->
     <v-dialog v-model="showModificationDialog" max-width="600" persistent>

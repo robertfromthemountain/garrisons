@@ -4,7 +4,7 @@ const messages = {
     en: {
         global: {
             tel: "+36 (30) 456 4526",
-            email: "info@garrisons.hu",
+            email: "{'info@garrisons.hu'}",
             owner: "Bíró Dominik, E.V.",
             shop: "Garrisons Haircraft & Barbershop",
             developer: "Nagy Róbert"
@@ -40,7 +40,8 @@ const messages = {
         },
         intro: {
             about: "About me",
-            services: "My services"
+            services: "My services",
+            businessHours: "Opening Hours"
         },
         references: {
             title: "References"
@@ -351,7 +352,7 @@ const messages = {
             alreadyHaveAccountBtn: "Lépj be",
             book: "Foglalás",
             tel: "+36 (30) 999 3211",
-            email: "info@garrisons.hu"
+            email: "info\\@garrisons.hu"
         },
         inputFields: {
             firstName: "Keresztnév",

@@ -12,20 +12,20 @@
             :key="service.id"
           >
             <v-col
-              cols="4"
+              cols="5"
               class="text-start pa-0 ma-0 text-garrisons bigger"
               no-gutters
               ><span class="mdi mdi-content-cut title-garrisons"></span>
               {{ service.title }}</v-col
             >
             <v-col
-              cols="4"
+              cols="2"
               class="text-center pa-0 ma-0 text-garrisons bigger"
               no-gutters
               ><span class="mdi mdi-timer-sand title-garrisons"></span
               >{{ service.duration }}</v-col
             >
-            <v-col cols="4" class="text-end pa-0 ma-0 text-garrisons bigger" no-gutters
+            <v-col cols="5" class="text-end pa-0 ma-0 text-garrisons bigger" no-gutters
               ><span class="mdi mdi-cash-multiple title-garrisons"></span>
               {{ service.price }} HUF</v-col
             >

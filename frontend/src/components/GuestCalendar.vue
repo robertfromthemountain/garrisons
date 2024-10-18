@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, shallowRef } from "vue";
+import { ref, reactive, onMounted, shallowRef, watch, computed } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
 import apiClient from "@/utils/apiClient";
 import { useI18n } from "vue-i18n";
@@ -12,11 +12,21 @@ import { useToast } from "vue-toastification";
 import { useRouter } from "vue-router";
 import RegisterForm from "./RegisterForm.vue";
 import LoginForm from "./LoginForm.vue";
+import { useDisplay } from "vuetify";
 
 // i18n and toast
 const { locale, t } = useI18n();
 const toast = useToast();
 const router = useRouter();
+const { xs, sm, md, lg, xl, xxl, smAndDown, mdAndUp } = useDisplay();
+const dialogWidth = computed(() => {
+  if (xs.value) return "95%"; // Small screens
+  if (sm.value) return "75%"; // Medium screens
+  if (md.value) return "50%"; // Medium screens
+  if (lg.value) return "25%"; // Large screens
+  if (xl.value || xxl.value) return "25%"; // Extra-large screens
+  return "100%"; // Fallback
+});
 
 // Reactive State
 const calendarEvents = ref([]);
@@ -24,6 +34,31 @@ const selectedSlot = ref({ date: "", time: "" });
 const showLoginRegisterDialog = ref(false); // Modal to show login/register
 const activeComponent = shallowRef(LoginForm); // Toggle between LoginForm and RegisterForm
 const loading = ref(false);
+
+// Reference to the FullCalendar instance
+const calendarRef = ref(null);
+
+const reactiveAspectRatio = computed(() => {
+  if (xs.value) return 0.6; // Small screens
+  if (sm.value) return 1; // Medium screens
+  if (md.value) return 1.5; // Medium screens
+  if (lg.value) return 2; // Large screens
+  if (xl.value || xxl.value) return 2; // Extra-large screens
+  return 2; // Fallback
+});
+
+const reactiveInitialView = computed(() => {
+  if (xs.value) return "timeGridDay"; // Small screens
+  return "timeGridWeek"; // Fallback
+});
+
+// Watch the computed reactiveInitialView for changes and use changeView
+watch(reactiveInitialView, (newView) => {
+  if (calendarRef.value) {
+    // Use FullCalendar API to change the view
+    calendarRef.value.getApi().changeView(newView);
+  }
+});
 
 // Calendar Options
 const calendarOptions = reactive({
@@ -33,17 +68,18 @@ const calendarOptions = reactive({
   locale: locale.value,
   plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
   slotEventOverlap: false,
-  initialView: "timeGridWeek",
+  initialView: reactiveInitialView.value,
   slotDuration: "00:15:00",
   slotMinTime: "08:00:00",
   slotMaxTime: "17:00:00",
+  aspectRatio: reactiveAspectRatio,
   editable: false,
   nowIndicator: true,
-  headerToolbar: {
-    left: "prev",
-    center: "title",
-    right: "today,next",
-  },
+  headerToolbar: computed(() => ({
+    left: !xs.value ? "title" : "prev",
+    center: !xs.value ? "" : "today",
+    right: !xs.value ? "prev,today,next" : "next",
+  })),
   footerToolbar: {
     left: "",
     center: "",
@@ -105,6 +141,11 @@ function toggleForm() {
 
 // Lifecycle Hook
 onMounted(async () => {
+  if (calendarRef.value) {
+    // Set the initial view when the component is mounted
+    calendarRef.value.getApi().changeView(reactiveInitialView.value);
+    console.log(`Initial view set to: ${reactiveInitialView.value}`);
+  }
   await fetchAllEvents();
   const businessHoursData = await fetchBusinessHours();
   if (businessHoursData) {
@@ -157,7 +198,7 @@ function mapBusinessHours(businessHours) {
 </script>
 
 <template>
-  <div class="pa-8 rounded elevation-5">
+  <div class="">
     <v-progress-linear
       v-if="loading"
       indeterminate
@@ -165,10 +206,10 @@ function mapBusinessHours(businessHours) {
       class="mb-4"
     ></v-progress-linear>
 
-    <FullCalendar :options="calendarOptions" class="h-auto" />
+    <FullCalendar ref="calendarRef" :options="calendarOptions" class="h-auto" />
 
     <!-- Modal for Login/Register -->
-    <v-dialog v-model="showLoginRegisterDialog" max-width="35vw">
+    <v-dialog v-model="showLoginRegisterDialog" :width="dialogWidth">
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title class="text-end">
           <!-- <h3 class="headline text-garrisons py-2 text-center font-weight-regular">

@@ -104,6 +104,12 @@ body {
     margin-bottom: 1em;
 }
 
+.fc .fc-icon{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 fc-today-button {
     width: 400px;
 }

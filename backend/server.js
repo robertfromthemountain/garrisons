@@ -557,9 +557,18 @@ app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
     });
 });
 
-// Get all business hours
+// Get all business hours with formatted time
 app.get('/api/business-hours', (req, res) => {
-    db.query('SELECT * FROM business_hours', (err, results) => {
+    const query = `
+        SELECT 
+            id, 
+            daysOfWeek, 
+            DATE_FORMAT(startTime, '%H:%i') AS startTime, 
+            DATE_FORMAT(endTime, '%H:%i') AS endTime 
+        FROM business_hours
+    `;
+    
+    db.query(query, (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
     });
