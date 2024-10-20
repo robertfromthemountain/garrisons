@@ -567,7 +567,7 @@ app.get('/api/business-hours', (req, res) => {
             DATE_FORMAT(endTime, '%H:%i') AS endTime 
         FROM business_hours
     `;
-    
+
     db.query(query, (err, results) => {
         if (err) return res.status(500).send(err);
         res.json(results);
@@ -610,88 +610,133 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
         return res.status(400).send('Missing required fields');
     }
 
-    // Insert into the unified `events` table with status "pending"
-    const sqlInsert = `INSERT INTO events (service_id, event_date, event_start, event_end, user_id, status, event_classes) 
-                       VALUES (?, ?, ?, ?, ?, 'pending', 'pending_event_bg')`;
-
-    db.query(sqlInsert, [service_id, event_date, event_start, event_end, user_id], (err, result) => {
+    // Query to check the user's role
+    const sqlCheckRole = 'SELECT role FROM users WHERE id = ?';
+    db.query(sqlCheckRole, [user_id], (err, roleResults) => {
         if (err) {
             console.error(err);
             return res.status(500).send('Database error');
         }
 
-        // Fetch user's full name
-        const sqlUserSelect = 'SELECT firstName, lastName FROM users WHERE id = ?';
-        db.query(sqlUserSelect, [user_id], (err, userResults) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-            if (userResults.length > 0) {
-                const user = userResults[0];
-                const fullName = `${user.firstName} ${user.lastName}`;
+        if (roleResults.length === 0) {
+            return res.status(404).send('User not found');
+        }
 
-                // Fetch service details from the services table
-                const sqlServiceSelect = 'SELECT title, id, duration, price FROM services WHERE id = ?';
-                db.query(sqlServiceSelect, [service_id], (err, serviceResults) => {
+        const userRole = roleResults[0].role;
+
+        // If the user is an admin, skip the pending event check and auto-confirm the event
+        if (userRole === 'admin') {
+            insertEvent('confirmed', 'confirmed_event_bg', true); // Insert a confirmed event with the 'confirmed_at' field
+        } else {
+            // For regular users, check if they already have 3 pending events
+            const sqlCountPendingEvents = 'SELECT COUNT(*) as pendingCount FROM events WHERE user_id = ? AND status = "pending"';
+            db.query(sqlCountPendingEvents, [user_id], (err, countResults) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('Database error');
+                }
+
+                const pendingCount = countResults[0].pendingCount;
+
+                // If the user already has 3 pending events, reject the request
+                if (pendingCount >= 3) {
+                    return res.status(429).send('You already have 3 pending events.');
+                }
+
+                // Otherwise, insert the event as pending
+                insertEvent('pending', 'pending_event_bg', false); // No 'confirmed_at' field for pending events
+            });
+        }
+
+        // Helper function to insert an event with a given status
+        function insertEvent(status, eventClass, isAdmin) {
+            // If the user is an admin, insert the 'confirmed_at' field
+            let sqlInsert = `INSERT INTO events (service_id, event_date, event_start, event_end, user_id, status, event_classes${isAdmin ? ', confirmed_at' : ''}) 
+                             VALUES (?, ?, ?, ?, ?, ?, ?${isAdmin ? ', NOW()' : ''})`;
+
+            db.query(sqlInsert, [service_id, event_date, event_start, event_end, user_id, status, eventClass], (err, result) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).send('Database error');
+                }
+
+                // Fetch user's full name
+                const sqlUserSelect = 'SELECT firstName, lastName FROM users WHERE id = ?';
+                db.query(sqlUserSelect, [user_id], (err, userResults) => {
                     if (err) {
                         console.error(err);
                         return res.status(500).send('Database error');
                     }
-                    if (serviceResults.length > 0) {
-                        const service = serviceResults[0];
+                    if (userResults.length > 0) {
+                        const user = userResults[0];
+                        const fullName = `${user.firstName} ${user.lastName}`;
 
-                        // Format the dates and times using your utility functions
-                        const formattedDate = formatDate(event_date);
-                        const formattedStartTime = formatTime(event_start);
-                        const formattedEndTime = formatTime(event_end);
-
-                        // Send email to admin for confirmation
-                        const mailOptions = {
-                            from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
-                            to: 'admin@example.com', // Admin's email address
-                            subject: 'New Appointment Request',
-                            html: `
-                            <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
-                                <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-                                    <h2 style="color: #8f6a48;">New Appointment Request</h2>
-                                    <p>A new appointment has been requested by <strong>${fullName}</strong></p>
-                                    <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
-
-                                    <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
-                                    <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
-                                    <p style="color: #0c0a09;"><strong>Price:</strong> ${service.price} HUF</p>
-                                    <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
-                                    <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
-                                    <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
-                                    <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
-                                    <a href="http://localhost:5000/api/deletePendingEvent/${result.insertId}" style="background-color: #e6413d; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Deny Appointment</a>
-                                    <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
-                                </div>
-                            </div>
-                            `
-                        };
-
-                        transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.error('Error sending email:', error);
-                                return res.status(500).send('Error sending email');
+                        // Fetch service details from the services table
+                        const sqlServiceSelect = 'SELECT title, id, duration, price FROM services WHERE id = ?';
+                        db.query(sqlServiceSelect, [service_id], (err, serviceResults) => {
+                            if (err) {
+                                console.error(err);
+                                return res.status(500).send('Database error');
                             }
-                            console.log('Email sent:', info.response);
-                        });
+                            if (serviceResults.length > 0) {
+                                const service = serviceResults[0];
 
-                        // Respond with the event data
-                        res.status(201).json({ id: result.insertId, service_id, event_date, event_start, event_end, user_id });
+                                // Format the dates and times using your utility functions
+                                const formattedDate = formatDate(event_date);
+                                const formattedStartTime = formatTime(event_start);
+                                const formattedEndTime = formatTime(event_end);
+
+                                // Send email to admin for confirmation if the event is pending
+                                if (status === 'pending') {
+                                    const mailOptions = {
+                                        from: "Garrison's Haircraft And Barbershop <noreply@garrisons.com>",
+                                        to: 'admin@example.com', // Admin's email address
+                                        subject: 'New Appointment Request',
+                                        html: `
+                                        <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
+                                            <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
+                                                <h2 style="color: #8f6a48;">New Appointment Request</h2>
+                                                <p>A new appointment has been requested by <strong>${fullName}</strong></p>
+                                                <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
+
+                                                <p style="color: #0c0a09;"><strong>Service:</strong> ${service.title}</p>
+                                                <p style="color: #0c0a09;"><strong>Duration:</strong> ${service.duration} minutes</p>
+                                                <p style="color: #0c0a09;"><strong>Price:</strong> ${service.price} HUF</p>
+                                                <p style="color: #0c0a09;"><strong>Date:</strong> ${formattedDate}</p>
+                                                <p style="color: #0c0a09;"><strong>Start Time:</strong> ${formattedStartTime}</p>
+                                                <p style="color: #0c0a09;"><strong>End Time:</strong> ${formattedEndTime}</p>
+                                                <a href="http://localhost:5000/api/confirmEvent/${result.insertId}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Confirm Appointment</a>
+                                                <a href="http://localhost:5000/api/deletePendingEvent/${result.insertId}" style="background-color: #e6413d; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Deny Appointment</a>
+                                                <p style="color: #0c0a09;">If you have any questions, feel free to contact us.</p>
+                                            </div>
+                                        </div>
+                                        `
+                                    };
+
+                                    transporter.sendMail(mailOptions, (error, info) => {
+                                        if (error) {
+                                            console.error('Error sending email:', error);
+                                            return res.status(500).send('Error sending email');
+                                        }
+                                        console.log('Email sent:', info.response);
+                                    });
+                                }
+
+                                // Respond with the event data
+                                res.status(201).json({ id: result.insertId, service_id, event_date, event_start, event_end, user_id, status });
+                            } else {
+                                return res.status(404).send('Service not found');
+                            }
+                        });
                     } else {
-                        return res.status(404).send('Service not found');
+                        return res.status(404).send('User not found');
                     }
                 });
-            } else {
-                return res.status(404).send('User not found');
-            }
-        });
+            });
+        }
     });
 });
+
 
 // Get pending events from the unified events table
 app.get('/api/getPendingEvents2', (req, res) => {

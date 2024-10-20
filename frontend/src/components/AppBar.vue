@@ -31,25 +31,38 @@ const themeIcon = computed(() =>
 );
 
 const navLinks = [
-  { name: t("link.home"), path: "/", requiresAuth: false },
+  {
+    name: t("link.home"),
+    path: "/",
+    requiresAuth: false,
+    icon: "mdi-home-outline",
+  },
   {
     name: t("link.booking"),
     path: "/booking",
     requiresAuth: true,
     role: "user",
+    icon: "mdi-book-plus-outline",
   },
   {
-    name: "GuestBooking",
+    name: t("link.booking"),
     path: "/guestBooking",
     requiresAuth: false,
     guestOnly: true,
+    icon: "mdi-book-plus-outline",
   },
   {
     name: t("link.references"),
     path: "/references",
     requiresAuth: false,
+    icon: "mdi-image-outline",
   },
-  { name: t("link.rules"), path: "/rules", requiresAuth: false },
+  {
+    name: t("link.rules"),
+    path: "/rules",
+    requiresAuth: false,
+    icon: "mdi-alert-box-outline",
+  },
 ];
 
 // Additional admin links for admin role
@@ -192,6 +205,7 @@ function handleLogout() {
         >
           <v-list-item @click="navigate">
             <v-list-item-title
+              ><v-icon class="me-1 text-garrisons-2">{{ link.icon }}</v-icon
               ><span class="text-garrisons">{{
                 link.name
               }}</span></v-list-item-title
@@ -222,10 +236,19 @@ function handleLogout() {
       </v-list>
 
       <v-divider></v-divider>
-
       <!-- Logout Button -->
-      <v-list-item @click="handleLogout" v-if="isLoggedIn">
-        <v-list-item-title>{{ t("button.logout") }}</v-list-item-title>
+      <v-list-item @click="handleLogout" v-if="isLoggedIn" class="text-center">
+        <v-list-item-title
+          ><v-btn
+          block
+          density="compact"
+          variant="tonal"
+            >{{ t("button.logout")
+            }}<v-icon
+              class="mdi mdi-logout ms-1 text-garrisons-2"
+              style="font-size: large"
+            ></v-icon></v-btn
+        ></v-list-item-title>
       </v-list-item>
     </v-navigation-drawer>
   </section>

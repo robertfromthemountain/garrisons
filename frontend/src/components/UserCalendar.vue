@@ -439,10 +439,18 @@ async function finalizeBooking() {
     await fetchAllEvents();
     showConfirmationDialog.value = false;
   } catch (error) {
-    handleError(
-      "There was an error booking your appointment. Please try again." +
-        error.message
-    );
+    // Handle the 403 error when the user exceeds the 3 pending events limit
+    if (error.response && error.response.status === 429) {
+      showToast(
+        "You already have 3 pending events. Please wait for one to be confirmed before booking a new one.",
+        "warning"
+      );
+    } else {
+      handleError(
+        "There was an error booking your appointment. Please try again." +
+          error.message
+      );
+    }
   } finally {
     loading.value = false;
   }

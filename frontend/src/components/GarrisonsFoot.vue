@@ -38,9 +38,9 @@ const dayOfWeekMap = {
   <v-footer class="bg-dark-garrisons footer-elevation my-0 py-0">
     <v-container class="w-75">
       <v-row>
-        <v-col cols="5" class="text-left">
+        <v-col cols="12" md="4" class="text-center text-md-left">
           <h2 class="subtitle-garrisons text-decoration-underline">
-            Important
+            {{ t("footer.important.title") }}
           </h2>
           <ul class="bg-dark-garrisons line-height-footer">
             <li class="text-garrisons line-height-item">
@@ -57,7 +57,7 @@ const dayOfWeekMap = {
           </ul>
         </v-col>
 
-        <v-col cols="2" class="text-center">
+        <v-col cols="12" md="3" class="text-center">
           <h1 class="title-garrisons text-decoration-underline">
             {{ t("footer.openingHours.title") }}
           </h1>
@@ -81,8 +81,8 @@ const dayOfWeekMap = {
           </ul>
         </v-col>
 
-        <v-col cols="5" class="text-right"
-          ><h2 class="subtitle-garrisons text-decoration-underline">Socials</h2>
+        <v-col cols="12" md="4" class="text-center text-md-right"
+          ><h2 class="subtitle-garrisons text-decoration-underline">{{ t("footer.socials.title") }}</h2>
           <ul class="bg-dark-garrisons line-height-footer">
             <li class="text-garrisons line-height-item">
               Facebook<span class="mdi mdi-facebook ps-1"></span>

@@ -17,6 +17,11 @@ const { t } = useI18n();
       <!-- Title and Contact Info -->
       <v-col cols="12" md="5" align-self="center" class="mb-4">
         <div>
+          <p class="text-garrisons float-in-animation">
+            {{ t("hero.subtitle") }}<span
+              class="mdi mdi-emoticon-wink"
+            ></span>
+          </p>
           <h1
             class="text-uppercase hero-title text-center text-md-start font-weight-bold hero-title-color float-left-animation-1"
           >
@@ -46,7 +51,10 @@ const { t } = useI18n();
 
       <!-- Button -->
       <v-col cols="6" md="2" align-self="end" class="">
-        <RouterLink to="/booking" class="clear">
+        <RouterLink
+          :to="isLoggedIn ? '/booking' : '/guestBooking'"
+          class="clear"
+        >
           <v-btn
             block
             size="large"
@@ -60,6 +68,7 @@ const { t } = useI18n();
 
       <!-- Hero Image -->
       <v-col
+        v-show="mdAndUp && !smAndDown"
         cols="12"
         md="5"
         align-self="end"
@@ -91,7 +100,7 @@ const { t } = useI18n();
   background-color: #201b18;
   padding-left: 10%;
   padding-right: 10%;
-  min-height: 50vh;
+  /* min-height: 30vh; */
   /* Reduce padding on smaller screens */
   @media (max-width: 600px) {
     padding-left: 5%;
@@ -145,6 +154,18 @@ const { t } = useI18n();
   cursor: pointer;
 }
 
+.float-in-animation {
+  opacity: 0;
+  transform: translateX(-100%);
+  animation: float-in 1s forwards;
+}
+@keyframes float-in {
+  to {
+    opacity: 0.5;
+    transform: translateX(0);
+  }
+}
+
 /* Animation for floating from the left */
 .float-left-animation-1 {
   opacity: 0;
@@ -156,14 +177,14 @@ const { t } = useI18n();
   opacity: 0;
   transform: translateX(-100%);
   animation: float-left 1s forwards;
-  animation-delay: 0.3s;
+  animation-delay: 0.1s;
 }
 
 .float-left-animation-3 {
   opacity: 0;
   transform: translateX(-100%);
   animation: float-left 1s forwards;
-  animation-delay: 0.6s;
+  animation-delay: 0.2s;
 }
 @keyframes float-left {
   to {

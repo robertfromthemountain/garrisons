@@ -2,16 +2,18 @@
 import Services from "@/components/Services.vue";
 import GuestCalendar from "@/components/GuestCalendar.vue";
 import { useDisplay } from "vuetify";
+import { useI18n } from "vue-i18n";
 
+const {t}=useI18n();
 const { smAndDown } = useDisplay();
 </script>
 
 <template>
   <div class="">
    <div>
-    <h1 class="text-center title-garrisons">Book an Appointment</h1>
+    <h1 class="text-center title-garrisons"> {{ t("guestBooking.title") }}</h1>
     <p class="text-center subtitle-garrisons">
-      Click into the calendar to start the booking process!
+      {{ t("guestBooking.subtitle") }}
     </p>
     <v-divider></v-divider>
    </div>

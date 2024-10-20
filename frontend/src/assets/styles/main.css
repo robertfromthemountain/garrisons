@@ -1,5 +1,6 @@
 body {
     font-family: 'Bebas Neue', sans-serif;
+    overflow-x: hidden;
 }
 
 .responsive-input {

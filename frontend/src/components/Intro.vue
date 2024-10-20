@@ -1,5 +1,5 @@
 <template>
-  <section class="mx-auto w-50 my-12 intro" min-height="50vh">
+  <section class="mx-auto my-12 intro-section">
     <v-row>
       <!-- Intro Section -->
       <v-col cols="12" lg="6" class="vertical-divider">
@@ -30,7 +30,9 @@
             class="skeleton-loader"
           ></v-skeleton-loader>
           <div v-else class="float-left-animation">
-            <h2 class="services-title text-center text-lg-left">{{ t("intro.services") }}</h2>
+            <h2 class="services-title text-center text-lg-left">
+              {{ t("intro.services") }}
+            </h2>
             <ul class="services-content">
               <div v-for="service in services" :key="service.id">
                 <li class="d-flex">
@@ -94,6 +96,21 @@ const fetchServices = async () => {
 </script>
 
 <style scoped>
+/* Apply w-100 (full width) on small screens and w-50 on md and above */
+.intro-section {
+  width: 100%; /* Full width on mobile */
+  padding-left: 5%;
+  padding-right: 5%;
+  /* min-height: 35vh; */
+}
+
+/* On medium screens and above (md, lg, xl), apply w-50 */
+@media (min-width: 960px) {
+  .intro-section {
+    width: 80%; /* 50% width for md and above */
+  }
+}
+
 .about-title {
   font-size: xx-large;
   color: #8f6a48;

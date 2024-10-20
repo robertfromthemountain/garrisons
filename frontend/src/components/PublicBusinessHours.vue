@@ -3,9 +3,9 @@
     <!-- Title Section -->
     <v-row v-if="loading" class="d-flex justify-center">
       <v-skeleton-loader
-          type="text"
-          class="title-skeleton-loader"
-        ></v-skeleton-loader>
+        type="text"
+        class="title-skeleton-loader"
+      ></v-skeleton-loader>
     </v-row>
 
     <v-row v-else class="d-flex justify-center">
@@ -41,7 +41,7 @@
         md="2"
         lg="1"
         xl="1"
-        class="d-flex justify-center mx-1 fade-in-animation"
+        :class="`d-flex justify-center mx-1 fade-in-animation delay-${index}`"
       >
         <v-card variant="tonal" class="business-card pa-3">
           <div class="text-center business-title">
@@ -64,7 +64,6 @@
     </v-row>
   </v-container>
 </template>
-
 
 <script setup>
 import { ref, onMounted } from "vue";
@@ -100,7 +99,7 @@ const dayOfWeekMap = {
   2: t("footer.openingHours.days.tuesday"),
   3: t("footer.openingHours.days.wednesday"),
   4: t("footer.openingHours.days.thursday"),
-  5: t("footer.openingHours.days.firday"), // corrected 'firday' to 'friday'
+  5: t("footer.openingHours.days.firday"),
   6: t("footer.openingHours.days.saturday"),
   7: t("footer.openingHours.days.sunday"),
 };
@@ -124,6 +123,7 @@ const dayOfWeekMap = {
   border-radius: 8px;
   box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.6);
   padding: 0px;
+  font-size: large;
   min-height: 65px;
   min-width: 110px;
   transition: transform 0.3s ease-in-out; /* Smooth transition */
@@ -164,12 +164,37 @@ const dayOfWeekMap = {
 /* Fade-in animation */
 .fade-in-animation {
   opacity: 0;
-  animation: fadeIn 1.3s forwards;
+  transform: translateY(-20px);
+  animation: fadeIn 1s forwards;
+}
+
+/* Staggered animation for each card based on index */
+.delay-0 {
+  animation-delay: 0.1s;
+}
+.delay-1 {
+  animation-delay: 0.2s;
+}
+.delay-2 {
+  animation-delay: 0.3s;
+}
+.delay-3 {
+  animation-delay: 0.4s;
+}
+.delay-4 {
+  animation-delay: 0.5s;
+}
+.delay-5 {
+  animation-delay: 0.6s;
+}
+.delay-6 {
+  animation-delay: 0.7s;
 }
 
 @keyframes fadeIn {
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

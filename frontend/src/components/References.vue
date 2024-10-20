@@ -1,11 +1,10 @@
 <template>
   <section fluid class="mx-auto my-12 references-bg-color">
-
     <v-row v-if="loading" class="d-flex justify-center">
       <v-skeleton-loader
-          type="text"
-          class="title-skeleton-loader"
-        ></v-skeleton-loader>
+        type="text"
+        class="title-skeleton-loader"
+      ></v-skeleton-loader>
     </v-row>
 
     <v-row v-else class="d-flex justify-center">
@@ -14,15 +13,15 @@
 
     <v-row class="mb-10">
       <v-sheet class="mx-auto" max-width="95vw">
-        <v-slide-group class="px-4 bg-garrisons" show-arrows>
+        <v-slide-group class="bg-garrisons" show-arrows>
           <v-slide-group-item
             v-for="(reference, index) in references"
             :key="index"
           >
             <v-card
               class="mx-3 elevation-5 references-border bg-garrisons"
-              height="300"
-              width="300"
+              :height="cardHeight"
+              :width="cardWidth"
               :disabled="loading"
               @click="openLightbox(index)"
             >
@@ -90,9 +89,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import apiClient from "@/utils/apiClient";
 import { useI18n } from "vue-i18n";
+import { useDisplay } from "vuetify";
 
 const { t } = useI18n();
 
@@ -102,6 +102,27 @@ const isLightboxOpen = ref(false);
 const currentImageIndex = ref(0);
 const currentImage = ref("");
 const loading = ref(true); // Loading state for images
+
+const { xs, sm, md, lg, xl, xxl } = useDisplay();
+
+// Function to determine card height and width dynamically based on screen size
+const cardHeight = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "175"; // Medium screens
+  if (md.value) return "200"; // Medium screens
+  if (lg.value) return "250"; // Large screens
+  if (xl.value || xxl.value) return "250"; // Extra-large screens
+  return "250"; // Fallback
+});
+
+const cardWidth = computed(() => {
+  if (xs.value) return "150"; // Small screens
+  if (sm.value) return "175"; // Medium screens
+  if (md.value) return "200"; // Medium screens
+  if (lg.value) return "250"; // Large screens
+  if (xl.value || xxl.value) return "250"; // Extra-large screens
+  return "250"; // Fallback
+});
 
 // Fetch the newest 15 images from the backend
 const fetchReferences = async () => {

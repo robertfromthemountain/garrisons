@@ -12,6 +12,7 @@ import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
 import { useDisplay } from "vuetify";
+import ConfirmDeleteModal from "./ConfirmDeleteModal.vue";
 
 // i18n and toast
 const { locale, t } = useI18n();
@@ -29,6 +30,11 @@ const showToast = (message, type = "success") => {
 const handleError = (customMessage) => {
   showToast(customMessage, "error");
 };
+
+const isDeleteModalOpen = ref(false);
+const actionType = ref("");
+const modalTitle = ref("");
+const modalMessage = ref("");
 
 // Reactive State
 const calendarEvents = ref([]);
@@ -189,7 +195,7 @@ function formatDate(date) {
   }).format(parsedDate);
 }
 
-function formatTime(time) {
+function formatTime(time, timeZone = "UTC") {
   if (!time) return "";
 
   const parsedTime = new Date(time);
@@ -201,7 +207,7 @@ function formatTime(time) {
   return new Intl.DateTimeFormat("hu-HU", {
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "UTC",
+    timeZone,
   }).format(parsedTime);
 }
 
@@ -234,34 +240,61 @@ async function confirmEvent() {
   }
 }
 
+// Open modal and set selected event ID
+const openDeleteModal = (action) => {
+  actionType.value = action;
+  if (action === "deny") {
+    modalTitle.value = "Deny Event";
+    modalMessage.value = "Are you sure you want to deny this event?";
+  } else if (action === "delete") {
+    modalTitle.value = "Delete Event";
+    modalMessage.value = "Are you sure you want to delete this event?";
+  }
+
+  isDeleteModalOpen.value = true;
+};
+
+// Close modal
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false;
+};
+
+const handleConfirm = () => {
+  if (actionType.value === "deny") {
+    denyEvent();
+  } else if (actionType.value === "delete") {
+    deleteEvent();
+  }
+
+  closeDeleteModal(); // Close modal after action
+};
+
 async function denyEvent() {
   if (!token) {
     showToast("You are not logged in. Please log in again.", "info");
     return;
   }
 
-  if (confirm("Are you sure you want to deny this event?")) {
-    loading.value = true;
-    try {
-      const response = await apiClient.get(
-        `http://localhost:5000/api/deletePendingEvent/${selectedEvent.value.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.status === 200) {
-        showToast("Event successfully denied.");
-        await fetchAllEvents();
-        closeEventDialog(); // Close the dialog
-      } else {
-        throw new Error("Failed to deny event.");
+  loading.value = true;
+  try {
+    const response = await apiClient.get(
+      `http://localhost:5000/api/deletePendingEvent/${selectedEvent.value.id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
-    } catch (error) {
-      handleError("Error denying event: " + error.message);
-    } finally {
-      loading.value = false;
+    );
+
+    if (response.status === 200) {
+      showToast("Event successfully denied.");
+      await fetchAllEvents();
+      closeEventDialog(); // Close the dialog
+    } else {
+      throw new Error("Failed to deny event.");
     }
+  } catch (error) {
+    handleError("Error denying event: " + error.message);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -470,34 +503,32 @@ async function fetchServices() {
 }
 
 async function deleteEvent() {
-  if (confirm("Are you sure you want to delete this event?")) {
-    loading.value = true;
-    try {
-      const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
-      if (!token) throw new Error("No token available");
+  loading.value = true;
+  try {
+    const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
+    if (!token) throw new Error("No token available");
 
-      const response = await apiClient.delete(
-        `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // Include token in headers
-        }
-      );
-
-      if (response.status !== 200) {
-        throw new Error("Failed to delete event");
+    const response = await apiClient.delete(
+      `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
+      {
+        headers: { Authorization: `Bearer ${token}` }, // Include token in headers
       }
+    );
 
-      calendarEvents.value = calendarEvents.value.filter(
-        (event) => event.id !== selectedEvent.value.id
-      );
-
-      closeEventDialog();
-      showToast("Event deleted successfully");
-    } catch (error) {
-      handleError("Error deleting event: " + error.message);
-    } finally {
-      loading.value = false;
+    if (response.status !== 200) {
+      throw new Error("Failed to delete event");
     }
+
+    calendarEvents.value = calendarEvents.value.filter(
+      (event) => event.id !== selectedEvent.value.id
+    );
+
+    closeEventDialog();
+    showToast("Event deleted successfully");
+  } catch (error) {
+    handleError("Error deleting event: " + error.message);
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -661,10 +692,12 @@ async function finalizeBooking() {
 
   loading.value = true;
   try {
+    // Make the API request to book the event
     await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    // Add the new event to the calendar
     calendarOptions.events.push(newEvent);
     showToast(
       `Appointment for ${selectedService.value.title} successfully requested!`
@@ -673,10 +706,18 @@ async function finalizeBooking() {
     await fetchAllEvents();
     showConfirmationDialog.value = false;
   } catch (error) {
-    handleError(
-      "There was an error booking your appointment. Please try again." +
-        error.message
-    );
+    // Handle the 403 error when the user exceeds the 3 pending events limit
+    if (error.response && error.response.status === 429) {
+      showToast(
+        "You already have 3 pending events. Please wait for one to be confirmed before booking a new one.",
+        "warning"
+      );
+    } else {
+      handleError(
+        "There was an error booking your appointment. Please try again." +
+          error.message
+      );
+    }
   } finally {
     loading.value = false;
   }
@@ -733,26 +774,32 @@ async function finalizeBooking() {
         <v-card-title class="">
           <h2 class="headline title-garrisons">
             <span class="mdi mdi-book-search-outline"></span>
-            {{ t("dialog.confirmChanges") }}
+            {{ t("dashboard.manageEvents.dialog.confirmChanges") }}
           </h2>
         </v-card-title>
         <v-divider></v-divider>
         <v-card-text>
-          <h3>{{ t("dialog.modifiedEvents") }}</h3>
-          <ul class="pa-5 larger">
+          <h3 class="text-garrisons">
+            {{ t("dashboard.manageEvents.dialog.modifiedEvents") }}
+          </h3>
+          <ul class="pa-5 larger text-garrisons">
             <li v-for="event in modifiedEvents" :key="event.id" class="pb-3">
               <strong>
                 {{ event.firstName + " " + event.lastName + ", " }}
                 {{ event.modifiedTitle }}</strong
               ><br />
-              <span>Original: </span>
-              <span v-if="getOriginalEvent(event.id)" class="">
+              <span>{{
+                t("dashboard.manageEvents.dialog.originalEventDetails")
+              }}</span>
+              <span v-if="getOriginalEvent(event.id)" class="text-red">
                 {{ formatDate(getOriginalEvent(event.id).start) }} -
                 {{ formatTime(getOriginalEvent(event.id).start) }} to
                 {{ formatTime(getOriginalEvent(event.id).end) }} </span
               ><br />
-              <span>Modified: </span>
-              <span class="">
+              <span>{{
+                t("dashboard.manageEvents.dialog.modifiedEventDetails")
+              }}</span>
+              <span class="text-green">
                 {{ formatDate(event.newStart) }} -
                 {{ formatTime(event.newStart) }} to
                 {{ formatTime(event.newEnd) }}
@@ -766,21 +813,22 @@ async function finalizeBooking() {
             density="comfortable"
             :disabled="loading"
             @click="closeModificationDialog"
-            >Close</v-btn
+            >{{ t("dashboard.manageEvents.dialog.button.close") }}</v-btn
           >
           <v-spacer></v-spacer>
           <v-btn
             density="comfortable"
             :disabled="loading"
             @click="discardModifications"
-            >{{ t("dialog.button.discard") }}</v-btn
+            class="bg-red text-garrisons"
+            >{{ t("dashboard.manageEvents.dialog.button.discard") }}</v-btn
           >
           <v-btn
             density="comfortable"
             :disabled="loading"
             class="bg-green text-garrisons"
             @click="confirmModifications"
-            >{{ t("dialog.button.modify") }}</v-btn
+            >{{ t("dashboard.manageEvents.dialog.button.save") }}</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -990,7 +1038,7 @@ async function finalizeBooking() {
             {{
               formatDate(selectedEvent.extendedProps.reserved_at) +
               ", " +
-              formatTime(selectedEvent.extendedProps.reserved_at)
+              formatTime(selectedEvent.extendedProps.reserved_at,"Europe/Budapest")
             }}
           </p>
 
@@ -1002,7 +1050,10 @@ async function finalizeBooking() {
             {{
               formatDate(selectedEvent.extendedProps.confirmed_at) +
               ", " +
-              formatTime(selectedEvent.extendedProps.confirmed_at)
+              formatTime(
+                selectedEvent.extendedProps.confirmed_at,
+                "Europe/Budapest"
+              )
             }}
           </p>
         </v-card-text>
@@ -1021,7 +1072,7 @@ async function finalizeBooking() {
               density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-red"
-              @click="denyEvent"
+              @click="openDeleteModal('deny')"
               >Deny</v-btn
             >
             <v-btn
@@ -1047,13 +1098,23 @@ async function finalizeBooking() {
               density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-red"
-              @click="deleteEvent"
+              @click="openDeleteModal('delete')"
               >Delete</v-btn
             >
           </template>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Confirmation Modal Component -->
+    <ConfirmDeleteModal
+      :isOpen="isDeleteModalOpen"
+      :title="modalTitle"
+      :message="modalMessage"
+      @cancel="closeDeleteModal"
+      @confirm="handleConfirm"
+      @update:isOpen="(val) => (isDeleteModalOpen = val)"
+    />
   </div>
 </template>
   

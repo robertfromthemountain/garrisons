@@ -27,7 +27,7 @@ const messages = {
                 closed: "CLOSED",
             },
             socials: {
-                title: "Social Media",
+                title: "Social",
             },
             toasts: {
                 error: "Error fetching opening hours."
@@ -36,6 +36,7 @@ const messages = {
         },
         hero: {
             title: "Garrison's haircraft and barbershop",
+            subtitle:"Let your hair do the talking!",
             button: "Book Now!"
         },
         intro: {
@@ -47,6 +48,8 @@ const messages = {
             title: "References"
         },
         guestBooking: {
+            title:"Book an Appointment!",
+            subtitle:"Click into the calendar to start the booking process!",
             modal: {
                 createAccount: "Click here to create an account!",
                 haveAccount: "I already have an account!",
@@ -60,7 +63,17 @@ const messages = {
             title: "Dashboard",
             manageEvents: {
                 title: "Manage Reservations",
-
+                dialog:{
+                    confirmChanges:"Modified Appointments",
+                    modifiedEvents:"Please confirm or deny your modifications!",
+                    originalEventDetails:"Original: ",
+                    modifiedEventDetails:"Modified: ",
+                    button:{
+                        close:"Close",
+                        discard:"Discard",
+                        save:"Save"
+                    }
+                }
             },
             managePendingEvents: {
                 title: "Manage Pending Reservations",
@@ -338,6 +351,272 @@ const messages = {
 
     },
     hu: {
+        global: {
+            tel: "+36 (30) 456 4526",
+            email: "{'info@garrisons.hu'}",
+            owner: "Bíró Dominik, E.V.",
+            shop: "Garrisons Haircraft & Barbershop",
+            developer: "Nagy Róbert"
+        },
+        footer: {
+            important: {
+                title: "Fontos",
+            },
+            openingHours: {
+                title: "Nyitvatartás",
+                days: {
+                    monday: "Hétfő",
+                    tuesday: "Kedd",
+                    wednesday: "Szerda",
+                    thursday: "Csütörtök",
+                    firday: "Péntek",
+                    saturday: "Szombat",
+                    sunday: "Vasárnap"
+                },
+                closed: "ZÁRVA",
+            },
+            socials: {
+                title: "Közösség",
+            },
+            toasts: {
+                error: "A nyitvatartás lekérdezése sikertelen."
+            },
+            rights: "Minden jog fenntartva."
+        },
+        hero: {
+            title: "Garrison's Haircraft and Barbershop",
+            subtitle: "Engedd, hogy a hajad beszéljen helyetted!",
+            button: "Foglalás"
+        },
+        intro: {
+            about: "Rólam",
+            services: "Szolgáltatásaim",
+            businessHours: "Nyitvatartás"
+        },
+        references: {
+            title: "Munkáim"
+        },
+        guestBooking: {
+            title:"Foglalj Időpontot",
+            subtitle:"Kattints a naptárba egy szabad időpontra, hogy elkezdődjön az időpontfoglalás!",
+            modal: {
+                createAccount: "Kattints ide a regisztrációhoz!",
+                haveAccount: "Már van fiókom!",
+            },
+            services: {
+                title: "Szolgáltatások",
+                subtitle: "You can decide what service do you want to book.",
+            }
+        },
+        dashboard: {
+            title: "Dashboard",
+            manageEvents: {
+                title: "Időpontok kezelése",
+                dialog:{
+                    confirmChanges:"Módosított Időpontok",
+                    modifiedEvents:"Kérlek erősítsd meg a módosításokat, hogy érvénybe lépjenek!",
+                    originalEventDetails:"Eredeti: ",
+                    modifiedEventDetails:"Módosított: ",
+                    button:{
+                        close:"Bezárás",
+                        discard:"Elvetés",
+                        save:"Mentés"
+                    }
+                }
+            },
+            managePendingEvents: {
+                title: "Függőben lévő időpontok kezelése",
+                subtitle: "A függőben lévő időpontokat itt is el tudod fogadni/utasítani, csak úgy mint emailben.",
+                noEvents: "Jelenleg egy függőben lévő időpont sincs. Tarts szünetet, igyál egy kávét, és várd meg a következő időpontot!",
+                table: {
+                    service: "Szolgáltatás",
+                    booker: "Vendég",
+                    date: "Dátum",
+                    start: "Kezdés",
+                    end: "Befejezés",
+                    actions: "Műveletek",
+                    buttons: {
+                        accept: "Elfogad",
+                        deny: "Elutasít"
+                    },
+                },
+                deleteModal: {
+                    title: "Függőben lévő időpont elutasítása",
+                    message: "Biztosan szeretnéd elutasítani a függőben lévő időpontot?"
+                },
+                toast: {
+                    error: {
+                        token: "Nem vagy bejelentkezve, kérlek lépj be a folytatáshoz!",
+                        confirm: "Időpont elfogadása sikertelen, kérlek próbáld újra később!",
+                        noEvent: "Kérlek válassz egy időpontot az elutasításhoz.",
+                        deny: "Az időpont elutasítása sikertelen, kérlek próbáld újra később!"
+
+                    },
+                    success: {
+                        confirm: "Időpont sikeresen elfogadva!",
+                        deny: "Időpont sikeresen elutasítva!",
+                    }
+                }
+            },
+            manageServices: {
+                title: "Szolgáltatások Kezelése",
+                subtitle: "Hozzáadhatsz, szerkeszthetsz, vagy törölhetsz szolgáltatásokat. Hagy üresen az árat, ha nem szeretnéd hogy a felhasználó kiválaszthassa a szolgáltatást!",
+                table: {
+                    title: "Title",
+                    price: "Price",
+                    duration: "Duration",
+                    color: "Color",
+                    search: "Search Services",
+                    searchPlaceholder: "Search by title, price, or duration",
+                    buttons: {
+                        edit: "Edit",
+                        delete: "Delete",
+                        add: "Add Service"
+                    },
+                },
+                editModal: {
+                    title: "Edit Service",
+                    textFields: {
+                        labels: {
+                            title: "Title",
+                            price: "Price",
+                            duration: "Duration (in minutes)",
+
+                        }
+                    },
+                    colorLabel: "Color of the service:"
+                },
+                addModal: {
+                    title: "Add New Service",
+                    textFields: {
+                        labels: {
+                            title: "Title",
+                            price: "Price",
+                            duration: "Duration (in minutes)",
+                            color: "Select Background Color"
+                        }
+                    },
+                    buttons: {
+                        cancel: "Cancel",
+                        add: "Add"
+                    }
+                },
+                deleteModal: {
+                    title: "Delete Service",
+                    message: "Are you sure you want to delete this service? This action cannot be undone."
+                },
+                buttons: {
+                    cancel: "Cancel",
+                    save: "Save"
+                }
+            },
+            manageUsers: {
+                title: "Manage User Accounts",
+                subtitle: "Here you can manage the registered users.",
+                table: {
+                    name: "Name",
+                    role: "Role",
+                    email: "Email",
+                    phone: "Phone number",
+                    status: "Status",
+                    search: "Search Users",
+                    searchPlaceholder: "Search by first name, last name, email, etc.",
+                    buttons: {
+                        edit: "Edit",
+                        delete: "Delete",
+                    },
+                },
+                modal: {
+                    title: "Edit user data",
+                    textFields: {
+                        labels: {
+                            firstName: "First Name",
+                            lastName: "Last Name",
+                            role: "Role",
+                            email: "Email",
+                            phoneNumber: "Phone Number",
+                            status: "Status"
+                        }
+                    },
+                    buttons: {
+                        cancel: "Cancel",
+                        save: "Save"
+                    }
+                },
+                deleteModal: {
+                    title: "Delete User",
+                    message: "Are you sure you want to delete this user? This action can not be undone!"
+                },
+            },
+            toast: {
+                error: {
+                    tokenError: "You are not logged in. Please log in again!",
+                    userUpdate: "Failed to update user details, please try again!",
+                    userDelete: "Failed to delete user from the database!",
+                    serviceDelete: "Failed to delete service, please try again!",
+                    serviceUpdate: "Failed to update service, please try again!",
+                    serviceAdd: "Failed to create new servce, please try again!",
+                },
+                success: {
+                    userUpdate: "User details updated successfully!",
+                    userDelete: "User successfully deleted from database!",
+                    serviceDelete: "Service deleted successfully!",
+                    serviceUpdate: "Service updated successfully!",
+                    serviceAdd: "New service added successfully!",
+                }
+            },
+            manageBusinessHours: {
+                title: "Business Hours",
+                subtitle: "Here you can edit your opening hours on the website globally.",
+                table: {
+                    days: "Days of Week",
+                    open: "Opening Time",
+                    close: "Closing Time",
+                    actions: "Actions",
+                    buttons: {
+                        edit: "Edit",
+                    },
+                },
+                modal: {
+                    title: "Edit Opening Hours",
+                    weekday: "Day of Week",
+                    buttons: {
+                        cancel: "Cancel",
+                        save: "Save"
+                    }
+                },
+                toast: {
+                    tokenError: "You are not logged in. Please log in again.",
+                    updateSuccess: "Business hours updated successfully!",
+                    updateError: "Failed to update business hours!"
+                }
+            },
+        },
+        logout: {
+            toasts: {
+                success: "You have successfully logged out. See-ya!"
+            }
+        },
+        registration: {
+            toasts: {
+                success: "Registration successful!",
+                error: "Registration failed!",
+                verificationEmailSent: "A verification email has been sent to your email address. Please check your inbox."
+            }
+        },
+        login: {
+            toasts: {
+                missingFields: "Kérlek töltsd ki az email és a jelszó mezőket is!",
+                success: "Siekres bejelentkezés! Üdv újra itt!",
+                invalidCredentials: "Hibás bejelentkezési adatok. Kérlek ellenőrizd az email címed és a jelszavad!",
+                userNotFound: "Felhasználó nem található. Kérlek ellenőrizd az email címed, vagy regisztálj.",
+                serverError: "Szerver hiba. Kérlek próbáld újra később.",
+                genericError: "Sikertelen bejelentkezés! Kérlek próbáld újra.",
+                networkError: "Kapcsolati hiba, kérlek ellenőrizd az internetkapcsolatod.",
+                verifyEmail:"Kérlek erősítsd meg az email címed, hogy aktiváld a fiókod.",
+                bannedUser:"Ki vagy tiltva az oldalról. Kérlek vedd fel a kapcsolatot a tulajdonossal."
+            }
+        },
         link: {
             home: "Főoldal",
             booking: "Foglalás",
@@ -352,7 +631,8 @@ const messages = {
             alreadyHaveAccountBtn: "Lépj be",
             book: "Foglalás",
             tel: "+36 (30) 999 3211",
-            email: "info\\@garrisons.hu"
+            email: "{'info@garrisons.hu'}",
+            calendarEdit: "Szerkesztés"
         },
         inputFields: {
             firstName: "Keresztnév",
@@ -391,15 +671,36 @@ const messages = {
             alreadyHaveAccount1: "Már regisztráltál?",
             alreadyHaveAccount2: "itt."
         },
-        hero: {
-            title: "Garrison's haircraft and barbershop"
-        }
+        dialog: {
+            date: "Dátum:",
+            time: "Idő",
+            service: "Szolgáltatás:",
+            duration: "Időtartam:",
+            duration2: "perc",
+            price: "Ár:",
+            price2: "HUF",
+            userName: "Név:",
+            userEmail: "Email:",
+            userPhone: "Telefonszám:",
+            bookDialog: {
+                title1: "Foglalj Időpontot",
+                title2: "Erősítsd meg Időpontod",
+                selectTitle: "Válassz szolgáltatást",
+                noServices: "Jelenleg egy szolgáltatás sem elérhető."
+            },
+            button: {
+                save: "Mentés",
+                cancel: "Mégsem",
+                next: "Tovább",
+                requestBook: "Időpont Kérvényezése"
+            }
+        },
     }
 };
 
 const i18n = createI18n({
     legacy: false,
-    locale: 'en',
+    locale: 'hu',
     fallbackLocale: 'en',
     messages,
 });
