@@ -1,7 +1,7 @@
 <script setup>
 import { useRegisterForm } from "@/composables/register.js";
 
-const { form, fields, t, register, passwordVisible, repeatPasswordVisible } =
+const { form, fields, t, register, passwordVisible, repeatPasswordVisible, isLoading } =
   useRegisterForm();
 
 // Add a prop to control the visibility of the register link
@@ -30,6 +30,7 @@ const props = defineProps({
         :rules="field.rules"
         :placeholder="field.placeholder"
         :prepend-inner-icon="field.innerIcon"
+        :loading="isLoading"
         clearable
         :type="
           field.model === 'password'
@@ -71,6 +72,7 @@ const props = defineProps({
         block
         @click="register"
         class="login-btn-color"
+        :disabled="isLoading"
         >{{ t("inputFields.submit") }}</v-btn
       >
 

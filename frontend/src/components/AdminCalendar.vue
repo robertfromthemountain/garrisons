@@ -1038,7 +1038,10 @@ async function finalizeBooking() {
             {{
               formatDate(selectedEvent.extendedProps.reserved_at) +
               ", " +
-              formatTime(selectedEvent.extendedProps.reserved_at,"Europe/Budapest")
+              formatTime(
+                selectedEvent.extendedProps.reserved_at,
+                "Europe/Budapest"
+              )
             }}
           </p>
 

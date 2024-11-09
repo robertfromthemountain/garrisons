@@ -1,459 +1,12 @@
 const express = require('express');
-const mysql = require('mysql');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
-require('dotenv').config();
-const crypto = require('crypto');
-const { formatDate, formatTime } = require('./dateFormatter');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Multer configuration to store images in the 'garrisons/frontend/public/images' directory 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, path.join(__dirname, '../frontend/public/images')); // Upload destination folder
-    },
-    filename: (req, file, cb) => {
-        const randomString = crypto.randomBytes(16).toString('hex');
-        const ext = path.extname(file.originalname); // Get the file extension
-        const uniqueFilename = `${Date.now()}-${randomString}${ext}`;
-        cb(null, uniqueFilename);
-    },
-});
-
-// Define allowed file types (MIME types)
-const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif'];
-
-// Validate file type and size before saving
-const fileFilter = (req, file, cb) => {
-    // Validate file type
-    if (!ALLOWED_FILE_TYPES.includes(file.mimetype)) {
-        return cb(new Error('Invalid file type. Only JPG, PNG, and GIF are allowed.'));
-    }
-    cb(null, true); // Accept the file if valid
-};
-
-// Limit file size to 2MB per file and allow up to 10 files
-const upload = multer({
-    storage,
-    fileFilter,
-    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit per file
-}).array('images', 10); // .array for multiple file uploads, limit to 10 files
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(bodyParser.json());
-const corsOptions = {
-    origin: 'http://localhost:5173', // The frontend URL
-    credentials: true, // Allow credentials (cookies, authorization headers)
-};
-
-app.use(cors(corsOptions));
-
-
-// MySQL connection
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'garrisons'
-});
-
-db.connect(err => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-    console.log('Connected to MySQL');
-});
-
-/*
----------------MIDDLEWARES:---------------
-*/
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-        console.log("No token provided"); // Log this
-        return res.sendStatus(401); // No token, Unauthorized
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            console.log("Token verification failed:", err.message); // Log token errors
-            return res.status(403).send('Forbidden: Invalid token');
-        }
-
-        req.user = user; // Attach user data to req.user
-        console.log("Token successfully decoded. User:", user);
-        next();
-    });
-}
-
-function isAdmin(req, res, next) {
-    const userId = req.user.userId; // Extract the userId from the decoded JWT
-    const sql = 'SELECT role FROM users WHERE id = ?';
-
-    db.query(sql, [userId], (err, results) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ message: 'Database error' });
-        }
-
-        if (results.length === 0) {
-            console.log("User not found in database");
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        const userRole = results[0].role;
-        if (userRole === 'admin') {
-            next(); // User is admin, proceed to the next middleware or route
-        } else {
-            console.log("User is not an admin");
-            return res.status(403).json({ message: 'Forbidden: Admins only' });
-        }
-    });
-}
-
-
-
-//Nodemailer
-const transporter = nodemailer.createTransport({
-    host: 'sandbox.smtp.mailtrap.io',
-    port: 2525,
-    auth: {
-        user: '2ffdd7c9108046', // Replace with Mailtrap username
-        pass: '378385174926c2'  // Replace with Mailtrap password
-    }
-});
-
-
-// API route for uploading multiple images
-app.post('/api/upload-images', authenticateToken, isAdmin, (req, res) => {
-    upload(req, res, function (err) {
-        if (err) {
-            // Handle errors from multer (e.g., file type or size errors)
-            if (err instanceof multer.MulterError) {
-                return res.status(400).json({ message: err.message });
-            }
-            return res.status(400).json({ message: err.message });
-        }
-
-        // If no files were uploaded
-        if (!req.files || req.files.length === 0) {
-            return res.status(400).json({ message: 'No files uploaded' });
-        }
-
-        // Array to store the image paths
-        const imagePaths = req.files.map(file => `/images/${file.filename}`);
-
-        // Prepare SQL insert statement for multiple files
-        const sql = 'INSERT INTO reference_images (image_path, created_at) VALUES ?';
-        const values = imagePaths.map(path => [path, new Date()]);
-
-        // Insert image paths into the database
-        db.query(sql, [values], (err, result) => {
-            if (err) return res.status(500).json({ message: 'Database error' });
-            res.status(201).json({ message: 'Images uploaded successfully', imagePaths });
-        });
-    });
-});
-
-// API route for getting paginated images 
-app.get('/api/images', (req, res) => {
-    const page = parseInt(req.query.page) || 1; const limit = parseInt(req.query.limit) || 6; const offset = (page - 1) * limit;
-    const sql = 'SELECT * FROM reference_images ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    db.query(sql, [limit, offset], (err, results) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-        res.json(results);
-    });
-});
-
-// API route to delete an image by ID
-app.delete('/api/images/:id', authenticateToken, isAdmin, (req, res) => {
-    const imageId = req.params.id;
-
-    // First, retrieve the image path from the database
-    const sqlSelect = 'SELECT image_path FROM reference_images WHERE id = ?';
-    db.query(sqlSelect, [imageId], (err, result) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).json({ message: 'Database error' });
-        }
-
-        if (result.length === 0) {
-            return res.status(404).json({ message: 'Image not found' });
-        }
-
-        const imagePath = result[0].image_path;
-        const fullImagePath = path.join(__dirname, '../frontend/public', imagePath);
-
-        // Delete the image file from the filesystem
-        fs.unlink(fullImagePath, (err) => {
-            if (err) {
-                console.error('Error deleting image file:', err);
-                return res.status(500).json({ message: 'Error deleting image file' });
-            }
-
-            // Once the file is deleted, delete the record from the database
-            const sqlDelete = 'DELETE FROM reference_images WHERE id = ?';
-            db.query(sqlDelete, [imageId], (err, result) => {
-                if (err) {
-                    console.error('Database error:', err);
-                    return res.status(500).json({ message: 'Database error' });
-                }
-
-                res.status(200).json({ message: 'Image deleted successfully' });
-            });
-        });
-    });
-});
-
-// Refresh Token Route
-app.post('/api/refresh-token', (req, res) => {
-    // Get refresh token from Authorization header or request body
-    const authHeader = req.headers['authorization'];
-    const refreshToken = authHeader && authHeader.split(' ')[1];
-
-    // If there's no refresh token in the header or body, return an error
-    if (!refreshToken) {
-        return res.status(403).json({ message: 'No refresh token provided' });
-    }
-
-    // Verify the refresh token using JWT
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid refresh token' });
-        }
-
-        // If valid, generate a new access token
-        const accessToken = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET, // Your access token secret
-            { expiresIn: '15m' } // Set the expiration for the new access token
-        );
-
-        // Send the new access token back to the client
-        res.json({ accessToken });
-    });
-});
-
-
-
-// Registration with email verification:
-app.post('/register', async (req, res) => {
-    const { firstName, lastName, email, phoneNumber, password } = req.body;
-
-    if (!firstName || !lastName || !email || !phoneNumber || !password) {
-        return res.status(400).json({ message: 'All fields are required' });
-    }
-
-    try {
-        // Check if email already exists in the `users` table
-        const emailCheckQuery = 'SELECT * FROM users WHERE email = ?';
-        db.query(emailCheckQuery, [email], async (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).json({ message: 'Database error' });
-            }
-
-            if (results.length > 0) {
-                return res.status(400).json({ message: 'Email is already registered in the system' });
-            }
-
-            // Hash the password
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Generate verification token
-            const verificationToken = crypto.randomBytes(32).toString('hex');
-
-            // Insert the user into the `users` table with 'pending' status
-            const sqlInsert = `INSERT INTO users (firstName, lastName, email, phoneNumber, password, status, verification_token) VALUES (?, ?, ?, ?, ?, 'pending', ?)`;
-            db.query(sqlInsert, [firstName, lastName, email, phoneNumber, hashedPassword, verificationToken], (err, insertResult) => {
-                if (err) {
-                    console.error(err);
-                    return res.status(500).json({ message: 'Database error during registration' });
-                }
-
-                // Send the verification email
-                const verificationLink = `http://localhost:5000/verify-email?token=${verificationToken}`;
-                const fullName = firstName + " " + lastName;
-                const mailOptions = {
-                    from: 'noreply@yourapp.com',
-                    to: email,
-                    subject: 'Please verify your email',
-                    html: `
-                            <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
-    <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-        <h2 style="color: #8f6a48;">Welcome to Garrison's Haircraft & Barbershop! Please Verify Your Email</h2>
-        <p>Hi <strong>${fullName}</strong>,</p>
-        <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
-        <p style="color: #0c0a09;">Welcome to <strong>Garrison's Haircraft & Barbershop</strong> – we’re thrilled to have you with us!</p>
-        <br>
-        <p style="color: #0c0a09;">Before you get started, we just need to verify your email address to activate your account and ensure the security of your details.</p>
-        <br>
-        <p style="color: #0c0a09;">To complete your registration, simply click the link below:</p>
-        <a href="${verificationLink}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Verify My Email</a>
-        <br><br>
-        <p style="color: #0c0a09;">If the above button doesn't work, copy and paste the following URL into your browser:</p>
-        <p style="color: #0c0a09;"><a href="${verificationLink}" style="color: #8f6a48; text-decoration: none;">${verificationLink}</a></p>
-        <br>
-        <p style="color: #0c0a09;">Once your email is verified, you'll have access to:</p>
-        <ul style="color: #0c0a09;">
-            <li>Exclusive offers and promotions</li>
-            <li>Easy booking for your favorite services</li>
-            <li>Personalized recommendations just for you</li>
-        </ul>
-        <p style="color: #0c0a09;">If you didn’t create an account with us, please ignore this email.</p>
-        <br>
-        <p style="color: #0c0a09;">Thank you for choosing <strong>Garrison's Haircraft</strong>. We look forward to giving you an exceptional experience!</p>
-        <br>
-        <p style="color: #0c0a09;">Best regards,</p>
-        <p style="color: #0c0a09;">The Garrison's Haircraft Team</p>
-        <p style="color: #0c0a09;"><strong>noreply@garrisons.com</strong></p>
-    </div>
-</div>
-
-                            `
-                };
-
-                transporter.sendMail(mailOptions, (error, info) => {
-                    if (error) {
-                        console.error('Error sending verification email:', error);
-                        return res.status(500).json({ message: 'Error sending verification email' });
-                    }
-
-                    res.status(201).json({ message: 'Verification email sent' });
-                });
-            });
-        });
-    } catch (error) {
-        console.error('Error in registration:', error);
-        return res.status(500).json({ message: 'Server error' });
-    }
-});
-
-// Email verification
-app.get('/verify-email', (req, res) => {
-    const { token } = req.query;
-
-    if (!token) {
-        return res.status(400).send('Invalid verification link');
-    }
-
-    // Find the user with the verification token in the `users` table
-    const findUserQuery = 'SELECT * FROM users WHERE verification_token = ? AND status = "pending"';
-    db.query(findUserQuery, [token], (err, results) => {
-        if (err) {
-            console.error('Database error:', err);
-            return res.status(500).send('Database error');
-        }
-
-        if (results.length === 0) {
-            return res.status(400).send('Invalid or expired token');
-        }
-
-        // Update user status to 'confirmed' and clear the verification token
-        const updateUserQuery = 'UPDATE users SET status = "confirmed", verification_token = NULL WHERE verification_token = ?';
-        db.query(updateUserQuery, [token], (err, updateResult) => {
-            if (err) {
-                console.error('Database error:', err);
-                return res.status(500).send('Database error during account activation');
-            }
-
-            res.status(200).send('Email successfully verified. Your account is now active.');
-        });
-    });
-});
-
-//This ensures that the token is validated on the server, preventing any tampering on the client side
-app.get('/verify-token', (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Bearer token
-
-    if (!token) {
-        return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid token' });
-        }
-
-        // Return the user's role securely
-        return res.json({ role: decoded.role });
-    });
-});
-
-
-// Login endpoint
-app.post('/login', async (req, res) => {
-    console.log('Login request for email:', req.body.email);
-    const { email, password } = req.body;
-
-    try {
-        const sqlSelect = 'SELECT * FROM users WHERE email = ?';
-        db.query(sqlSelect, [email], async (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.status(500).send('Database error');
-            }
-
-            if (results.length > 0) {
-                const user = results[0];
-
-                // Check the password first
-                const validPassword = await bcrypt.compare(password, user.password);
-
-                if (validPassword) {
-                    // Check user's status
-                    if (user.status === 'pending') {
-                        return res.status(603).json({ message: 'Please verify your email to activate your account.' });
-                    } else if (user.status === 'banned') {
-                        return res.status(604).json({ message: 'Your account has been banned. Contact support for further assistance.' });
-                    } else if (user.status === 'confirmed') {
-                        // If password is valid and user is confirmed, generate JWT token
-                        const token = jwt.sign(
-                            {
-                                userId: user.id,
-                                email: user.email,
-                                firstName: user.firstName,
-                                lastName: user.lastName,
-                                phoneNumber: user.phoneNumber,
-                                role: user.role,
-                            },
-                            process.env.JWT_SECRET,
-                            { expiresIn: '1h' }
-                        );
-
-                        console.log("User logged in with role:", user.role);
-                        return res.json({ token, role: user.role });
-                    } else {
-                        // Handle unexpected status
-                        return res.status(400).json({ message: 'Unexpected account status. Please contact support.' });
-                    }
-                } else {
-                    // Invalid password
-                    return res.status(401).send('Invalid credentials');
-                }
-            } else {
-                // User not found
-                return res.status(404).send('User not found');
-            }
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).send('Server error');
-    }
-});
+const router = express.Router();
+const db = require('../database/database');
+const { authenticateToken, isAdmin } = require('../middlewares/authenticate');
+const { formatDate, formatTime } = require('../../dateFormatter'); // Import date formatting utilities
+const { sendEmail } = require('../../utils/mailer'); // Import sendEmail function
 
 // Get confirmed events from the unified events table
-app.get('/api/getEvents', (req, res) => {
+router.get('/getEvents', (req, res) => {
     const sqlQuery = `
         SELECT 
             events.event_id, 
@@ -514,94 +67,8 @@ app.get('/api/getEvents', (req, res) => {
     });
 });
 
-
-
-// Get services
-app.get('/api/services', (req, res) => {
-    db.query('SELECT * FROM services', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
-    });
-});
-
-// CREATE a new service
-app.post('/api/services', authenticateToken, isAdmin, (req, res) => {
-    const { title, price, duration, backgroundColor } = req.body;
-    const sql = 'INSERT INTO services (title, price, duration, backgroundColor) VALUES (?, ?, ?, ?)';
-    db.query(sql, [title, price, duration, backgroundColor || '#8f6a48'], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.status(201).json({ id: result.insertId, title, price, duration, backgroundColor });
-    });
-});
-
-// UPDATE a service
-app.put('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    const { title, price, duration, backgroundColor } = req.body;
-    const sql = 'UPDATE services SET title = ?, price = ?, duration = ?, backgroundColor = ? WHERE id = ?';
-    db.query(sql, [title, price, duration, backgroundColor || '#8f6a48', id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Service updated successfully' });
-    });
-});
-
-// DELETE a service
-app.delete('/api/services/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    console.log("Service ID received for deletion:", req.params.id);
-    const sql = 'DELETE FROM services WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Service deleted successfully' });
-    });
-});
-
-// Get all business hours with formatted time
-app.get('/api/business-hours', (req, res) => {
-    const query = `
-        SELECT 
-            id, 
-            daysOfWeek, 
-            DATE_FORMAT(startTime, '%H:%i') AS startTime, 
-            DATE_FORMAT(endTime, '%H:%i') AS endTime 
-        FROM business_hours
-    `;
-
-    db.query(query, (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
-    });
-});
-
-// Update business hours for a specific day
-app.put('/api/business-hours/:id', authenticateToken, isAdmin, (req, res) => {
-    const { startTime, endTime } = req.body;
-    const { id } = req.params;
-
-    const sql = 'UPDATE business_hours SET startTime = ?, endTime = ? WHERE id = ?';
-    db.query(sql, [startTime, endTime, id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'Business hours updated successfully' });
-    });
-});
-
-
-// Protected route requiring authentication
-app.get('/api/user', authenticateToken, (req, res) => {
-    const userId = req.user.userId; // Access user ID from decoded token
-    const email = req.user.email;
-    const firstName = req.user.firstName;
-    const lastName = req.user.lastName;
-    const phoneNumber = req.user.phoneNumber;
-
-    // Optional: Fetch user details from database based on userId
-    // ...
-
-    res.json({ userId, email, firstName, lastName, phoneNumber });
-});
-
 // Create an event
-app.post('/api/requestEvent', authenticateToken, (req, res) => {
+router.post('/requestEvent', authenticateToken, (req, res) => {
     const { service_id, event_date, event_start, event_end, user_id } = req.body;
 
     // Check if required fields are provided
@@ -712,17 +179,18 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
                                         `
                                     };
 
-                                    transporter.sendMail(mailOptions, (error, info) => {
-                                        if (error) {
+                                    sendEmail(mailOptions)
+                                        .then(info => {
+                                            console.log('Email sent:', info.response);
+                                            return res.send('Event pending, email sent to admin');
+                                        })
+                                        .catch(error => {
                                             console.error('Error sending email:', error);
                                             return res.status(500).send('Error sending email');
-                                        }
-                                        console.log('Email sent:', info.response);
-                                    });
+                                        });
+                                } else {
+                                    return res.status(201).json({ id: result.insertId, service_id, event_date, event_start, event_end, user_id, status });
                                 }
-
-                                // Respond with the event data
-                                res.status(201).json({ id: result.insertId, service_id, event_date, event_start, event_end, user_id, status });
                             } else {
                                 return res.status(404).send('Service not found');
                             }
@@ -736,9 +204,8 @@ app.post('/api/requestEvent', authenticateToken, (req, res) => {
     });
 });
 
-
 // Get pending events from the unified events table
-app.get('/api/getPendingEvents2', (req, res) => {
+router.get('/getPendingEvents2', (req, res) => {
     const sqlQuery = `
         SELECT 
             events.event_id, 
@@ -799,7 +266,7 @@ app.get('/api/getPendingEvents2', (req, res) => {
     });
 });
 
-app.get('/api/confirmEvent/:id', (req, res) => {
+router.get('/confirmEvent/:id', (req, res) => {
     const eventId = req.params.id;
 
     // Find the pending event in the `events` table
@@ -867,21 +334,21 @@ app.get('/api/confirmEvent/:id', (req, res) => {
                 `
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
+            sendEmail(mailOptions)
+                .then(info => {
+                    console.log('Confirmation email sent:', info.response);
+                    res.send('Event confirmed, email sent to user');
+                })
+                .catch(error => {
                     console.error('Error sending confirmation email:', error);
-                    return res.status(500).send('Error sending confirmation email');
-                }
-                console.log('Confirmation email sent:', info.response);
-            });
-
-            res.send('Event confirmed, email sent to user');
+                    res.status(500).send('Error sending confirmation email');
+                });
         });
     });
 });
 
 // Deny (delete) a pending event
-app.get('/api/deletePendingEvent/:id', (req, res) => {
+router.get('/deletePendingEvent/:id', (req, res) => {
     const eventId = req.params.id;
 
     // Fetch the event details and user's email before deleting
@@ -935,28 +402,31 @@ app.get('/api/deletePendingEvent/:id', (req, res) => {
             `
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
+        // Send email and then delete the event
+        sendEmail(mailOptions)
+            .then(info => {
+                console.log('Denial email sent:', info.response);
+
+                // Proceed to delete the pending event from the database
+                const sqlDelete = 'DELETE FROM events WHERE event_id = ? AND status = "pending"';
+                db.query(sqlDelete, [eventId], (err) => {
+                    if (err) {
+                        console.error('Error deleting pending event:', err);
+                        return res.status(500).send('Error deleting pending event');
+                    }
+
+                    // Send response after the event has been deleted
+                    res.send('Event denied and deleted, email sent to user');
+                });
+            })
+            .catch(error => {
                 console.error('Error sending denial email:', error);
                 return res.status(500).send('Error sending denial email');
-            }
-            console.log('Denial email sent:', info.response);
-
-            // Delete the pending event from the events table
-            const sqlDelete = 'DELETE FROM events WHERE event_id = ? AND status = "pending"';
-            db.query(sqlDelete, [eventId], (err) => {
-                if (err) {
-                    console.error('Error deleting pending event:', err);
-                    return res.status(500).send('Error deleting pending event');
-                }
-
-                res.send('Event denied and deleted, email sent to user');
             });
-        });
     });
 });
 
-app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, async (req, res) => {
+router.post('/updateConfirmedEvents', authenticateToken, isAdmin, async (req, res) => {
     const modifiedEvents = req.body;
 
     try {
@@ -1029,15 +499,15 @@ app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, async (req, r
                             subject: 'Your Appointment has been Updated',
                             html: emailContent  // The constructed HTML email content
                         };
-
-                        transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.error('Error sending update email:', error);
-                            } else {
+                        sendEmail(mailOptions)
+                            .then(info => {
                                 console.log('Update email sent:', info.response);
-                            }
-                        });
-                        resolve();
+                                resolve(); // Resolve promise on success
+                            })
+                            .catch(error => {
+                                console.error('Error sending update email:', error);
+                                resolve(); // Still resolve the promise even if email fails
+                            });
                     });
                 });
             });
@@ -1056,7 +526,7 @@ app.post('/api/updateConfirmedEvents', authenticateToken, isAdmin, async (req, r
 });
 
 // Delete confirmed event and send feedback email
-app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
+router.delete('/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
     const confirmedEventId = req.params.id;
 
     // Fetch event details, including user information, before deletion
@@ -1119,51 +589,18 @@ app.delete('/api/deleteEvent/:id', authenticateToken, isAdmin, (req, res) => {
                 </div>`
             };
 
-            transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    console.error('Error sending cancellation email:', error);
-                } else {
+            // Send the email and handle any email errors
+            sendEmail(mailOptions)
+                .then(info => {
                     console.log('Cancellation email sent:', info.response);
-                }
-            });
-
-            res.status(200).send('Event deleted successfully and feedback email sent');
+                    return res.status(200).send('Event deleted successfully and feedback email sent');
+                })
+                .catch(error => {
+                    console.error('Error sending cancellation email:', error);
+                    return res.status(200).send('Event deleted successfully but email sending failed');
+                });
         });
     });
 });
 
-// GET all users
-app.get('/api/users', authenticateToken, isAdmin, (req, res) => {
-    db.query('SELECT * FROM users', (err, results) => {
-        if (err) return res.status(500).send(err);
-        res.json(results);
-    });
-});
-
-
-// UPDATE a user
-app.put('/api/users/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    const { firstName, lastName, role, email, phoneNumber, status } = req.body;
-    const sql = 'UPDATE users SET firstName = ?, lastName = ?, role = ?, email = ?, phoneNumber = ?, status = ? WHERE id = ?';
-    db.query(sql, [firstName, lastName, role, email, phoneNumber, status, id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'User updated successfully' });
-    });
-});
-
-
-// DELETE a user
-app.delete('/api/users/:id', authenticateToken, isAdmin, (req, res) => {
-    const { id } = req.params;
-    const sql = 'DELETE FROM users WHERE id = ?';
-    db.query(sql, [id], (err, result) => {
-        if (err) return res.status(500).send(err);
-        res.json({ message: 'User deleted successfully' });
-    });
-});
-
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+module.exports = router;

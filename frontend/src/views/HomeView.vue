@@ -1,8 +1,8 @@
 <script setup>
-import Hero from "@/components/Hero.vue";
-import Intro from "@/components/Intro.vue";
-import References from "@/components/References.vue";
-import PublicBusinessHours from "@/components/PublicBusinessHours.vue";
+import Hero from "@/components/home/Hero.vue";
+import Intro from "@/components/home/Intro.vue";
+import References from "@/components/home/References.vue";
+import PublicBusinessHours from "@/components/home/PublicBusinessHours.vue";
 </script>
 
 <template>

@@ -91,7 +91,9 @@ const fetchBusinessHours = async () => {
 };
 
 // Fetch business hours on mount
-onMounted(fetchBusinessHours);
+onMounted(()=>{
+  fetchBusinessHours();
+});
 
 // Map numbers to day names
 const dayOfWeekMap = {
@@ -128,16 +130,6 @@ const dayOfWeekMap = {
   min-width: 110px;
   transition: transform 0.3s ease-in-out; /* Smooth transition */
   cursor: default; /* Prevent the cursor from changing */
-}
-
-/* Zoom-in effect on hover */
-.business-card:hover {
-  transform: scale(1.05); /* Slight zoom-in */
-}
-
-/* Optional: Additional hover shadow for more emphasis */
-.business-card:hover {
-  box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.8);
 }
 
 .text-red {

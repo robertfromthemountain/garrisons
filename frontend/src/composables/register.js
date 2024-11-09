@@ -10,7 +10,7 @@ export function useRegisterForm() {
     const toast = useToast();
     const passwordVisible = ref(false);
     const repeatPasswordVisible = ref(false);
-
+    const isLoading = ref(false);
 
     const form = reactive({
         firstName: '',
@@ -92,6 +92,8 @@ export function useRegisterForm() {
             return;  // Stop the form submission
         }
 
+        isLoading.value=true;
+
         try {
             // Proceed with registration if all required fields are filled
             const response = await apiClient.post('http://localhost:5000/register', form);
@@ -113,8 +115,10 @@ export function useRegisterForm() {
                 // Something happened in setting up the request
                 toast.error('Error occurred during registration. Please try again.');
             }
+        }finally{
+            isLoading.value=false;
         }
     };
 
-    return { form, fields, t, register, passwordVisible, repeatPasswordVisible };
+    return { form, fields, t, register, passwordVisible, repeatPasswordVisible, isLoading };
 }

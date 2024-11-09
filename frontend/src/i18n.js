@@ -405,7 +405,7 @@ const messages = {
             },
             services: {
                 title: "Szolgáltatások",
-                subtitle: "You can decide what service do you want to book.",
+                subtitle: "Kérlek válaszd ki melyik szolgáltatást szeretnéd igényelni.",
             }
         },
         dashboard: {
@@ -462,146 +462,146 @@ const messages = {
                 title: "Szolgáltatások Kezelése",
                 subtitle: "Hozzáadhatsz, szerkeszthetsz, vagy törölhetsz szolgáltatásokat. Hagy üresen az árat, ha nem szeretnéd hogy a felhasználó kiválaszthassa a szolgáltatást!",
                 table: {
-                    title: "Title",
-                    price: "Price",
-                    duration: "Duration",
-                    color: "Color",
-                    search: "Search Services",
-                    searchPlaceholder: "Search by title, price, or duration",
+                    title: "Cím",
+                    price: "Ár",
+                    duration: "Időtartam",
+                    color: "Szín",
+                    search: "Keresés",
+                    searchPlaceholder: "Keress cím, ár, vagy időtartam alapján",
                     buttons: {
-                        edit: "Edit",
-                        delete: "Delete",
-                        add: "Add Service"
+                        edit: "Szerkesztés",
+                        delete: "Törlés",
+                        add: "Új szolgáltatás"
                     },
                 },
                 editModal: {
-                    title: "Edit Service",
+                    title: "Szolgáltatás szerkesztése",
                     textFields: {
                         labels: {
-                            title: "Title",
-                            price: "Price",
-                            duration: "Duration (in minutes)",
+                            title: "Cím",
+                            price: "Ár",
+                            duration: "Időtartam (percben)",
 
                         }
                     },
-                    colorLabel: "Color of the service:"
+                    colorLabel: "A szolgáltatás színe: (A naptárban így jelenik meg)"
                 },
                 addModal: {
-                    title: "Add New Service",
+                    title: "Új szolgáltatás hozzáadása",
                     textFields: {
                         labels: {
-                            title: "Title",
-                            price: "Price",
-                            duration: "Duration (in minutes)",
-                            color: "Select Background Color"
+                            title: "Cím",
+                            price: "Ár",
+                            duration: "Időtartam (Percben)",
+                            color: "A szolgáltatás színe: (A naptárban így jelenik meg)"
                         }
                     },
                     buttons: {
-                        cancel: "Cancel",
-                        add: "Add"
+                        cancel: "Mégsem",
+                        add: "Hozzáad"
                     }
                 },
                 deleteModal: {
-                    title: "Delete Service",
-                    message: "Are you sure you want to delete this service? This action cannot be undone."
+                    title: "Szolgáltatás Törlése",
+                    message: "Biztosan törlni szeretnéd a szolgáltatást? A törlés nem vonható vissza!"
                 },
                 buttons: {
-                    cancel: "Cancel",
-                    save: "Save"
+                    cancel: "Mégsem",
+                    save: "Mentés"
                 }
             },
             manageUsers: {
-                title: "Manage User Accounts",
-                subtitle: "Here you can manage the registered users.",
+                title: "Felhasználók kezelése",
+                subtitle: "Itt kezelheted a regisztrált felhasználókat.",
                 table: {
-                    name: "Name",
-                    role: "Role",
+                    name: "Név",
+                    role: "Jogosultság",
                     email: "Email",
-                    phone: "Phone number",
-                    status: "Status",
-                    search: "Search Users",
-                    searchPlaceholder: "Search by first name, last name, email, etc.",
+                    phone: "Telefonszám",
+                    status: "Státusz",
+                    search: "Felhasználó keresése",
+                    searchPlaceholder: "Keress vezetéknév, keresztnév, email, stb. alapján",
                     buttons: {
-                        edit: "Edit",
-                        delete: "Delete",
+                        edit: "Szerkesztés",
+                        delete: "Törlés",
                     },
                 },
                 modal: {
-                    title: "Edit user data",
+                    title: "Felhasználó adatainak szerkesztése",
                     textFields: {
                         labels: {
-                            firstName: "First Name",
-                            lastName: "Last Name",
-                            role: "Role",
+                            firstName: "Keresztnév",
+                            lastName: "Vezetéknév",
+                            role: "Jogosultság",
                             email: "Email",
-                            phoneNumber: "Phone Number",
-                            status: "Status"
+                            phoneNumber: "Telefonszám",
+                            status: "Státusz"
                         }
                     },
                     buttons: {
-                        cancel: "Cancel",
-                        save: "Save"
+                        cancel: "Mégsem",
+                        save: "Mentés"
                     }
                 },
                 deleteModal: {
-                    title: "Delete User",
-                    message: "Are you sure you want to delete this user? This action can not be undone!"
+                    title: "Felhasználó törlése",
+                    message: "Biztosan törölni szeretnéd a felhasználót? A törlés nem vonható vissza!"
                 },
             },
             toast: {
                 error: {
-                    tokenError: "You are not logged in. Please log in again!",
-                    userUpdate: "Failed to update user details, please try again!",
-                    userDelete: "Failed to delete user from the database!",
-                    serviceDelete: "Failed to delete service, please try again!",
-                    serviceUpdate: "Failed to update service, please try again!",
-                    serviceAdd: "Failed to create new servce, please try again!",
+                    tokenError: "Nem vagy bejelentkezve. Kérlek lépj be újra!",
+                    userUpdate: "Nem sikerült módosítani a felhasználó adatait, kérlek próbáld újra!",
+                    userDelete: "A felhasználó törlése sikertelen, kérlek próbáld újra!",
+                    serviceDelete: "A szolgáltatás törlése sikeretelen, kérlek próbáld újra!",
+                    serviceUpdate: "A szolgáltatás módosítása sikertelen, kérlek próbáld újra!",
+                    serviceAdd: "Az új szolgáltatás létrehozása sikertelen, kérlek próbáld újra!",
                 },
                 success: {
-                    userUpdate: "User details updated successfully!",
-                    userDelete: "User successfully deleted from database!",
-                    serviceDelete: "Service deleted successfully!",
-                    serviceUpdate: "Service updated successfully!",
-                    serviceAdd: "New service added successfully!",
+                    userUpdate: "Felhasználó adatai sikeresen módosítva!",
+                    userDelete: "Felhasználó sikeresen törölve!",
+                    serviceDelete: "Szolgáltatás sikeresen törölve!",
+                    serviceUpdate: "Szolgáltatás sikeresen módosítva!",
+                    serviceAdd: "Új szolgáltatás sikeresen hozzáadva!",
                 }
             },
             manageBusinessHours: {
-                title: "Business Hours",
-                subtitle: "Here you can edit your opening hours on the website globally.",
+                title: "Nyitvatartás",
+                subtitle: "Módosíthatod a nyitvatartásod ami az egész oldalon és a naptárban is változik.",
                 table: {
-                    days: "Days of Week",
-                    open: "Opening Time",
-                    close: "Closing Time",
-                    actions: "Actions",
+                    days: "Nap",
+                    open: "Nyitás",
+                    close: "Zárás",
+                    actions: "Műveletek",
                     buttons: {
-                        edit: "Edit",
+                        edit: "Szerkesztés",
                     },
                 },
                 modal: {
-                    title: "Edit Opening Hours",
-                    weekday: "Day of Week",
+                    title: "Nyitvatartás szerkesztése",
+                    weekday: "Nap",
                     buttons: {
-                        cancel: "Cancel",
-                        save: "Save"
+                        cancel: "Mégsem",
+                        save: "Mentés"
                     }
                 },
                 toast: {
-                    tokenError: "You are not logged in. Please log in again.",
-                    updateSuccess: "Business hours updated successfully!",
-                    updateError: "Failed to update business hours!"
+                    tokenError: "Nem vagy bejelentkezve, kérlek lépj be újra.",
+                    updateSuccess: "Nyitvatartás sikeresen módosítva!",
+                    updateError: "Nyitvatartás módosítása sikertelen!"
                 }
             },
         },
         logout: {
             toasts: {
-                success: "You have successfully logged out. See-ya!"
+                success: "Sikeres kijelentkezés. Várlak vissza!"
             }
         },
         registration: {
             toasts: {
-                success: "Registration successful!",
-                error: "Registration failed!",
-                verificationEmailSent: "A verification email has been sent to your email address. Please check your inbox."
+                success: "Sikeres regisztráció!",
+                error: "Sikertelen regisztráció!",
+                verificationEmailSent: "Visszaigazoló email sikeresen elküldve. Kérlek ellenőrizd az email címed."
             }
         },
         login: {

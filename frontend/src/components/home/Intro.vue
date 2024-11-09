@@ -34,7 +34,7 @@
               {{ t("intro.services") }}
             </h2>
             <ul class="services-content">
-              <div v-for="service in services" :key="service.id">
+              <div v-for="service in filteredServices" :key="service.id">
                 <li class="d-flex">
                   <v-col cols="4" class="text-start pa-0 ma-0" no-gutters>
                     <span class="mdi mdi-content-cut subtitle-garrisons"></span>
@@ -69,13 +69,9 @@ import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 // Define the services array
-const services = ref([]);
+const filteredServices = ref([]);
 const loading = ref(false);
 
-// Fetch services when the component is mounted
-onMounted(async () => {
-  await fetchServices();
-});
 
 // Fetch services method
 const fetchServices = async () => {
@@ -83,16 +79,23 @@ const fetchServices = async () => {
   try {
     // Fetch the services from the API without needing a token
     const response = await apiClient.get("http://localhost:5000/api/services");
-    const allServices = response.data;
-
+    const unfilteredServices = response.data;
+    
     // Filter out services that have no price (e.g., breaks)
-    services.value = allServices.filter((service) => service.price !== null);
+    filteredServices.value = unfilteredServices.filter(
+      (service) => service.price !== null
+    );
   } catch (error) {
     console.error("Error fetching services:", error);
   } finally {
     loading.value = false;
   }
 };
+
+// Fetch services when the component is mounted
+onMounted(() => {
+  fetchServices();
+});
 </script>
 
 <style scoped>

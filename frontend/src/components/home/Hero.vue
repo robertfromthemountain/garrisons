@@ -1,8 +1,12 @@
 <script setup>
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
-import portraitImage from "../assets/images/portrait_2_transparent.png";
+import portraitImage from "../../assets/images/portrait_2_transparent.png";
 import { useDisplay } from "vuetify";
+// import { useStore } from "vuex";
+
+// const store = useStore();
+// const isLoggedIn = computed(() => store.getters.isLoggedIn);
 
 const { xs, sm, md, lg, xl, xxl, smAndDown, mdAndUp } = useDisplay();
 const { t } = useI18n();
@@ -17,7 +21,7 @@ const { t } = useI18n();
       <!-- Title and Contact Info -->
       <v-col cols="12" md="5" align-self="center" class="mb-4">
         <div>
-          <p class="text-garrisons float-in-animation">
+          <p class="text-garrisons text-center text-md-left float-in-animation">
             {{ t("hero.subtitle") }}<span
               class="mdi mdi-emoticon-wink"
             ></span>
@@ -52,7 +56,7 @@ const { t } = useI18n();
       <!-- Button -->
       <v-col cols="6" md="2" align-self="end" class="">
         <RouterLink
-          :to="isLoggedIn ? '/booking' : '/guestBooking'"
+          :to="$store.getters.isLoggedIn ? '/booking' : '/guestBooking'"
           class="clear"
         >
           <v-btn

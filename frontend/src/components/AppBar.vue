@@ -212,6 +212,29 @@ function handleLogout() {
             >
           </v-list-item>
         </RouterLink>
+        <v-divider class="mb-3"></v-divider>
+        <div class="d-flex flex-column justify-center align-center">
+          <RouterLink v-if="!isLoggedIn" to="/login" class="clear"
+            ><v-btn
+              prepend-icon="mdi-login"
+              density="compact"
+              variant="tonal"
+              class="sing-in-btn text-h6 text-button"
+              rounded="xl"
+              >{{ t("button.login") }}</v-btn
+            ></RouterLink
+          >
+          <RouterLink v-if="!isLoggedIn" to="/register" class="clear"
+            ><v-btn
+              prepend-icon="mdi-account-plus"
+              density="compact"
+              variant="tonal"
+              class="sing-up-btn text-h6 text-button"
+              rounded="xl"
+              >{{ t("button.register") }}</v-btn
+            ></RouterLink
+          >
+        </div>
 
         <!-- Admin Links (shown only for admins) -->
         <template v-if="userRole === 'admin'">
@@ -239,10 +262,7 @@ function handleLogout() {
       <!-- Logout Button -->
       <v-list-item @click="handleLogout" v-if="isLoggedIn" class="text-center">
         <v-list-item-title
-          ><v-btn
-          block
-          density="compact"
-          variant="tonal"
+          ><v-btn block density="compact" variant="tonal"
             >{{ t("button.logout")
             }}<v-icon
               class="mdi mdi-logout ms-1 text-garrisons-2"

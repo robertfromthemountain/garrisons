@@ -25,7 +25,7 @@
             ></v-file-input>
 
             <v-btn
-              :disabled="loading || !images.length"
+              :disabled="loading || !(images?.length)"
               type="submit"
               density="compact"
               class="bg-green text-garrisons"
@@ -199,7 +199,7 @@ const uploadImages = async () => {
     toast.error("Image upload failed. Please try again.");
   } finally {
     loading.value = false;
-    images.value = null;
+    images.value = [];
   }
 };
 

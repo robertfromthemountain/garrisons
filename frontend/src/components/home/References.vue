@@ -141,7 +141,7 @@ const fetchReferences = async () => {
     console.error("Error fetching references:", error);
   } finally {
     setTimeout(() => {
-      loading.value = false; // Simulate a delay before displaying the images
+      loading.value = false;
     }, 300); // 1.5 sec delay for loading
   }
 };
