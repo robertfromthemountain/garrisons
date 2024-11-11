@@ -10,6 +10,7 @@ const {
   loginUser,
   t,
   visible,
+  showForgotPassword,
 } = useLogin();
 
 // Add a prop to control the visibility of the register link
@@ -34,6 +35,8 @@ const props = defineProps({
         density="compact"
         :label="t('inputFields.email')"
         :rules="emailRules"
+        :disabled="isLoading"
+        :loading="isLoading"
         v-model="email"
         type="email"
         hide-details="auto"
@@ -48,13 +51,21 @@ const props = defineProps({
         :label="t('inputFields.password')"
         :rules="passwordRules"
         v-model="password"
+        :disabled="isLoading"
         :loading="isLoading"
         hide-details="auto"
-        class="my-5"
+        :class="showForgotPassword ? 'mt-5' : 'mt-5 mb-6'"
         clearable
         @click:append-inner="visible = !visible"
         prepend-inner-icon="mdi-lock-outline"
       ></v-text-field>
+
+      <!-- Forgot Password Link -->
+      <div v-if="showForgotPassword" class="text-end">
+        <RouterLink to="/forgot-password" class="clear">
+          {{ t("login.forgotPassword.link") }}
+        </RouterLink>
+      </div>
 
       <v-btn
         :disabled="isLoading"
@@ -84,5 +95,11 @@ const props = defineProps({
 .login-btn-color {
   color: #d3d2cd;
   background-color: #8f6a48;
+}
+
+.forgot-password-link {
+  color: #8f6a48;
+  font-weight: bold;
+  text-decoration: underline;
 }
 </style>

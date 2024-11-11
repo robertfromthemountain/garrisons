@@ -14,6 +14,8 @@ import ManagePicturesView from '@/views/ManagePicturesView.vue'
 import ManageBusinessHoursView from '@/views/ManageBusinessHoursView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
 import NotFound from "@/components/NotFound.vue"
+import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
+import ResetPasswordView from '@/views/ResetPasswordView.vue'
 import apiClient from '@/utils/apiClient'; // Import the custom Axios instance
 
 const router = createRouter({
@@ -98,6 +100,16 @@ const router = createRouter({
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgotPassword',
+      component: ForgotPasswordView
+    },
+    {
+      path: '/reset-password',
+      name: 'resetPassword',
+      component: ResetPasswordView
     },
     {
       path: '/:pathMatch(.*)*', // This will catch all invalid routes

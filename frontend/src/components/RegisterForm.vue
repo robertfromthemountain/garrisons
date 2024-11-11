@@ -1,8 +1,15 @@
 <script setup>
 import { useRegisterForm } from "@/composables/register.js";
 
-const { form, fields, t, register, passwordVisible, repeatPasswordVisible, isLoading } =
-  useRegisterForm();
+const {
+  form,
+  fields,
+  t,
+  register,
+  passwordVisible,
+  repeatPasswordVisible,
+  isLoading,
+} = useRegisterForm();
 
 // Add a prop to control the visibility of the register link
 const props = defineProps({
@@ -31,6 +38,7 @@ const props = defineProps({
         :placeholder="field.placeholder"
         :prepend-inner-icon="field.innerIcon"
         :loading="isLoading"
+        :disabled="isLoading"
         clearable
         :type="
           field.model === 'password'

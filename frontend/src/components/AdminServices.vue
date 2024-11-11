@@ -39,6 +39,8 @@
           <th>
             <v-text-field
               v-model="searchQuery"
+              :disabled="loading"
+              :loading="loading"
               :label="t('dashboard.manageServices.table.search')"
               density="compact"
               :placeholder="
@@ -195,6 +197,8 @@
         <v-card-text>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.editModal.textFields.labels.title')
             "
@@ -205,6 +209,8 @@
           ></v-text-field>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.editModal.textFields.labels.price')
             "
@@ -215,6 +221,8 @@
           ></v-text-field>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.editModal.textFields.labels.duration')
             "
@@ -270,6 +278,8 @@
         <v-card-text>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.addModal.textFields.labels.title')
             "
@@ -280,6 +290,8 @@
           ></v-text-field>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.addModal.textFields.labels.price')
             "
@@ -291,6 +303,8 @@
           ></v-text-field>
           <v-text-field
             density="compact"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.addModal.textFields.labels.duration')
             "
@@ -303,6 +317,8 @@
           <!-- New Color Picker -->
           <v-color-picker
             v-model="newService.backgroundColor"
+            :disabled="loading"
+            :loading="loading"
             :label="
               t('dashboard.manageServices.addModal.textFields.labels.color')
             "

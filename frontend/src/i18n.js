@@ -1,4 +1,5 @@
 import { createI18n } from "vue-i18n";
+import ResetPassword from "./components/ResetPassword.vue";
 
 const messages = {
     en: {
@@ -36,7 +37,7 @@ const messages = {
         },
         hero: {
             title: "Garrison's haircraft and barbershop",
-            subtitle:"Let your hair do the talking!",
+            subtitle: "Let your hair do the talking!",
             button: "Book Now!"
         },
         intro: {
@@ -48,8 +49,8 @@ const messages = {
             title: "References"
         },
         guestBooking: {
-            title:"Book an Appointment!",
-            subtitle:"Click into the calendar to start the booking process!",
+            title: "Book an Appointment!",
+            subtitle: "Click into the calendar to start the booking process!",
             modal: {
                 createAccount: "Click here to create an account!",
                 haveAccount: "I already have an account!",
@@ -63,15 +64,15 @@ const messages = {
             title: "Dashboard",
             manageEvents: {
                 title: "Manage Reservations",
-                dialog:{
-                    confirmChanges:"Modified Appointments",
-                    modifiedEvents:"Please confirm or deny your modifications!",
-                    originalEventDetails:"Original: ",
-                    modifiedEventDetails:"Modified: ",
-                    button:{
-                        close:"Close",
-                        discard:"Discard",
-                        save:"Save"
+                dialog: {
+                    confirmChanges: "Modified Appointments",
+                    modifiedEvents: "Please confirm or deny your modifications!",
+                    originalEventDetails: "Original: ",
+                    modifiedEventDetails: "Modified: ",
+                    button: {
+                        close: "Close",
+                        discard: "Discard",
+                        save: "Save"
                     }
                 }
             },
@@ -264,8 +265,8 @@ const messages = {
                 serverError: "Server error. Please try again later.",
                 genericError: "Login failed! Please try again.",
                 networkError: "Network error. Please check your connection.",
-                verifyEmail:"Please verify your email to activate your account.",
-                bannedUser:"You are banned from the site. Please contact the owner."
+                verifyEmail: "Please verify your email to activate your account.",
+                bannedUser: "You are banned from the site. Please contact the owner."
             }
         },
         link: {
@@ -397,8 +398,8 @@ const messages = {
             title: "Munkáim"
         },
         guestBooking: {
-            title:"Foglalj Időpontot",
-            subtitle:"Kattints a naptárba egy szabad időpontra, hogy elkezdődjön az időpontfoglalás!",
+            title: "Foglalj Időpontot",
+            subtitle: "Kattints a naptárba egy szabad időpontra, hogy elkezdődjön az időpontfoglalás!",
             modal: {
                 createAccount: "Kattints ide a regisztrációhoz!",
                 haveAccount: "Már van fiókom!",
@@ -412,15 +413,15 @@ const messages = {
             title: "Dashboard",
             manageEvents: {
                 title: "Időpontok kezelése",
-                dialog:{
-                    confirmChanges:"Módosított Időpontok",
-                    modifiedEvents:"Kérlek erősítsd meg a módosításokat, hogy érvénybe lépjenek!",
-                    originalEventDetails:"Eredeti: ",
-                    modifiedEventDetails:"Módosított: ",
-                    button:{
-                        close:"Bezárás",
-                        discard:"Elvetés",
-                        save:"Mentés"
+                dialog: {
+                    confirmChanges: "Módosított Időpontok",
+                    modifiedEvents: "Kérlek erősítsd meg a módosításokat, hogy érvénybe lépjenek!",
+                    originalEventDetails: "Eredeti: ",
+                    modifiedEventDetails: "Módosított: ",
+                    button: {
+                        close: "Bezárás",
+                        discard: "Elvetés",
+                        save: "Mentés"
                     }
                 }
             },
@@ -605,6 +606,16 @@ const messages = {
             }
         },
         login: {
+            forgotPassword: {
+                link: "Elfelejtette a jelszavát?",
+                title1:"Adja meg email címét!",
+                title2:"Adja meg új jelszavát!",
+                submitButton: "Küldés",
+                ResetPassword: {
+                    success: "Jelszó változtatás sikeres!",
+                    error:"Jelszó változtatás sikertelen, kérem próbálja újra!",
+                }
+            },
             toasts: {
                 missingFields: "Kérlek töltsd ki az email és a jelszó mezőket is!",
                 success: "Siekres bejelentkezés! Üdv újra itt!",
@@ -613,8 +624,10 @@ const messages = {
                 serverError: "Szerver hiba. Kérlek próbáld újra később.",
                 genericError: "Sikertelen bejelentkezés! Kérlek próbáld újra.",
                 networkError: "Kapcsolati hiba, kérlek ellenőrizd az internetkapcsolatod.",
-                verifyEmail:"Kérlek erősítsd meg az email címed, hogy aktiváld a fiókod.",
-                bannedUser:"Ki vagy tiltva az oldalról. Kérlek vedd fel a kapcsolatot a tulajdonossal."
+                verifyEmail: "Kérlek erősítsd meg az email címed, hogy aktiváld a fiókod.",
+                bannedUser: "Ki vagy tiltva az oldalról. Kérlek vedd fel a kapcsolatot a tulajdonossal.",
+                passwordResetEmailSent: "Jelszó változtatási email sikeresen elküldve.",
+                passwordResetError: "Jelszó változtatás sikertelen, kérem próbálkozzon újra!."
             }
         },
         link: {
@@ -642,7 +655,9 @@ const messages = {
             phoneNumber: "Telefonszám",
             password: "Jelszó",
             repeatPassword: "Jelszó Újra",
-            submit: "Küldés"
+            submit: "Küldés",
+            newPassword:"Új Jelszó",
+            newPasswordRepeat:"Új Jelszó Ismétlése",
         },
         validation: {
             firstNameReq: "Keresztnév megadása kötelező!",

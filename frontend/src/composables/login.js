@@ -14,6 +14,8 @@ export function useLogin() {
     const store = useStore();
     const visible = ref(false);
     const toast = useToast();  // Initialize Toast
+    const showForgotPassword = ref(false);
+    const forgotPasswordEmail = ref('');
 
     // Define validation rules
     const emailRules = [
@@ -33,6 +35,8 @@ export function useLogin() {
         }
 
         isLoading.value = true;
+        showForgotPassword.value = false; // Reset before making the request
+
         try {
             const response = await apiClient.post('http://localhost:5000/login', {
                 email: email.value,
@@ -70,6 +74,7 @@ export function useLogin() {
                 switch (error.response.status) {
                     case 401:
                         toast.error(t("login.toasts.invalidCredentials"));
+                        showForgotPassword.value = true;
                         break;
                     case 603:
                         toast.error(t("login.toasts.verifyEmail"));
@@ -94,5 +99,26 @@ export function useLogin() {
         }
     };
 
-    return { email, password, emailRules, passwordRules, isLoading, loginUser, t, visible };
+    // Forgot Password Function
+    const forgotPassword = async () => {
+        if (!forgotPasswordEmail.value) {
+            toast.error(t("validation.emailRequired"));
+            return;
+        }
+
+        isLoading.value = true;
+
+        try {
+            const response = await apiClient.post('http://localhost:5000/forgot-password', {
+                email: forgotPasswordEmail.value,
+            });
+            toast.success(t("login.toasts.passwordResetEmailSent"));
+        } catch (error) {
+            toast.error(t("login.toasts.passwordResetError"));
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
+    return { email, password, emailRules, passwordRules, isLoading, loginUser, t, visible, showForgotPassword, forgotPasswordEmail, forgotPassword };
 }

@@ -452,6 +452,105 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// Forgot Password Endpoint
+app.post('/forgot-password', (req, res) => {
+    const { email } = req.body;
+
+    const sqlSelect = 'SELECT * FROM users WHERE email = ?';
+    db.query(sqlSelect, [email], (err, results) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Database error');
+        }
+
+        if (results.length === 0) {
+            return res.status(404).send('User not found');
+        }
+
+        const user = results[0];
+
+        // Generate a secure token
+        const resetToken = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '10m' }
+        );
+
+        // Create a reset link
+        const resetLink = `http://localhost:5173/reset-password?token=${resetToken}`;
+
+        const mailOptions = {
+            from: 'garrisons@noreply.hu',
+            to: user.email,
+            subject: 'Password Reset Request',
+            html: `
+                <h2>Password Reset Request</h2>
+                <p>Click the link below to reset your password:</p>
+                <a href="${resetLink}">Reset Password</a>
+                <p>This link is valid for 10 minutes.</p>
+            `,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error(error);
+                return res.status(500).send('Failed to send email');
+            }
+
+            res.status(200).send('Password reset email sent');
+        });
+    });
+});
+
+// Reset Password Endpoint
+app.post('/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+        return res.status(400).send('Missing token or new password');
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userEmail = decoded.email;
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const sqlUpdate = 'UPDATE users SET password = ? WHERE id = ?';
+        db.query(sqlUpdate, [hashedPassword, decoded.userId], async (err) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Database error');
+            }
+            // Send a success email to the user
+            try {
+                const mailOptions = {
+                    from: 'garrisons@noreply.hu',
+                    to: userEmail,
+                    subject: 'Password Changed Successfully',
+                    html: `
+            <h2>Your Password Has Been Changed</h2>
+            <p>Hello,</p>
+            <p>Your password has been successfully updated. If you did not request this change, please contact our support team immediately.</p>
+            <p>If you made this change, no further action is required.</p>
+            <p>Thank you,<br>Garrisons</p>
+        `,
+                };
+
+                await transporter.sendMail(mailOptions);
+
+                res.status(200).send('Password has been reset successfully, and a confirmation email has been sent.');
+            } catch (emailError) {
+                console.error('Failed to send success email:', emailError);
+                return res.status(500).send('Password reset successful, but failed to send confirmation email.');
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(400).send('Invalid or expired token');
+    }
+});
+
 // Get confirmed events from the unified events table
 app.get('/api/getEvents', (req, res) => {
     const sqlQuery = `
