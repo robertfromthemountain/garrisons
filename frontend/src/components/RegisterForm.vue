@@ -54,7 +54,7 @@ const props = defineProps({
         v-model="form[field.model]"
         hide-details="auto"
         :label="field.label"
-        class="my-5"
+        class="my-5 input-field-font"
         :append-inner-icon="
           field.model === 'password'
             ? passwordVisible

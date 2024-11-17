@@ -46,6 +46,7 @@
               :placeholder="t('dashboard.manageUsers.table.searchPlaceholder')"
               append-inner-icon="mdi-magnify"
               :disabled="isAnyRowEditing"
+              class="input-field-font"
             ></v-text-field>
           </th>
         </tr>
@@ -164,6 +165,7 @@
             prepend-inner-icon="mdi-account-outline"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -172,6 +174,7 @@
             v-model="editUserData.lastName"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-select
             :label="t('dashboard.manageUsers.modal.textFields.labels.role')"
@@ -180,6 +183,7 @@
             :items="roles"
             density="compact"
             required
+            class="input-field-font"
           ></v-select>
           <v-text-field
             density="compact"
@@ -189,6 +193,7 @@
             type="email"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -200,6 +205,7 @@
             type="tel"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-select
             :label="t('dashboard.manageUsers.modal.textFields.labels.status')"

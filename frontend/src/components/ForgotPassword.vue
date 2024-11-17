@@ -17,7 +17,7 @@
         clearable
         prepend-inner-icon="mdi-email-outline"
         hide-details="auto"
-        class="my-5"
+        class="my-5 input-field-font"
       ></v-text-field>
 
       <v-btn

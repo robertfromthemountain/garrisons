@@ -47,6 +47,7 @@
                 t('dashboard.manageServices.table.searchPlaceholder')
               "
               append-inner-icon="mdi-magnify"
+              class="input-field-font"
             ></v-text-field>
           </th>
         </tr>
@@ -206,6 +207,7 @@
             prepend-inner-icon="mdi-label-outline"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -218,6 +220,7 @@
             prepend-inner-icon="mdi-currency-usd"
             type="number"
             clearable
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -231,6 +234,7 @@
             type="number"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <!-- New Color Picker -->
           <p>{{ t("dashboard.manageServices.editModal.colorLabel") }}</p>
@@ -287,6 +291,7 @@
             prepend-inner-icon="mdi-label-outline"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -300,6 +305,7 @@
             type="number"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <v-text-field
             density="compact"
@@ -313,6 +319,7 @@
             type="number"
             clearable
             required
+            class="input-field-font"
           ></v-text-field>
           <!-- New Color Picker -->
           <v-color-picker

@@ -20,7 +20,7 @@
         :loading="isLoading"
         hide-details="auto"
         prepend-inner-icon="mdi-lock-outline"
-        class="my-5"
+        class="my-5 input-field-font"
       ></v-text-field>
 
       <v-text-field
@@ -36,7 +36,7 @@
         :rules="repeatPasswordRules"
         clearable
         prepend-inner-icon="mdi-lock-outline"
-        class="my-5"
+        class="my-5 input-field-font"
       ></v-text-field>
 
       <v-btn

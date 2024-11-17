@@ -123,6 +123,7 @@
             v-model="dayOfWeekMap[editBusinessHourData.daysOfWeek]"
             prepend-inner-icon="mdi-calendar-outline"
             readonly
+            class="input-field-font"
           ></v-text-field>
 
           <!-- Start Time Picker -->
@@ -132,6 +133,7 @@
             readonly
             prepend-inner-icon="mdi-clock-outline"
             @click="startTimeDialog = true"
+            class="input-field-font"
           ></v-text-field>
 
           <v-dialog v-model="startTimeDialog" max-width="350">
@@ -161,6 +163,7 @@
             readonly
             prepend-inner-icon="mdi-clock-outline"
             @click="endTimeDialog = true"
+            class="input-field-font"
           ></v-text-field>
 
           <v-dialog v-model="endTimeDialog" max-width="350">

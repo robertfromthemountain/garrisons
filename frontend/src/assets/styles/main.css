@@ -24,6 +24,12 @@ body {
     }
 }
 
+.input-field-font .v-input__control {
+    font-family: "Roboto", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
 .bg-garrisons {
     background-color: #26211e;
 }
@@ -40,11 +46,11 @@ body {
     background-color: #6a4e35;
 }
 
-.text-garrisons-2{
+.text-garrisons-2 {
     color: #8f6a48;
 }
 
-.text-garrisons-3{
+.text-garrisons-3 {
     color: #6a4e35;
 }
 
@@ -105,7 +111,7 @@ body {
     margin-bottom: 1em;
 }
 
-.fc .fc-icon{
+.fc .fc-icon {
     display: flex;
     align-items: center;
     justify-content: center;

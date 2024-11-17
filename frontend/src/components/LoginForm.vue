@@ -40,7 +40,7 @@ const props = defineProps({
         v-model="email"
         type="email"
         hide-details="auto"
-        class="my-5"
+        class="my-5 input-field-font"
         prepend-inner-icon="mdi-email-outline"
       ></v-text-field>
 
@@ -54,7 +54,7 @@ const props = defineProps({
         :disabled="isLoading"
         :loading="isLoading"
         hide-details="auto"
-        :class="showForgotPassword ? 'mt-5' : 'mt-5 mb-6'"
+        :class="showForgotPassword ? 'mt-5 input-field-font' : 'mt-5 mb-6 input-field-font'"
         clearable
         @click:append-inner="visible = !visible"
         prepend-inner-icon="mdi-lock-outline"
@@ -95,6 +95,10 @@ const props = defineProps({
 .login-btn-color {
   color: #d3d2cd;
   background-color: #8f6a48;
+}
+
+v-text-field{
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .forgot-password-link {
