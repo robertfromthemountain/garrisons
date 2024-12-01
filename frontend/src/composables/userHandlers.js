@@ -4,7 +4,7 @@ export const fetchUserId = async (store, user) => {
   if (!store.getters.isLoggedIn) return;
 
   try {
-    const response = await apiClient.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
       headers: {
         Authorization: `Bearer ${store.getters.accessToken}`,
       },

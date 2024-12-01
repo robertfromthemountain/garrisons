@@ -158,8 +158,8 @@ async function fetchAllEvents() {
   loading.value = true;
   try {
     const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      apiClient.get("http://localhost:5000/api/getEvents"),
-      apiClient.get("http://localhost:5000/api/getPendingEvents2"),
+      apiClient.get("http://localhost:5000/api/events/getEvents"),
+      apiClient.get("http://localhost:5000/api/events/getPendingEvents"),
     ]);
     calendarOptions.events = [
       ...regularEventsResponse.data,

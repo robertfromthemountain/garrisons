@@ -110,19 +110,19 @@ const calendarOptions = reactive({
   nowIndicator: true,
   customButtons: {
     editCalendar: {
-      text: "Edit Calendar",
+      text: "Szerkesztés",
       click() {
         enableModification(); // Enable editing mode
       },
     },
     saveChanges: {
-      text: "Save",
+      text: "Mentés",
       click() {
         showModificationModal(); // Save modifications
       },
     },
     cancelChanges: {
-      text: "Cancel",
+      text: "Mégsem",
       click() {
         resetModifications(); // Discard modifications
       },
@@ -218,7 +218,7 @@ async function confirmEvent() {
 
     // Send GET request to confirm the event
     const response = await apiClient.get(
-      `http://localhost:5000/api/confirmEvent/${selectedEvent.value.id}`,
+      `http://localhost:5000/api/events/confirmEvent/${selectedEvent.value.id}`,
       {
         headers: { Authorization: `Bearer ${token}` }, // Ensure token is passed correctly
       }
@@ -278,7 +278,7 @@ async function denyEvent() {
   loading.value = true;
   try {
     const response = await apiClient.get(
-      `http://localhost:5000/api/deletePendingEvent/${selectedEvent.value.id}`,
+      `http://localhost:5000/api/events/deletePendingEvent/${selectedEvent.value.id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -409,7 +409,7 @@ async function fetchUserId() {
 
   loading.value = true;
   try {
-    const response = await apiClient.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -460,12 +460,12 @@ async function fetchAllEvents() {
     if (!token) throw new Error("No token available");
 
     const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      apiClient.get("http://localhost:5000/api/getEvents", {
+      apiClient.get("http://localhost:5000/api/events/getEvents", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in headers
         },
       }),
-      apiClient.get("http://localhost:5000/api/getPendingEvents2", {
+      apiClient.get("http://localhost:5000/api/events/getPendingEvents", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in headers
         },
@@ -509,7 +509,7 @@ async function deleteEvent() {
     if (!token) throw new Error("No token available");
 
     const response = await apiClient.delete(
-      `http://localhost:5000/api/deleteEvent/${selectedEvent.value.id}`,
+      `http://localhost:5000/api/events/deleteEvent/${selectedEvent.value.id}`,
       {
         headers: { Authorization: `Bearer ${token}` }, // Include token in headers
       }
@@ -560,7 +560,7 @@ async function confirmModifications() {
 
   try {
     await apiClient.post(
-      "http://localhost:5000/api/updateConfirmedEvents",
+      "http://localhost:5000/api/events/updateConfirmedEvents",
       modifiedEvents.value,
       {
         headers: { Authorization: `Bearer ${token}` },
@@ -693,7 +693,7 @@ async function finalizeBooking() {
   loading.value = true;
   try {
     // Make the API request to book the event
-    await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
+    await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

@@ -247,7 +247,7 @@ async function fetchUserId() {
 
   loading.value = true;
   try {
-    const response = await apiClient.get("http://localhost:5000/api/user", {
+    const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -269,12 +269,12 @@ async function fetchAllEvents() {
   loading.value = true;
   try {
     const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      apiClient.get("http://localhost:5000/api/getEvents", {
+      apiClient.get("http://localhost:5000/api/events/getEvents", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in headers
         },
       }),
-      apiClient.get("http://localhost:5000/api/getPendingEvents2", {
+      apiClient.get("http://localhost:5000/api/events/getPendingEvents", {
         headers: {
           Authorization: `Bearer ${token}`, // Include the token in headers
         },
@@ -427,7 +427,7 @@ async function finalizeBooking() {
 
   loading.value = true;
   try {
-    await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
+    await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
       headers: { Authorization: `Bearer ${token}` },
     });
 

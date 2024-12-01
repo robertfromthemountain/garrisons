@@ -92,11 +92,11 @@ export function useRegisterForm() {
             return;  // Stop the form submission
         }
 
-        isLoading.value=true;
+        isLoading.value = true;
 
         try {
             // Proceed with registration if all required fields are filled
-            const response = await apiClient.post('http://localhost:5000/register', form);
+            const response = await apiClient.post('http://localhost:5000/api/auth/register', form);
 
             // Handle success response
             if (response.status === 201) {
@@ -106,8 +106,30 @@ export function useRegisterForm() {
         } catch (error) {
             // Catching backend errors and displaying the message using toast
             if (error.response) {
-                // The request was made, and the server responded with a status code outside the 2xx range
-                toast.error('Registration failed: ' + error.response.data.message);  // Show the backend message
+                const { status, data } = error.response;
+                switch (status) {
+                    case 400:
+                        // Specific handling for validation errors
+                        if (data.errors) {
+                            data.errors.forEach(err => {
+                                toast.error(`${err.message}`);
+                            });
+                        } else {
+                            toast.error(data.message || 'Bad Request. Please check your input.');
+                        }
+                        break;
+
+                    case 404:
+                        toast.error('Not Found. The requested resource could not be found.');
+                        break;
+
+                    case 500:
+                        toast.error(data.message || 'Server error. Please try again later.');
+                        break;
+
+                    default:
+                        toast.error('An unexpected error occurred. Please try again.');
+                }
             } else if (error.request) {
                 // The request was made, but no response was received
                 toast.error('No response from server. Please try again later.');
@@ -115,8 +137,8 @@ export function useRegisterForm() {
                 // Something happened in setting up the request
                 toast.error('Error occurred during registration. Please try again.');
             }
-        }finally{
-            isLoading.value=false;
+        } finally {
+            isLoading.value = false;
         }
     };
 

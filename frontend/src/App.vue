@@ -14,7 +14,7 @@ async function validateUserRole() {
 
   if (token) {
     try {
-      const response = await axios.get("http://localhost:5000/verify-token", {
+      const response = await axios.get("http://localhost:5000/api/auth/verify-token", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const verifiedRole = response.data.role;

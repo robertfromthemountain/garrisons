@@ -101,7 +101,7 @@ export default {
             }
 
             try {
-                const response = await apiClient.get("http://localhost:5000/api/user", {
+                const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
                     headers: {
                         Authorization: `Bearer ${this.$store.getters.accessToken}`,
                     },
@@ -118,7 +118,7 @@ export default {
 
         async fetchEvents() {
             try {
-                const response = await apiClient.get("http://localhost:5000/api/getEvents");
+                const response = await apiClient.get("http://localhost:5000/api/events/getEvents");
                 this.calendarOptions.events = response.data;
                 console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
             } catch (error) {
@@ -190,7 +190,7 @@ export default {
             };
 
             try {
-                await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
+                await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
                     headers: {
                         Authorization: `Bearer ${this.$store.getters.accessToken}`,
                     },

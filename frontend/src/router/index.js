@@ -133,7 +133,7 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.role) {
     try {
       // Validate token with backend to prevent sessionStorage tampering
-      const response = await apiClient.get('http://localhost:5000/verify-token', {
+      const response = await apiClient.get('http://localhost:5000/api/auth/verify-token', {
         headers: { Authorization: `Bearer ${token}` },
       });
 

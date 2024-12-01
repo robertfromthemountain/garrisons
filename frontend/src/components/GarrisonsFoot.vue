@@ -82,17 +82,24 @@ const dayOfWeekMap = {
         </v-col>
 
         <v-col cols="12" md="4" class="text-center text-md-right"
-          ><h2 class="subtitle-garrisons text-decoration-underline">{{ t("footer.socials.title") }}</h2>
+          ><h2 class="subtitle-garrisons text-decoration-underline">
+            {{ t("footer.socials.title") }}
+          </h2>
           <ul class="bg-dark-garrisons line-height-footer">
-            <li class="text-garrisons line-height-item">
-              Facebook<span class="mdi mdi-facebook ps-1"></span>
-            </li>
-            <li class="text-garrisons line-height-item">
-              Instagram <span class="mdi mdi-instagram"></span>
-            </li>
-            <li class="text-garrisons line-height-item">
-              Twitter <span class="mdi mdi-twitter"></span>
-            </li></ul
+            <a
+              href="https://www.facebook.com/JakeeY14"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><li class="text-garrisons line-height-item">
+                Facebook<span class="mdi mdi-facebook ps-1"></span></li
+            ></a>
+            <a
+              href="https://www.instagram.com/garrison_barbershop_/"
+              target="_blank"
+              rel="noopener noreferrer"
+              ><li class="text-garrisons line-height-item">
+                Instagram <span class="mdi mdi-instagram"></span></li
+            ></a></ul
         ></v-col>
       </v-row>
       <v-divider class="mt-5"></v-divider>

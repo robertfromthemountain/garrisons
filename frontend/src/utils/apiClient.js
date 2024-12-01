@@ -21,7 +21,7 @@ apiClient.interceptors.response.use(
 
       try {
         // Attempt to refresh the access token
-        const response = await axios.post('http://localhost:5000/api/refresh-token');
+        const response = await axios.post('http://localhost:5000/api/auth/refresh-token');
 
         // Store the new access token in session storage
         sessionStorage.setItem('accessToken', response.data.accessToken);

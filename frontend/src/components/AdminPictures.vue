@@ -187,7 +187,7 @@ const uploadImages = async () => {
 
   loading.value = true;
   try {
-    const response = await apiClient.post("/api/upload-images", formData, {
+    const response = await apiClient.post("/api/images/upload-images", formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",

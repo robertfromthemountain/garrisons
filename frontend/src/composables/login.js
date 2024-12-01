@@ -38,7 +38,7 @@ export function useLogin() {
         showForgotPassword.value = false; // Reset before making the request
 
         try {
-            const response = await apiClient.post('http://localhost:5000/login', {
+            const response = await apiClient.post('http://localhost:5000/api/auth/login', {
                 email: email.value,
                 password: password.value,
             });
@@ -71,10 +71,10 @@ export function useLogin() {
             console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
 
             if (error.response) {
+                showForgotPassword.value = true;
                 switch (error.response.status) {
                     case 401:
                         toast.error(t("login.toasts.invalidCredentials"));
-                        showForgotPassword.value = true;
                         break;
                     case 603:
                         toast.error(t("login.toasts.verifyEmail"));
@@ -109,12 +109,36 @@ export function useLogin() {
         isLoading.value = true;
 
         try {
-            const response = await apiClient.post('http://localhost:5000/forgot-password', {
+            const response = await apiClient.post('http://localhost:5000/api/auth/forgot-password', {
                 email: forgotPasswordEmail.value,
             });
             toast.success(t("login.toasts.passwordResetEmailSent"));
         } catch (error) {
-            toast.error(t("login.toasts.passwordResetError"));
+            if (error.response) {
+                // Server responded with a status code other than 2xx
+                const status = error.response.status;
+                const errorMessage = error.response.data;
+    
+                switch (status) {
+                    case 404:
+                        toast.error(t("login.toasts.userNotFound")); // User not found
+                        break;
+                    case 603:
+                        toast.error(errorMessage); // Display the backend error message directly
+                        break;
+                    case 500:
+                        toast.error(t("login.toasts.serverError")); // Database or server error
+                        break;
+                    default:
+                        toast.error(t("login.toasts.unknownError")); // Generic unknown error
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                toast.error(t("login.toasts.networkError")); // Network error or server unreachable
+            } else {
+                // Something happened while setting up the request
+                toast.error(t("login.toasts.passwordResetError"));
+            }
         } finally {
             isLoading.value = false;
         }

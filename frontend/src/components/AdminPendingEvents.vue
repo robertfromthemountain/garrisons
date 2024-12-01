@@ -232,7 +232,7 @@ const fetchPendingEvents = async () => {
   loading.value = true;
   try {
     const response = await apiClient.get(
-      "http://localhost:5000/api/getPendingEvents2",
+      "http://localhost:5000/api/events/getPendingEvents",
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -255,7 +255,7 @@ const confirmPendingEvent = async (id) => {
   loading.value = true;
   try {
     const response = await apiClient.get(
-      `http://localhost:5000/api/confirmEvent/${id}`,
+      `http://localhost:5000/api/events/confirmEvent/${id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -315,7 +315,7 @@ const denyPendingEvent = async () => {
   loading.value = true;
   try {
     const response = await apiClient.get(
-      `http://localhost:5000/api/deletePendingEvent/${id}`,
+      `http://localhost:5000/api/events/deletePendingEvent/${id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }

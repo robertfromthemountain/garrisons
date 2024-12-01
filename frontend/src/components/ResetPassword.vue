@@ -104,7 +104,7 @@ const submitNewPassword = async () => {
 
   try {
     // Send new password and token to the backend
-    await apiClient.post("http://localhost:5000/reset-password", {
+    await apiClient.post("http://localhost:5000/api/auth/reset-password", {
       token,
       newPassword: newPassword.value,
     });

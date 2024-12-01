@@ -22,9 +22,7 @@ const { t } = useI18n();
       <v-col cols="12" md="5" align-self="center" class="mb-4">
         <div>
           <p class="text-garrisons text-center text-md-left float-in-animation">
-            {{ t("hero.subtitle") }}<span
-              class="mdi mdi-emoticon-wink"
-            ></span>
+            {{ t("hero.subtitle") }}<span class="mdi mdi-emoticon-wink"></span>
           </p>
           <h1
             class="text-uppercase hero-title text-center text-md-start font-weight-bold hero-title-color float-left-animation-1"
@@ -38,11 +36,20 @@ const { t } = useI18n();
           <p
             class="hero-subtitle-size hero-subtitle-color text-center text-md-start float-left-animation-2"
           >
+            <v-icon
+              class="text-garrisons-3 pe-2"
+              icon="mdi-map-marker-outline"
+            ></v-icon
+            >{{ t("global.location") }}
+          </p>
+          <p
+            class="hero-subtitle-size hero-subtitle-color text-center text-md-start float-left-animation-3"
+          >
             <v-icon class="text-garrisons-3 pe-2" icon="mdi-phone"></v-icon
             >{{ t("global.tel") }}
           </p>
           <p
-            class="hero-subtitle-size hero-subtitle-color text-center text-md-start float-left-animation-3"
+            class="hero-subtitle-size hero-subtitle-color text-center text-md-start float-left-animation-4"
           >
             <v-icon
               class="text-garrisons-3 pe-2"
@@ -189,6 +196,12 @@ const { t } = useI18n();
   transform: translateX(-100%);
   animation: float-left 1s forwards;
   animation-delay: 0.2s;
+}
+.float-left-animation-4 {
+  opacity: 0;
+  transform: translateX(-100%);
+  animation: float-left 1s forwards;
+  animation-delay: 0.3s;
 }
 @keyframes float-left {
   to {

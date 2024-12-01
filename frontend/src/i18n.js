@@ -8,7 +8,8 @@ const messages = {
             email: "{'info@garrisons.hu'}",
             owner: "Bíró Dominik, E.V.",
             shop: "Garrisons Haircraft & Barbershop",
-            developer: "Nagy Róbert"
+            developer: "Nagy Róbert",
+            location: "Orosháza, Kossuth utca 25"
         },
         footer: {
             important: {
@@ -639,6 +640,7 @@ const messages = {
         button: {
             login: "Bejelentkezés",
             register: "Regisztráció",
+            logout:"Kijelentkezés",
             dashboard: "Dashboard",
             needToRegBtn: "Regisztrálj",
             alreadyHaveAccountBtn: "Lépj be",

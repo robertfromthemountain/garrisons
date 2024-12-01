@@ -1,15 +1,14 @@
 const mysql = require('mysql');
 
-// Create a MySQL connection
+// MySQL connection
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '',  // Add your password if needed
+    password: '',
     database: 'garrisons'
 });
 
-// Connect to the database
-db.connect((err) => {
+db.connect(err => {
     if (err) {
         console.error('Error connecting to MySQL:', err);
         return;
@@ -17,5 +16,4 @@ db.connect((err) => {
     console.log('Connected to MySQL');
 });
 
-// Export the connection for use in other files
 module.exports = db;

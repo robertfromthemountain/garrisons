@@ -110,7 +110,7 @@ export default {
       if (confirm("Are you sure you want to delete this event?")) {
         try {
           console.log("EZ A KIVALASZTOTT EVENT IDJE AMIT TOTOLNI KELL:", this.selectedEvent.id)
-          const response = await apiClient.delete(`http://localhost:5000/api/deleteEvent/${this.selectedEvent.id}`, {
+          const response = await apiClient.delete(`http://localhost:5000/api/events/deleteEvent/${this.selectedEvent.id}`, {
             headers: {
               Authorization: `Bearer ${this.$store.getters.accessToken}`,
             },
@@ -151,7 +151,7 @@ export default {
     // Confirm modifications and update the confirmed_events table
     async confirmModifications() {
       try {
-        await apiClient.post("http://localhost:5000/api/updateConfirmedEvents", this.modifiedEvents);
+        await apiClient.post("http://localhost:5000/api/events/updateConfirmedEvents", this.modifiedEvents);
         alert("Modifications saved successfully!");
 
         this.resetModifications();
@@ -261,7 +261,7 @@ export default {
       }
 
       try {
-        const response = await apiClient.get("http://localhost:5000/api/user", {
+        const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
           headers: {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
@@ -278,7 +278,7 @@ export default {
 
     async fetchEvents() {
       try {
-        const response = await apiClient.get("http://localhost:5000/api/getEvents");
+        const response = await apiClient.get("http://localhost:5000/api/events/getEvents");
         this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
         // console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
       } catch (error) {
@@ -289,7 +289,7 @@ export default {
 //GET ALL PENDING EVENTS TEST ONLY
 async fetchPendingEvents() {
   try {
-    const response = await apiClient.get("http://localhost:5000/api/getPendingEvents2");
+    const response = await apiClient.get("http://localhost:5000/api/events/getPendingEvents");
     this.calendarOptions.events = [...this.calendarOptions.events, ...response.data];
     console.log("ITT VANNAK AZ EVENTEK A DATABASEBOL:", this.calendarOptions.events);
   } catch (error) {
@@ -361,7 +361,7 @@ async fetchPendingEvents() {
       };
 
       try {
-        await apiClient.post("http://localhost:5000/api/requestEvent", newEvent, {
+        await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
           headers: {
             Authorization: `Bearer ${this.$store.getters.accessToken}`,
           },
