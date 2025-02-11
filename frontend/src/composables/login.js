@@ -2,7 +2,8 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
-import axios from 'axios';
+import apiClient from '@/utils/apiClient';
+import { useToast } from 'vue-toastification';  // Import Toast
 
 export function useLogin() {
     const { t } = useI18n();
@@ -11,45 +12,137 @@ export function useLogin() {
     const password = ref('');
     const isLoading = ref(false);
     const store = useStore();
+    const visible = ref(false);
+    const toast = useToast();  // Initialize Toast
+    const showForgotPassword = ref(false);
+    const forgotPasswordEmail = ref('');
+
+    // Define validation rules
+    const emailRules = [
+        (value) => !!value || t("validation.emailRequired"),
+        (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || t("validation.invalidEmailFormat"),
+    ];
+
+    const passwordRules = [
+        (value) => !!value || t("validation.passwordRequired"),
+    ];
 
     const loginUser = async () => {
+        // Check if email and password are not empty before making the request
+        if (!email.value || !password.value) {
+            toast.error(t("login.toasts.missingFields"));
+            return;
+        }
+
         isLoading.value = true;
+        showForgotPassword.value = false; // Reset before making the request
+
         try {
-            const response = await axios.post('http://localhost:5000/login', {
+            const response = await apiClient.post('http://localhost:5000/api/auth/login', {
                 email: email.value,
                 password: password.value,
             });
+
             console.log('Server response:', response.data);
-            if (response.data.token) {
-                store.dispatch('login', response.data.token);
-                alert('Login successful!');
-                router.push('/');
+
+            // Check if token and role are received
+            if (response.data.token && response.data.role) {
+
+                sessionStorage.setItem('accessToken', response.data.token);
+                console.log("Received token:", response.data.token);
+                sessionStorage.setItem('role', response.data.role);
+                console.log("Received role:", response.data.role);
+
+                store.dispatch('login', { token: response.data.token, role: response.data.role });
+                toast.success(t("login.toasts.success"));
+                // Role-based redirection
+                if (response.data.role === 'admin') {
+                    router.push('/dashboard'); // Redirect admin to dashboard
+                } else if (response.data.role === 'user') {
+                    router.push('/'); // Redirect user to homepage or wherever it is now
+                } else {
+                    router.push('/login'); // Fallback for any unexpected roles
+                    toast.error("Unexpected role error");
+                }
             } else {
-                throw new Error('No token received');
+                throw new Error('No token or role received');
             }
         } catch (error) {
             console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
+
             if (error.response) {
+                showForgotPassword.value = true;
                 switch (error.response.status) {
                     case 401:
-                        alert('Invalid credentials. Please check your email and password.');
+                        toast.error(t("login.toasts.invalidCredentials"));
+                        break;
+                    case 603:
+                        toast.error(t("login.toasts.verifyEmail"));
+                        break;
+                    case 604:
+                        toast.error(t("login.toasts.bannedUser"));
                         break;
                     case 404:
-                        alert('User not found. Please check your email or register.');
+                        toast.error(t("login.toasts.userNotFound"));
                         break;
                     case 500:
-                        alert('Server error. Please try again later.');
+                        toast.error(t("login.toasts.serverError"));
                         break;
                     default:
-                        alert('Login failed! Please try again.');
+                        toast.error(t("login.toasts.genericError"));
                 }
             } else {
-                alert('Login failed! Please check your network connection.');
+                toast.error(t("login.toasts.networkError"));
             }
         } finally {
             isLoading.value = false;
         }
     };
 
-    return { email, password, isLoading, loginUser, t };
+    // Forgot Password Function
+    const forgotPassword = async () => {
+        if (!forgotPasswordEmail.value) {
+            toast.error(t("validation.emailRequired"));
+            return;
+        }
+
+        isLoading.value = true;
+
+        try {
+            const response = await apiClient.post('http://localhost:5000/api/auth/forgot-password', {
+                email: forgotPasswordEmail.value,
+            });
+            toast.success(t("login.toasts.passwordResetEmailSent"));
+        } catch (error) {
+            if (error.response) {
+                // Server responded with a status code other than 2xx
+                const status = error.response.status;
+                const errorMessage = error.response.data;
+    
+                switch (status) {
+                    case 404:
+                        toast.error(t("login.toasts.userNotFound")); // User not found
+                        break;
+                    case 603:
+                        toast.error(errorMessage); // Display the backend error message directly
+                        break;
+                    case 500:
+                        toast.error(t("login.toasts.serverError")); // Database or server error
+                        break;
+                    default:
+                        toast.error(t("login.toasts.unknownError")); // Generic unknown error
+                }
+            } else if (error.request) {
+                // Request was made but no response received
+                toast.error(t("login.toasts.networkError")); // Network error or server unreachable
+            } else {
+                // Something happened while setting up the request
+                toast.error(t("login.toasts.passwordResetError"));
+            }
+        } finally {
+            isLoading.value = false;
+        }
+    };
+
+    return { email, password, emailRules, passwordRules, isLoading, loginUser, t, visible, showForgotPassword, forgotPasswordEmail, forgotPassword };
 }

@@ -1,47 +1,85 @@
-import { createApp, watch } from 'vue'
-import './assets/styles/main.css'
+import { createApp, watch } from 'vue';
+import '@/assets/styles/main.css';
 
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+import { aliases, mdi } from 'vuetify/iconsets/mdi';
 
-import App from './App.vue'
-import axios from 'axios'
-import router from './router'
-import i18n from './i18n'
-import store from './stores/store'
+import App from './App.vue';
+import axios from 'axios';
+import router from './router';
+import i18n from './i18n';
+import store from './stores/store';
+import Toast, { POSITION } from 'vue-toastification';
+import 'vue-toastification/dist/index.css'; // Import the CSS for the toast
 
+// Axios interceptor to add the accessToken from sessionStorage
 axios.interceptors.request.use(function (config) {
-    const token = localStorage.getItem('accessToken');
-    config.headers.Authorization = token ? `Bearer ${token}` : '';
-    return config;
+  const token = sessionStorage.getItem('accessToken'); // Use sessionStorage
+  config.headers.Authorization = token ? `Bearer ${token}` : '';
+  return config;
 });
 
+// Vuetify setup
 const vuetify = createVuetify({
-    components,
-    directives,
-    icons: {
-        iconfont: 'mdi',
+  components,
+  directives,
+  icons: {
+    iconfont: 'mdi',
+    aliases,
+    sets: {
+      mdi,
     },
-    theme: {
-        defaultTheme: store.getters['theme/currentTheme'],
+  },
+  theme: {
+    defaultTheme: store.getters['theme/currentTheme'],
+  },
+  typography: {
+    fontFamily: 'Bebas Neue, sans-serif',
+  },
+  breakpoint: {
+    thresholds: {
+      xs: 600,
+      sm: 960,
+      md: 1280,
+      lg: 1920,
+      xl: 2560,
+      xxl: 5120,
     },
-    typography: {
-        fontFamily: 'Bebas Neue, sans-serif',
-    }
-})
+    scrollBarWidth: 12,
+  },
+});
 
-const app = createApp(App)
+// Vue app setup
+const app = createApp(App);
 
-app.use(vuetify)
-app.use(router)
-app.use(i18n)
-app.use(store)
+// Initialize the store (refresh token from sessionStorage)
+store.dispatch('initializeStore'); // Ensure token is available
 
-watch(() => store.getters['theme/currentTheme'], (newTheme) => {
+// Use Vuetify, router, i18n, and Toast in the app
+app.use(vuetify);
+app.use(router);
+app.use(i18n);
+app.use(store);
+app.use(Toast, {
+  position: POSITION.BOTTOM_LEFT,
+  timeout: 5000,
+  transition: "Vue-Toastification__fade",
+  maxToasts: 5,
+  newestOnTop: true
+});
+
+// Watch theme changes
+watch(
+  () => store.getters['theme/currentTheme'],
+  (newTheme) => {
     console.log('Watcher triggered, new theme:', newTheme);
     vuetify.theme.defaultTheme = newTheme === 'dark';
-}, { immediate: true });
+  },
+  { immediate: true }
+);
 
-app.mount('#app')
+// Mount the app
+app.mount('#app');
