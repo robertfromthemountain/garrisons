@@ -2,31 +2,31 @@ function registerEmailTemplate(fullName, verificationLink) {
     return `
     <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
         <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-            <h2 style="color: #8f6a48;">Welcome to Garrison's Haircraft & Barbershop! Please Verify Your Email</h2>
-            <p>Hi <strong>${fullName}</strong>,</p>
+            <h2 style="color: #8f6a48;">Üdvözlünk a Garrison's Haircraft & Barbershop-nál! Kérjük, erősítsd meg az email címedet</h2>
+            <p>Kedves <strong>${fullName}</strong>,</p>
         <div style="height: 1px; background-color: #8f6a48; margin: 20px 0; width: 100%;"></div>
-        <p style="color: #0c0a09;">Welcome to <strong>Garrison's Haircraft & Barbershop</strong> – we’re thrilled to have you with us!</p>
+        <p style="color: #0c0a09;">Üdvözlünk a <strong>Garrison's Haircraft & Barbershop</strong> közösségében – örömünkre szolgál, hogy csatlakoztál hozzánk!</p>
         <br>
-        <p style="color: #0c0a09;">Before you get started, we just need to verify your email address to activate your account and ensure the security of your details.</p>
+        <p style="color: #0c0a09;">Mielőtt elkezdenéd használni szolgáltatásainkat, kérjük, erősítsd meg az email címedet, hogy aktiválhassuk a fiókodat, és biztosíthassuk az adataid biztonságát.</p>
         <br>
-        <p style="color: #0c0a09;">To complete your registration, simply click the link below:</p>
-        <a href="${verificationLink}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Verify My Email</a>
+        <p style="color: #0c0a09;">A regisztráció befejezéséhez kattints az alábbi linkre:</p>
+        <a href="${verificationLink}" style="background-color: #8f6a48; color: #fff; padding: 10px 15px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block;">Email cím megerősítése</a>
         <br><br>
-        <p style="color: #0c0a09;">If the above button doesn't work, copy and paste the following URL into your browser:</p>
+        <p style="color: #0c0a09;">Ha a fenti gomb nem működik, másold be az alábbi URL-t a böngésződ címsorába:</p>
         <p style="color: #0c0a09;"><a href="${verificationLink}" style="color: #8f6a48; text-decoration: none;">${verificationLink}</a></p>
         <br>
-        <p style="color: #0c0a09;">Once your email is verified, you'll have access to:</p>
+        <p style="color: #0c0a09;">Az email cím megerősítése után hozzáférhetsz:</p>
         <ul style="color: #0c0a09;">
-            <li>Exclusive offers and promotions</li>
-            <li>Easy booking for your favorite services</li>
-            <li>Personalized recommendations just for you</li>
+            <li>Exkluzív ajánlatokhoz és akciókhoz</li>
+            <li>Kedvenc szolgáltatásaid könnyű foglalásához</li>
+            <li>Személyre szabott ajánlásokhoz</li>
         </ul>
-        <p style="color: #0c0a09;">If you didn’t create an account with us, please ignore this email.</p>
+        <p style="color: #0c0a09;">Ha nem te hoztad létre ezt a fiókot, kérjük, hagyd figyelmen kívül ezt az emailt.</p>
         <br>
-        <p style="color: #0c0a09;">Thank you for choosing <strong>Garrison's Haircraft</strong>. We look forward to giving you an exceptional experience!</p>
+        <p style="color: #0c0a09;">Köszönjük, hogy a <strong>Garrison's Haircraft</strong>-ot választottad. Alig várjuk, hogy kiváló élményt nyújthassunk neked!</p>
         <br>
-        <p style="color: #0c0a09;">Best regards,</p>
-        <p style="color: #0c0a09;">The Garrison's Haircraft Team</p>
+        <p style="color: #0c0a09;">Üdvözlettel,</p>
+        <p style="color: #0c0a09;">A Garrison's Haircraft csapata</p>
         <p style="color: #0c0a09;"><strong>noreply@garrisons.com</strong></p>
     </div>
 </div>

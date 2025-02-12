@@ -551,7 +551,7 @@ function showModificationModal() {
 async function confirmModifications() {
   loading.value = true;
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "error");
+    showToast("Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.", "error");
     loading.value = false;
     return;
   }
@@ -566,11 +566,11 @@ async function confirmModifications() {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    showToast("Modifications saved successfully!", "success");
+    showToast("Sikeres módosítás!", "success");
     resetModifications();
   } catch (error) {
     handleError(
-      "There was an error saving the modifications. Please try again. " +
+      "Módosítások mentése sikertelen. Kérlek próbáld újra. " +
         (error.response?.data?.message || error.message)
     );
   } finally {
@@ -606,7 +606,7 @@ function closeDialog() {
 
 function checkOverlap() {
   if (!selectedService.value) {
-    showToast("Please select a service.", "warning");
+    showToast("Kérlek válassz szolgáltatást.", "warning");
     return;
   }
 
@@ -844,7 +844,7 @@ async function finalizeBooking() {
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
           <p class="pb-1">
-            Please select a service to calculate your appointment!
+            Kérlek válassz egy szolgáltatást az időpont kalkuláláshoz!
           </p>
           <v-select
             class=""
@@ -914,7 +914,7 @@ async function finalizeBooking() {
     <v-dialog v-model="showConfirmationDialog" max-width="600" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <h2 class="headline title-garrisons py-2">Finalize your booking</h2>
+          <h2 class="headline title-garrisons py-2">Foglalás kérvényezése</h2>
         </v-card-title>
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
@@ -935,7 +935,7 @@ async function finalizeBooking() {
             <span class="mdi mdi-calendar-end-outline"></span>
             {{ formatTime(pickedEnd) }},
             <span class="mdi mdi-timer-sand"></span>
-            {{ pickedDuration }} minutes
+            {{ pickedDuration }} perc
           </p>
           <p>
             <span class="mdi mdi-content-cut"></span>
@@ -1068,7 +1068,7 @@ async function finalizeBooking() {
               :disabled="loading"
               class="text-garrisons"
               @click="closeEventDialog"
-              >Cancel</v-btn
+              >Bezár</v-btn
             >
             <v-spacer></v-spacer>
             <v-btn
@@ -1076,14 +1076,14 @@ async function finalizeBooking() {
               :disabled="loading"
               class="text-garrisons bg-red"
               @click="openDeleteModal('deny')"
-              >Deny</v-btn
+              >Elutasít</v-btn
             >
             <v-btn
               density="comfortable"
               :disabled="loading"
               class="text-garrisons bg-green"
               @click="confirmEvent"
-              >Accept</v-btn
+              >Elfogad</v-btn
             >
           </template>
 
@@ -1094,7 +1094,7 @@ async function finalizeBooking() {
               :disabled="loading"
               class="text-garrisons"
               @click="closeEventDialog"
-              >Close</v-btn
+              >Bezár</v-btn
             >
             <v-spacer></v-spacer>
             <v-btn
@@ -1102,7 +1102,7 @@ async function finalizeBooking() {
               :disabled="loading"
               class="text-garrisons bg-red"
               @click="openDeleteModal('delete')"
-              >Delete</v-btn
+              >Törlés</v-btn
             >
           </template>
         </v-card-actions>
