@@ -63,6 +63,15 @@
           <v-icon left class="text-garrisons-2">mdi-camera-plus-outline</v-icon>
           {{ t("dashboard.menuItems.references") }}
         </v-list-item>
+
+        <v-list-item
+          v-if="isLoggedIn && userRole === 'admin'"
+          class="list-item-custom"
+          :to="{ name: 'dashboard-manageCalendar' }"
+        >
+          <v-icon left class="text-garrisons-2">mdi-calendar-alert</v-icon>
+          Naptárkezelés
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 

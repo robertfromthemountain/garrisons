@@ -12,6 +12,7 @@ import ManageServicesView from '@/views/ManageServicesView.vue'
 import ManageUsersView from '@/views/ManageUsersView.vue'
 import ManagePicturesView from '@/views/ManagePicturesView.vue'
 import ManageBusinessHoursView from '@/views/ManageBusinessHoursView.vue'
+import ManageCalendarView from '@/views/ManageCalendarView.vue'
 import GuestBookingView from '@/views/GuestBookingView.vue'
 import NotFound from "@/components/NotFound.vue"
 import ForgotPasswordView from '@/views/ForgotPasswordView.vue'
@@ -97,6 +98,12 @@ const router = createRouter({
           path: 'managePictures',
           name: 'dashboard-managePictures',
           component: ManagePicturesView,
+          meta: { requiresAuth: true, role: 'admin' },
+        },
+        {
+          path: 'manageCalendar',
+          name: 'dashboard-manageCalendar',
+          component: ManageCalendarView,
           meta: { requiresAuth: true, role: 'admin' },
         }
       ]
