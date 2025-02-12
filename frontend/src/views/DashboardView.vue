@@ -14,7 +14,7 @@
           :to="{ name: 'dashboard-events' }"
         >
           <v-icon left class="text-garrisons-2">mdi-calendar-check</v-icon>
-          Reservations
+          {{ t("dashboard.menuItems.reservations") }}
         </v-list-item>
 
         <v-list-item
@@ -23,7 +23,7 @@
           :to="{ name: 'dashboard-pendings' }"
         >
           <v-icon left class="text-garrisons-2">mdi-calendar-alert</v-icon>
-          Pending Events
+          {{ t("dashboard.menuItems.pendings") }}
         </v-list-item>
 
         <v-list-item
@@ -32,7 +32,7 @@
           :to="{ name: 'dashboard-services' }"
         >
           <v-icon left class="text-garrisons-2">mdi-content-cut</v-icon>
-          Services
+          {{ t("dashboard.menuItems.services") }}
         </v-list-item>
 
         <v-list-item
@@ -43,7 +43,7 @@
           <v-icon left class="text-garrisons-2"
             >mdi-calendar-clock-outline</v-icon
           >
-          Business Hours
+          {{ t("dashboard.menuItems.businessHours") }}
         </v-list-item>
 
         <v-list-item
@@ -52,7 +52,7 @@
           :to="{ name: 'dashboard-users' }"
         >
           <v-icon left class="text-garrisons-2">mdi-account-group</v-icon>
-          Users
+          {{ t("dashboard.menuItems.users") }}
         </v-list-item>
 
         <v-list-item
@@ -61,7 +61,7 @@
           :to="{ name: 'dashboard-managePictures' }"
         >
           <v-icon left class="text-garrisons-2">mdi-camera-plus-outline</v-icon>
-          Pictures
+          {{ t("dashboard.menuItems.references") }}
         </v-list-item>
       </v-list>
     </v-navigation-drawer>

@@ -204,8 +204,8 @@ function handleDateClick(arg) {
     selectedService.value = null;
     showFirstDialog.value = true;
   } else {
-    console.log("Selected slot is outside of business hours.");
-    showToast("This time slot is outside of business hours.", "error");
+    // console.log("Selected slot is outside of business hours.");
+    showToast("A választott időpont munkaidőn kívüli!.", "error");
   }
 }
 
@@ -214,7 +214,7 @@ onMounted(async () => {
   if (calendarRef.value) {
     // Set the initial view when the component is mounted
     calendarRef.value.getApi().changeView(reactiveInitialView.value);
-    console.log(`Initial view set to: ${reactiveInitialView.value}`);
+    // console.log(`Initial view set to: ${reactiveInitialView.value}`);
   }
   await fetchUserId();
   await fetchAllEvents();
@@ -231,7 +231,7 @@ onMounted(async () => {
 // Methods
 async function fetchUserId() {
   if (!token) {
-    showToast("You are not logged in. Please log in again.", "info");
+    showToast("Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.", "info");
     return;
   }
 
@@ -239,7 +239,7 @@ async function fetchUserId() {
   const currentTime = Math.floor(Date.now() / 1000);
 
   if (payload.exp < currentTime) {
-    showToast("Session expired. Please log in again.", "info");
+    showToast("Munkamenet lejárt. Kérlek lépj be újra.", "info");
     sessionStorage.removeItem("accessToken"); // Clear token on expiration
     sessionStorage.removeItem("role"); // Clear user role as well if needed
     return;
@@ -247,9 +247,12 @@ async function fetchUserId() {
 
   loading.value = true;
   try {
-    const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.get(
+      "http://localhost:5000/api/users/loggedInUser",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     // Assuming the API response returns user details in response.data
     userId.value = response.data.userId;
@@ -353,7 +356,7 @@ function closeDialog() {
 
 function checkOverlap() {
   if (!selectedService.value) {
-    showToast("Please select a service.", "warning");
+    showToast("Kérlek válassz szolgáltatást.", "warning");
     return;
   }
 
@@ -378,7 +381,7 @@ function checkOverlap() {
 
   if (hasOverlap) {
     showToast(
-      "This time slot is already booked. Please choose another time.",
+      "Erre az időpontra nem foglalhatsz, mert ütközik egy másikkal. Kérlek válassz másik időpontot.",
       "error"
     );
   } else {
@@ -413,7 +416,7 @@ async function finalizeBooking() {
   );
 
   if (!isWithinBusinessHours) {
-    showToast("The selected time is outside of business hours.", "error");
+    showToast("A választott időpont munkaidőn kívüli.", "error");
     return; // Prevent booking if the event is outside business hours
   }
 
@@ -427,13 +430,17 @@ async function finalizeBooking() {
 
   loading.value = true;
   try {
-    await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await apiClient.post(
+      "http://localhost:5000/api/events/requestAppointment",
+      newEvent,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     calendarOptions.events.push(newEvent);
     showToast(
-      `Appointment for ${selectedService.value.title} successfully requested!`
+      `Időpont ${selectedService.value.title} szolgáltatásra sikeresen kérvényezve!`
     );
 
     await fetchAllEvents();
@@ -442,12 +449,12 @@ async function finalizeBooking() {
     // Handle the 403 error when the user exceeds the 3 pending events limit
     if (error.response && error.response.status === 429) {
       showToast(
-        "You already have 3 pending events. Please wait for one to be confirmed before booking a new one.",
+        "Már van 3 függőben lévő időpont kérvényed. Kérlek várd meg ameddig visszaigazolják őket, utána próbáld újra.",
         "warning"
       );
     } else {
       handleError(
-        "There was an error booking your appointment. Please try again." +
+        "Foglalási hiba. Kérlek próbáld újra." +
           error.message
       );
     }
@@ -477,7 +484,7 @@ async function finalizeBooking() {
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
           <p class="pb-1">
-            Please select a service to calculate your appointment!
+            Kérlek válassz egy szolgáltatást az időpont kalkuláláshoz!
           </p>
           <v-select
             class=""
@@ -545,7 +552,7 @@ async function finalizeBooking() {
     <v-dialog v-model="showConfirmationDialog" max-width="600" persistent>
       <v-card class="bg-garrisons text-garrisons">
         <v-card-title>
-          <h2 class="headline title-garrisons py-2">Finalize your booking</h2>
+          <h2 class="headline title-garrisons py-2">Foglalás kérvényezése</h2>
         </v-card-title>
         <v-divider class="mx-3"></v-divider>
         <v-card-text>
@@ -566,7 +573,7 @@ async function finalizeBooking() {
             <span class="mdi mdi-calendar-end-outline"></span>
             {{ formatTime(pickedEnd) }},
             <span class="mdi mdi-timer-sand"></span>
-            {{ pickedDuration }} minutes
+            {{ pickedDuration }} perc
           </p>
           <p>
             <span class="mdi mdi-content-cut"></span>

@@ -8,19 +8,20 @@ function appointmentConfirmationTemplate({
     return `
         <div style="font-family: 'Bebas Neue', sans-serif; background-color: #f5f5f5; color: #333; padding: 20px;">
             <div style="background-color: #fff; border-radius: 8px; padding: 20px;">
-                <h2 style="color: #8f6a48;">Appointment Confirmed</h2>
-                <p>Dear <strong>${userName}</strong>,</p>
-                <p>Your appointment has been confirmed for the following service:</p>
+                <h2 style="color: #8f6a48;">Időpont megerősítve</h2>
+                <p>Kedves <strong>${userName}</strong>,</p>
+                <p>Az időpontod visszaigazolásra került a következő adatokkal:</p>
                 <ul>
-                    <li><strong>Service:</strong> ${event.title}</li>
-                    <li><strong>Duration:</strong> ${event.duration} minutes</li>
-                    <li><strong>Price:</strong> ${event.price} HUF</li>
-                    <li><strong>Date:</strong> ${formattedDate}</li>
-                    <li><strong>Start Time:</strong> ${formattedStartTime}</li>
-                    <li><strong>End Time:</strong> ${formattedEndTime}</li>
+                    <li><strong>Szolgáltatás:</strong> ${event.title}</li>
+                    <li><strong>Ár:</strong> ${event.price} HUF</li>
+                    <li><strong>Dátum:</strong> ${formattedDate}</li>
+                    <li><strong>Kezdet:</strong> ${formattedStartTime}</li>
+                    <li><strong>Időtartam:</strong> ${event.duration} perc</li>
+                    <li><strong>Befejezés:</strong> ${formattedEndTime}</li>
                 </ul>
-                <p>If you have any questions, feel free to contact us.</p>
-            </div>
+                <p style="color: #0c0a09;">Kérdés esetén keress minket bátran!</p>
+                <p><br>Garrison's Haircraft csapata</p>
+                </div>
         </div>
     `;
 }

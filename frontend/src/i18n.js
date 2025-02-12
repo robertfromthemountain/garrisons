@@ -360,6 +360,7 @@ const messages = {
             shop: "Garrisons Haircraft & Barbershop",
             developer: "Nagy Róbert"
         },
+     
         footer: {
             important: {
                 title: "Fontos",
@@ -412,6 +413,14 @@ const messages = {
         },
         dashboard: {
             title: "Dashboard",
+            menuItems:{
+                reservations: "Foglalások",
+                pendings: "Foglalási kérések",
+                services: "Szolgáltatások",
+                businessHours: "Munkaidő",
+                users: "Felhasználók",
+                references: "Képek",
+            },
             manageEvents: {
                 title: "Időpontok kezelése",
                 dialog: {
