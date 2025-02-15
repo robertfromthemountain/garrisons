@@ -4,20 +4,32 @@ const db = require('../models/db');
 exports.openCalendar = (req, res) => {
     const { year, month } = req.body;
 
-    const query = `
-        INSERT INTO calendar_status (year, month, is_open)
-        VALUES (?, ?, true)
-        ON DUPLICATE KEY UPDATE is_open = true
-    `;
+    // Először lezárjuk az összes nyitott hónapot
+    const closeQuery = "UPDATE calendar_status SET is_open = false WHERE is_open = true";
 
-    db.query(query, [year, month], (err) => {
-        if (err) {
-            console.error('Database error during calendar opening:', err);
-            return res.status(500).json({ message: 'Adatbázis hiba a naptár megnyitásakor.' });
+    db.query(closeQuery, (closeErr) => {
+        if (closeErr) {
+            console.error("Database error while closing previous months:", closeErr);
+            return res.status(500).json({ message: "Hiba történt a korábbi hónapok lezárásakor." });
         }
-        res.json({ message: 'A következő hónap sikeresen megnyitva.' });
+
+        // Ezután megnyitjuk az új hónapot
+        const openQuery = `
+            INSERT INTO calendar_status (year, month, is_open)
+            VALUES (?, ?, true)
+            ON DUPLICATE KEY UPDATE is_open = true
+        `;
+
+        db.query(openQuery, [year, month], (openErr) => {
+            if (openErr) {
+                console.error("Database error during calendar opening:", openErr);
+                return res.status(500).json({ message: "Adatbázis hiba a naptár megnyitásakor." });
+            }
+            res.json({ message: `A hónap sikeresen megnyitva: ${year}-${month}.` });
+        });
     });
 };
+
 
 // Naptár lezárása
 exports.closeCalendar = (req, res) => {
@@ -61,4 +73,36 @@ exports.getCalendarStatus = (req, res) => {
             res.json({ is_open: false });
         }
     });
+};
+
+// Nyitott hónapok lekérése
+exports.getOpenMonths = (req, res) => {
+    try {
+        db.query(
+            "SELECT year, month FROM calendar_status WHERE is_open = 1 ORDER BY year ASC, month ASC",
+            (error, results) => {
+                if (error) {
+                    console.error("Hiba a nyitott hónapok lekérdezésekor:", error);
+                    return res.status(500).json({ message: "Hiba történt a nyitott hónapok lekérdezésekor." });
+                }
+
+                // Formázott hónapok létrehozása
+                const formattedResults = results.map(row => ({
+                    year: row.year,
+                    month: row.month,
+                    formattedMonth: new Date(row.year, row.month - 1)
+                        .toLocaleDateString("hu-HU", { year: "numeric", month: "long" }) // Pl.: "2025. február"
+                }));
+
+                // Válaszban visszaküldjük a nyitott hónapok számát is
+                res.json({
+                    count: formattedResults.length,
+                    openMonths: formattedResults
+                });
+            }
+        );
+    } catch (error) {
+        console.error("Váratlan hiba a nyitott hónapok lekérdezésekor:", error);
+        res.status(500).json({ message: "Váratlan hiba történt." });
+    }
 };

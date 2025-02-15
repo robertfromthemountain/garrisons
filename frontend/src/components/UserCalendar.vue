@@ -10,12 +10,15 @@ import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
 import { useDisplay } from "vuetify";
+import { useCalendarStatus } from "@/composables/dashboard/useCalendarStatus";
 
 // i18n and toast
 const { locale, t } = useI18n();
 const toast = useToast();
 
 const { xs, sm, md, lg, xl, xxl, smAndDown, mdAndUp } = useDisplay();
+
+const { openMonths, fetchOpenMonths, formattedOpenMonth } = useCalendarStatus();
 
 // Show toast function
 const showToast = (message, type = "success") => {
@@ -184,7 +187,23 @@ function formatTime(time) {
 function handleDateClick(arg) {
   const clickedDate = new Date(arg.date);
   const dayOfWeek = clickedDate.getDay();
+  const clickedMonth = clickedDate.getMonth() + 1;
+  const clickedYear = clickedDate.getFullYear();
   const clickedTime = clickedDate.toISOString().slice(11, 16); // Extract the time in HH:mm format
+
+  // Ellenőrizzük, hogy a kiválasztott hónap nyitva van-e
+  const isMonthOpen = openMonths.value.some(
+    (month) => month.year === clickedYear && month.month === clickedMonth
+  );
+
+  if (!isMonthOpen) {
+    showToast(
+      "Ez a hónap le van zárva, nem foglalható!\n Aktuális nyitott hónap: " +
+      formattedOpenMonth.value,
+      "error"
+    );
+    return;
+  }
 
   // Check if the clicked time falls within the business hours for that day
   const isWithinBusinessHours = calendarOptions.businessHours.some(
@@ -219,6 +238,7 @@ onMounted(async () => {
   await fetchUserId();
   await fetchAllEvents();
   await fetchServices();
+  await fetchOpenMonths();
 
   const businessHoursData = await fetchBusinessHours();
 
@@ -453,10 +473,7 @@ async function finalizeBooking() {
         "warning"
       );
     } else {
-      handleError(
-        "Foglalási hiba. Kérlek próbáld újra." +
-          error.message
-      );
+      handleError("Foglalási hiba. Kérlek próbáld újra." + error.message);
     }
   } finally {
     loading.value = false;

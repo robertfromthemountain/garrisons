@@ -13,4 +13,7 @@ router.post('/close', authenticateToken, isAdmin, calendarController.closeCalend
 // Naptár állapotának lekérdezése (Minden hitelesített felhasználó számára)
 router.get('/status/:year/:month', authenticateToken, calendarController.getCalendarStatus);
 
+// Hónap állapotának lekérdezése a userek számára
+router.get("/status/open-months", calendarController.getOpenMonths);
+
 module.exports = router;
