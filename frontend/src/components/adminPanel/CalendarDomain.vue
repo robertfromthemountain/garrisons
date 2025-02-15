@@ -10,7 +10,7 @@
           <v-col cols="12" md="6">
             <v-btn
               :color="isOpen ? 'error' : 'primary'"
-              @click="toggleCalendar"
+              @click="isOpen ? closeCalendar() : openCalendar()"
             >
               {{ isOpen ? "Hónap Lezárása" : "Hónap Megnyitása" }}
             </v-btn>
@@ -48,8 +48,23 @@ const calendarOptions = reactive({
   timeZone: "UTC",
   plugins: [dayGridPlugin],
   initialView: "dayGridWeek",
+
+  customButtons: {
+    openCalendar: {
+      text: "Hónap Megnyitása",
+      click() {
+        openCalendar();
+      },
+    },
+    closeCalendar: {
+      text: "Hónap Lezárása",
+      click() {
+        closeCalendar();
+      },
+    },
+  },
   headerToolbar: {
-    start: "", // Nem használunk alap navigációt
+    start: isOpen.value ? "closeCalendar" : "openCalendar",
     center: "title",
     end: "prev,today,next",
   },
@@ -88,43 +103,41 @@ const checkCalendarStatus = async () => {
 };
 
 // Naptár nyitása/zárása
-async function toggleCalendar() {
-  loading.value = true;
+async function openCalendar() {
   const year = currentDate.value.getFullYear();
   const month = currentDate.value.getMonth() + 1;
   try {
-    if (isOpen.value) {
-      await apiClient.post(
-        "/api/calendar/close",
-        { year, month },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("A hónap sikeresen lezárva!");
-    } else {
-      await apiClient.post(
-        "/api/calendar/open",
-        { year, month },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      toast.success("A hónap sikeresen megnyitva!");
-    }
-
+    await apiClient.post(
+      "/api/calendar/open",
+      { year, month },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log("A hónap sikeresen megnyitva!", "success");
     await checkCalendarStatus();
-
-    // isOpen.value = !isOpen.value;
   } catch (error) {
-    toast.error("Hiba történt a naptár állapot módosítása közben.");
+    console.log("Hiba történt a naptár megnyitása közben.", "error");
     console.error(error);
   } finally {
-    loading.value = false;
   }
 }
 
-
+async function closeCalendar() {
+  const year = currentDate.value.getFullYear();
+  const month = currentDate.value.getMonth() + 1;
+  try {
+    await apiClient.post(
+      "/api/calendar/close",
+      { year, month },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    console.log("A hónap sikeresen lezárva!", "success");
+    await checkCalendarStatus();
+  } catch (error) {
+    console.log("Hiba történt a naptár lezárása közben.", "error");
+    console.error(error);
+  } finally {
+  }
+}
 
 // Automatikus állapotlekérdezés a komponens betöltésekor
 onMounted(() => {

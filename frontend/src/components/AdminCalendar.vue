@@ -12,6 +12,7 @@ import { useDialogManager } from "@/composables/dashboard/useDialogManager";
 import { useNotifier } from "@/composables/dashboard/useNotifier";
 import { useEventFetcher } from "@/composables/useEventFetcher";
 import { useCalendarOptions } from "@/composables/dashboard/useCalendarOptions";
+import { useCalendarStatus } from "@/composables/dashboard/useCalendarStatus";
 // i18n and toast
 const { locale, t } = useI18n();
 const { showToast } = useNotifier();
@@ -20,6 +21,15 @@ const { showToast } = useNotifier();
 const calendarEvents = ref([]);
 const services = ref([]);
 const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
+
+const {
+  isMonthOpen,
+  formattedMonthYear,
+  currentDate,
+  checkCalendarStatus,
+  openCalendar,
+  closeCalendar,
+} = useCalendarStatus();
 
 const originalEvents = ref([]);
 const modifiedEvents = ref([]);
@@ -59,6 +69,12 @@ const calendarOptions = useCalendarOptions({
   showModificationModal,
   resetModifications,
   handleDateClick,
+  calendarRef,
+  currentDate,
+  checkCalendarStatus,
+  isMonthOpen,
+  openCalendar,
+  closeCalendar,
 });
 
 const { fetchAllEvents, fetchServices, fetchBusinessHours } = useEventFetcher(
