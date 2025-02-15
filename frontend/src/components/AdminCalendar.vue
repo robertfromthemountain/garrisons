@@ -11,42 +11,23 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import enLocale from "@fullcalendar/core/locales/en-gb";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
-import { useDisplay } from "vuetify";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.vue";
 import { useSlotDateTimeFormatter } from "@/composables/dashboard/useSlotDateTimeFormatter";
 import { useDialogDateTimeFormatter } from "@/composables/dashboard/useDialogDateTimeFormatter";
-
+import { useCalendarViewSettings } from "@/composables/dashboard/useCalendarViewSettings";
+import { useLoading } from "@/composables/dashboard/useLoading";
+import { useDialogManager } from "@/composables/dashboard/useDialogManager";
+import {useNotifier} from "@/composables/dashboard/useNotifier";
 
 // i18n and toast
 const { locale, t } = useI18n();
-const toast = useToast();
-const { xs, sm, md, lg, xl, xxl, smAndDown } = useDisplay();
-
-// Show toast function
-const showToast = (message, type = "success") => {
-  if (type === "success") toast.success(message);
-  else if (type === "error") toast.error(message);
-  else if (type === "warning") toast.warning(message);
-  else if (type === "info") toast.info(message);
-};
-
-const handleError = (customMessage) => {
-  showToast(customMessage, "error");
-};
-
-const isDeleteModalOpen = ref(false);
-const actionType = ref("");
-const modalTitle = ref("");
-const modalMessage = ref("");
+const { showToast } = useNotifier();
 
 // Reactive State
 const calendarEvents = ref([]);
 const originalEvents = ref([]);
 const modifiedEvents = ref([]);
 const modifying = ref(false);
-const showModificationDialog = ref(false);
-const showFirstDialog = ref(false);
-const showConfirmationDialog = ref(false);
 const selectedSlot = ref({ date: "", time: "" });
 const { formattedDate, formattedTime } = useSlotDateTimeFormatter(selectedSlot);
 const { formatDate, formatTime } = useDialogDateTimeFormatter();
@@ -57,10 +38,9 @@ const email = ref(null);
 const firstName = ref(null);
 const lastName = ref(null);
 const phoneNumber = ref(null);
-const showEventDialog = ref(false);
-const selectedEvent = ref({});
+const selectedEvent = ref(null);
 const isPending = ref(false);
-const loading = ref(false);
+const { loading, startLoading, stopLoading, toggleLoading } = useLoading();
 const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
 
 const pickedStart = ref(null);
@@ -69,28 +49,33 @@ const pickedDuration = ref(0);
 
 // Reference to the FullCalendar instance
 const calendarRef = ref(null);
+const { reactiveAspectRatio, reactiveInitialView, xs, sm, md, lg, xl, xxl } =
+  useCalendarViewSettings(calendarRef);
 
-const reactiveAspectRatio = computed(() => {
-  if (xs.value) return 0.6; // Small screens
-  if (sm.value) return 1; // Medium screens
-  if (md.value) return 1.5; // Medium screens
-  if (lg.value) return 2; // Large screens
-  if (xl.value || xxl.value) return 2.5; // Extra-large screens
-  return 2.5; // Fallback
-});
+// A useDialogManager-nek átadjuk a szükséges függőségeket
+const deps = {
+  selectedEvent,
+  calendarEvents,
+  fetchAllEvents,
+  closeEventDialog,
+  showToast,
+};
 
-const reactiveInitialView = computed(() => {
-  if (xs.value) return "timeGridDay"; // Small screens
-  return "timeGridWeek"; // Fallback
-});
-
-// Watch the computed reactiveInitialView for changes and use changeView
-watch(reactiveInitialView, (newView) => {
-  if (calendarRef.value) {
-    // Use FullCalendar API to change the view
-    calendarRef.value.getApi().changeView(newView);
-  }
-});
+const {
+  // Reaktív állapotok
+  isDeleteModalOpen,
+  actionType,
+  modalTitle,
+  modalMessage,
+  showModificationDialog,
+  showFirstDialog,
+  showConfirmationDialog,
+  showEventDialog,
+  // Függvények
+  openDeleteModal,
+  closeDeleteModal,
+  handleConfirm,
+} = useDialogManager(deps);
 
 // Calendar Options
 const calendarOptions = reactive({
@@ -163,7 +148,7 @@ const calendarOptions = reactive({
 
 // Computed Properties
 async function confirmEvent() {
-  loading.value = true; // Start loading indicator
+  startLoading(); // Start loading indicator
   try {
     console.log("Token being sent:", token); // Log the token to verify
 
@@ -185,67 +170,9 @@ async function confirmEvent() {
     closeEventDialog();
   } catch (error) {
     // Handle any errors that occur during confirmation
-    handleError("Error confirming event: " + error.message);
+    showToast(("Error confirming event: " + error.message), "error");
   } finally {
-    loading.value = false; // Stop loading indicator
-  }
-}
-
-// Open modal and set selected event ID
-const openDeleteModal = (action) => {
-  actionType.value = action;
-  if (action === "deny") {
-    modalTitle.value = "Deny Event";
-    modalMessage.value = "Are you sure you want to deny this event?";
-  } else if (action === "delete") {
-    modalTitle.value = "Delete Event";
-    modalMessage.value = "Are you sure you want to delete this event?";
-  }
-
-  isDeleteModalOpen.value = true;
-};
-
-// Close modal
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false;
-};
-
-const handleConfirm = () => {
-  if (actionType.value === "deny") {
-    denyEvent();
-  } else if (actionType.value === "delete") {
-    deleteEvent();
-  }
-
-  closeDeleteModal(); // Close modal after action
-};
-
-async function denyEvent() {
-  if (!token) {
-    showToast("You are not logged in. Please log in again.", "info");
-    return;
-  }
-
-  loading.value = true;
-  try {
-    const response = await apiClient.get(
-      `http://localhost:5000/api/events/deletePendingEvent/${selectedEvent.value.id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    if (response.status === 200) {
-      showToast("Event successfully denied.");
-      await fetchAllEvents();
-      closeEventDialog(); // Close the dialog
-    } else {
-      throw new Error("Failed to deny event.");
-    }
-  } catch (error) {
-    handleError("Error denying event: " + error.message);
-  } finally {
-    loading.value = false;
+    stopLoading(); // Stop loading indicator
   }
 }
 
@@ -306,7 +233,9 @@ function handleDateClick(arg) {
 }
 
 function handleEventClick(info) {
+  console.log(info.event);
   selectedEvent.value = info.event;
+  console.log("ITTT: "+deps.selectedEvent.value.id);
   showEventDialog.value = true;
 }
 
@@ -358,7 +287,7 @@ async function fetchUserId() {
     return;
   }
 
-  loading.value = true;
+  startLoading();
   try {
     const response = await apiClient.get(
       "http://localhost:5000/api/users/loggedInUser",
@@ -375,15 +304,15 @@ async function fetchUserId() {
     phoneNumber.value = response.data.phoneNumber;
   } catch (error) {
     console.log("Error fetching user ID: " + error.message);
-    handleError("Error fetching user ID: " + error.message);
+    showToast(("Error fetching user ID: " + error.message), "error");
   } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 
 // Function to fetch business hours from API
 async function fetchBusinessHours() {
-  loading.value = true;
+  startLoading();
   try {
     const response = await apiClient.get(
       "http://localhost:5000/api/business-hours",
@@ -395,7 +324,7 @@ async function fetchBusinessHours() {
   } catch (error) {
     console.error("Error fetching business hours:", error);
   } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 
@@ -409,7 +338,7 @@ function mapBusinessHours(businessHours) {
 }
 
 async function fetchAllEvents() {
-  loading.value = true;
+  startLoading();
   try {
     if (!token) throw new Error("No token available");
 
@@ -434,12 +363,12 @@ async function fetchAllEvents() {
   } catch (error) {
     console.error("Error fetching all events:", error);
   } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 
 async function fetchServices() {
-  loading.value = true;
+  startLoading();
   try {
     if (!token) throw new Error("No token available");
 
@@ -452,37 +381,7 @@ async function fetchServices() {
   } catch (error) {
     console.error("Error fetching services:", error);
   } finally {
-    loading.value = false;
-  }
-}
-
-async function deleteEvent() {
-  loading.value = true;
-  try {
-    const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
-    if (!token) throw new Error("No token available");
-
-    const response = await apiClient.delete(
-      `http://localhost:5000/api/events/deleteEvent/${selectedEvent.value.id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }, // Include token in headers
-      }
-    );
-
-    if (response.status !== 200) {
-      throw new Error("Failed to delete event");
-    }
-
-    calendarEvents.value = calendarEvents.value.filter(
-      (event) => event.id !== selectedEvent.value.id
-    );
-
-    closeEventDialog();
-    showToast("Event deleted successfully");
-  } catch (error) {
-    handleError("Error deleting event: " + error.message);
-  } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 
@@ -503,13 +402,13 @@ function showModificationModal() {
 }
 
 async function confirmModifications() {
-  loading.value = true;
+  startLoading();
   if (!token) {
     showToast(
       "Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.",
       "error"
     );
-    loading.value = false;
+    stopLoading();
     return;
   }
 
@@ -526,12 +425,12 @@ async function confirmModifications() {
     showToast("Sikeres módosítás!", "success");
     resetModifications();
   } catch (error) {
-    handleError(
-      "Módosítások mentése sikertelen. Kérlek próbáld újra. " +
-        (error.response?.data?.message || error.message)
+    showToast(
+      ("Módosítások mentése sikertelen. Kérlek próbáld újra. " +
+        (error.response?.data?.message || error.message)), "error"
     );
   } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 
@@ -573,12 +472,6 @@ function checkOverlap() {
   pickedEnd.value = new Date(
     startTime.getTime() + pickedDuration.value * 60000
   );
-  // console.log(
-  //   "ITT VANNAK EZEK ASZAROK IS:",
-  //   pickedDuration.value,
-  //   pickedStart.value,
-  //   pickedEnd.value
-  // );
 
   const hasOverlap = calendarOptions.events.some((event) => {
     const eventStart = new Date(event.start);
@@ -647,7 +540,7 @@ async function finalizeBooking() {
     user_id: userId.value,
   };
 
-  loading.value = true;
+  startLoading();
   try {
     // Make the API request to book the event
     await apiClient.post(
@@ -674,13 +567,13 @@ async function finalizeBooking() {
         "warning"
       );
     } else {
-      handleError(
-        "There was an error booking your appointment. Please try again." +
-          error.message
+      showToast(
+        ("There was an error booking your appointment. Please try again." +
+          error.message), "error"
       );
     }
   } finally {
-    loading.value = false;
+    stopLoading();
   }
 }
 </script>
@@ -693,40 +586,6 @@ async function finalizeBooking() {
       color="primary"
       class="mb-4"
     ></v-progress-linear>
-    <!-- Modification controls -->
-    <!-- <div v-if="!modifying" class="d-flex align-center justify-start">
-      <v-btn
-        density="comfortable"
-        :disabled="loading"
-        @click="enableModification"
-        class="elevation-8 btn-garrisons text-garrisons text-start"
-      >
-        <v-icon class="pe-2">mdi-pencil</v-icon>
-        {{ t("button.calendarEdit") }}
-      </v-btn>
-    </div> -->
-    <!-- <div v-if="modifying" class="d-flex align-center justify-start">
-      <v-btn
-        density="comfortable"
-        :disabled="loading"
-        class="elevation-8 bg-red-darken-1 text-garrisons"
-        @click="resetModifications"
-      >
-        <v-icon class="pe-2">mdi-cancel</v-icon>
-        {{ t("dialog.button.cancel") }}
-      </v-btn>
-      <div class="mx-2"></div>
-      <v-btn
-        density="comfortable"
-        :disabled="loading"
-        class="elevation-8 bg-green text-garrisons"
-        @click="showModificationModal"
-      >
-        <v-icon class="pe-2">mdi-content-save-all</v-icon>
-        {{ t("dialog.button.save") }}
-      </v-btn>
-    </div> -->
-
     <FullCalendar ref="calendarRef" :options="calendarOptions" class="h-auto" />
 
     <!-- Modal for Confirming Modifications -->
@@ -828,16 +687,6 @@ async function finalizeBooking() {
             {{ formattedTime }}
           </p>
           <div v-if="selectedService">
-            <!-- <p v-if="$store.getters.isLoggedIn">
-              <span class="mdi mdi-account-circle-outline"></span>
-              {{ firstName + " " + lastName }}
-            </p>
-            <p v-if="$store.getters.isLoggedIn">
-              <span class="mdi mdi-email-outline"></span> {{ email }}
-            </p>
-            <p v-if="$store.getters.isLoggedIn" class="pb-2">
-              <span class="mdi mdi-phone-outline"></span> {{ phoneNumber }}
-            </p> -->
             <p>
               <span class="mdi mdi-content-cut"></span>
               {{ selectedService.title }} -
