@@ -104,5 +104,35 @@ export function useEventActions({
         }
     }
 
-    return { denyEvent, deleteEvent };
+    async function confirmEvent() {
+        const token = sessionStorage.getItem("accessToken");
+        if (!token) {
+            showToast("You are not logged in. Please log in again.", "info");
+            return;
+        }
+        startLoading();
+        try {
+            console.log("Token being sent:", token);
+            const response = await apiClient.get(
+                `http://localhost:5000/api/events/confirmEvent/${selectedEvent.value.id}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            if (response.status === 200) {
+                showToast("Event successfully confirmed.", "success");
+                await fetchAllEvents();
+                closeEventDialog();
+            } else {
+                throw new Error("Failed to confirm event.");
+            }
+        } catch (error) {
+            showToast("Error confirming event: " + error.message, "error");
+        } finally {
+            stopLoading();
+        }
+    }
+
+    return { denyEvent, deleteEvent, confirmEvent };
 }

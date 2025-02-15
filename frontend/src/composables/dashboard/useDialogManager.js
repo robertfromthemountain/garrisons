@@ -7,7 +7,7 @@ export function useDialogManager(deps) {
     const actionType = ref("");
     const modalTitle = ref("");
     const modalMessage = ref("");
-    
+
     const showModificationDialog = ref(false);
     const showFirstDialog = ref(false);
     const showConfirmationDialog = ref(false);

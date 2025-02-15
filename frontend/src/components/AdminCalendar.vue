@@ -1,37 +1,32 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from "vue";
-// import { useStore } from "vuex";
+import { ref, onMounted } from "vue";
 import FullCalendar from "@fullcalendar/vue3";
-// import axios from "axios";
 import apiClient from "@/utils/apiClient"; // Import your Axios client
 import { useI18n } from "vue-i18n";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import enLocale from "@fullcalendar/core/locales/en-gb";
-import huLocale from "@fullcalendar/core/locales/hu";
-import { useToast } from "vue-toastification";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.vue";
 import { useSlotDateTimeFormatter } from "@/composables/dashboard/useSlotDateTimeFormatter";
 import { useDialogDateTimeFormatter } from "@/composables/dashboard/useDialogDateTimeFormatter";
 import { useCalendarViewSettings } from "@/composables/dashboard/useCalendarViewSettings";
 import { useLoading } from "@/composables/dashboard/useLoading";
 import { useDialogManager } from "@/composables/dashboard/useDialogManager";
-import {useNotifier} from "@/composables/dashboard/useNotifier";
-
+import { useNotifier } from "@/composables/dashboard/useNotifier";
+import { useEventFetcher } from "@/composables/useEventFetcher";
+import { useCalendarOptions } from "@/composables/dashboard/useCalendarOptions";
 // i18n and toast
 const { locale, t } = useI18n();
 const { showToast } = useNotifier();
 
 // Reactive State
 const calendarEvents = ref([]);
+const services = ref([]);
+const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
+
 const originalEvents = ref([]);
 const modifiedEvents = ref([]);
 const modifying = ref(false);
 const selectedSlot = ref({ date: "", time: "" });
 const { formattedDate, formattedTime } = useSlotDateTimeFormatter(selectedSlot);
 const { formatDate, formatTime } = useDialogDateTimeFormatter();
-const services = ref([]);
 const selectedService = ref(null);
 const userId = ref(null);
 const email = ref(null);
@@ -40,9 +35,7 @@ const lastName = ref(null);
 const phoneNumber = ref(null);
 const selectedEvent = ref(null);
 const isPending = ref(false);
-const { loading, startLoading, stopLoading, toggleLoading } = useLoading();
-const token = sessionStorage.getItem("accessToken"); // Get token from sessionStorage
-
+const { loading, startLoading, stopLoading } = useLoading();
 const pickedStart = ref(null);
 const pickedEnd = ref(null);
 const pickedDuration = ref(0);
@@ -51,6 +44,28 @@ const pickedDuration = ref(0);
 const calendarRef = ref(null);
 const { reactiveAspectRatio, reactiveInitialView, xs, sm, md, lg, xl, xxl } =
   useCalendarViewSettings(calendarRef);
+
+// Calendar Options
+const calendarOptions = useCalendarOptions({
+  locale,
+  reactiveInitialView,
+  reactiveAspectRatio,
+  modifying,
+  xs,
+  calendarEvents,
+  handleEventDrop,
+  handleEventClick,
+  enableModification,
+  showModificationModal,
+  resetModifications,
+  handleDateClick,
+});
+
+const { fetchAllEvents, fetchServices, fetchBusinessHours } = useEventFetcher(
+  calendarEvents,
+  services,
+  calendarOptions
+);
 
 // A useDialogManager-nek átadjuk a szükséges függőségeket
 const deps = {
@@ -76,105 +91,6 @@ const {
   closeDeleteModal,
   handleConfirm,
 } = useDialogManager(deps);
-
-// Calendar Options
-const calendarOptions = reactive({
-  timeZone: "UTC",
-  weekends: false,
-  locales: [huLocale, enLocale],
-  locale: locale.value,
-  plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
-  slotEventOverlap: false,
-  allDaySlot: false,
-  initialView: reactiveInitialView.value,
-  slotDuration: "00:15:00",
-  slotMinTime: "08:00:00",
-  slotMaxTime: "17:00:00",
-  editable: false,
-  eventDurationEditable: false,
-  eventResizableFromEnd: false,
-  eventDrop: handleEventDrop,
-  eventClick: handleEventClick,
-  // eventResize: handleEventResize,
-  aspectRatio: reactiveAspectRatio,
-  nowIndicator: true,
-  customButtons: {
-    editCalendar: {
-      text: "Szerkesztés",
-      click() {
-        enableModification(); // Enable editing mode
-      },
-    },
-    saveChanges: {
-      text: "Mentés",
-      click() {
-        showModificationModal(); // Save modifications
-      },
-    },
-    cancelChanges: {
-      text: "Mégsem",
-      click() {
-        resetModifications(); // Discard modifications
-      },
-    },
-  },
-  headerToolbar: computed(() => ({
-    left: !modifying.value ? "editCalendar" : "",
-    center: !xs.value ? "title" : "",
-    right: modifying.value
-      ? "saveChanges,cancelChanges" // Show Save/Cancel in editing mode
-      : "prev,today,next", // Default buttons when not editing
-  })),
-  footerToolbar: {
-    left: "",
-    center: "",
-    right: "",
-  },
-  slotLabelFormat: {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  },
-  eventTimeFormat: {
-    // for event display
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false, // This ensures 24-hour format
-  },
-  businessHours: true,
-  dateClick: handleDateClick,
-  events: calendarEvents,
-});
-
-// Computed Properties
-async function confirmEvent() {
-  startLoading(); // Start loading indicator
-  try {
-    console.log("Token being sent:", token); // Log the token to verify
-
-    // Send GET request to confirm the event
-    const response = await apiClient.get(
-      `http://localhost:5000/api/events/confirmEvent/${selectedEvent.value.id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }, // Ensure token is passed correctly
-      }
-    );
-
-    // Show success toast message
-    showToast("Event successfully confirmed.");
-
-    // Re-fetch all events to update the calendar
-    await fetchAllEvents();
-
-    // Close the event dialog/modal
-    closeEventDialog();
-  } catch (error) {
-    // Handle any errors that occur during confirmation
-    showToast(("Error confirming event: " + error.message), "error");
-  } finally {
-    stopLoading(); // Stop loading indicator
-  }
-}
 
 // Event Handlers
 function handleEventDrop(info) {
@@ -227,7 +143,6 @@ function handleDateClick(arg) {
     selectedService.value = null;
     showFirstDialog.value = true;
   } else {
-    console.log("Selected slot is outside of business hours.");
     showToast("This time slot is outside of business hours.", "error");
   }
 }
@@ -235,7 +150,7 @@ function handleDateClick(arg) {
 function handleEventClick(info) {
   console.log(info.event);
   selectedEvent.value = info.event;
-  console.log("ITTT: "+deps.selectedEvent.value.id);
+  console.log("ITTT: " + deps.selectedEvent.value.id);
   showEventDialog.value = true;
 }
 
@@ -261,13 +176,7 @@ onMounted(async () => {
   await fetchUserId();
   await fetchAllEvents();
   await fetchServices();
-
-  const businessHoursData = await fetchBusinessHours();
-
-  if (businessHoursData) {
-    // Map the fetched business hours to FullCalendar's format and update the calendar
-    calendarOptions.businessHours = mapBusinessHours(businessHoursData);
-  }
+  await fetchBusinessHours();
 });
 
 // Methods
@@ -304,82 +213,7 @@ async function fetchUserId() {
     phoneNumber.value = response.data.phoneNumber;
   } catch (error) {
     console.log("Error fetching user ID: " + error.message);
-    showToast(("Error fetching user ID: " + error.message), "error");
-  } finally {
-    stopLoading();
-  }
-}
-
-// Function to fetch business hours from API
-async function fetchBusinessHours() {
-  startLoading();
-  try {
-    const response = await apiClient.get(
-      "http://localhost:5000/api/business-hours",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching business hours:", error);
-  } finally {
-    stopLoading();
-  }
-}
-
-// Function to map business hours to FullCalendar's format
-function mapBusinessHours(businessHours) {
-  return businessHours.map((hour) => ({
-    daysOfWeek: [hour.daysOfWeek], // Maps the day number from the database
-    startTime: hour.startTime.slice(0, 5), // FullCalendar expects 'HH:mm' format
-    endTime: hour.endTime.slice(0, 5),
-  }));
-}
-
-async function fetchAllEvents() {
-  startLoading();
-  try {
-    if (!token) throw new Error("No token available");
-
-    const [regularEventsResponse, pendingEventsResponse] = await Promise.all([
-      apiClient.get("http://localhost:5000/api/events/getEvents", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in headers
-        },
-      }),
-      apiClient.get("http://localhost:5000/api/events/getPendingEvents", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the token in headers
-        },
-      }),
-    ]);
-    // Combine both event types in a single assignment
-    calendarOptions.events = [
-      ...regularEventsResponse.data,
-      ...pendingEventsResponse.data,
-    ];
-    console.log("Fetched all events:", calendarOptions.events);
-  } catch (error) {
-    console.error("Error fetching all events:", error);
-  } finally {
-    stopLoading();
-  }
-}
-
-async function fetchServices() {
-  startLoading();
-  try {
-    if (!token) throw new Error("No token available");
-
-    const response = await apiClient.get("http://localhost:5000/api/services", {
-      headers: {
-        Authorization: `Bearer ${token}`, // Include the token in headers
-      },
-    });
-    services.value = response.data;
-  } catch (error) {
-    console.error("Error fetching services:", error);
+    showToast("Error fetching user ID: " + error.message, "error");
   } finally {
     stopLoading();
   }
@@ -426,8 +260,9 @@ async function confirmModifications() {
     resetModifications();
   } catch (error) {
     showToast(
-      ("Módosítások mentése sikertelen. Kérlek próbáld újra. " +
-        (error.response?.data?.message || error.message)), "error"
+      "Módosítások mentése sikertelen. Kérlek próbáld újra. " +
+        (error.response?.data?.message || error.message),
+      "error"
     );
   } finally {
     stopLoading();
@@ -568,8 +403,9 @@ async function finalizeBooking() {
       );
     } else {
       showToast(
-        ("There was an error booking your appointment. Please try again." +
-          error.message), "error"
+        "There was an error booking your appointment. Please try again." +
+          error.message,
+        "error"
       );
     }
   } finally {
