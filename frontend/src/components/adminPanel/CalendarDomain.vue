@@ -47,11 +47,11 @@ const token = sessionStorage.getItem("accessToken");
 const calendarOptions = reactive({
   timeZone: "UTC",
   plugins: [dayGridPlugin],
-  initialView: "dayGridMonth",
+  initialView: "dayGridWeek",
   headerToolbar: {
     start: "", // Nem használunk alap navigációt
     center: "title",
-    end: "prev,next",
+    end: "prev,today,next",
   },
   datesSet: (info) => {
     const calendarApi = calendarRef.value.getApi(); // FullCalendar API elérése
@@ -75,7 +75,10 @@ const checkCalendarStatus = async () => {
 
   try {
     const response = await apiClient.get(
-      `/api/calendar/status/${year}/${month}`
+      `/api/calendar/status/${year}/${month}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
     );
     isOpen.value = response.data.is_open;
   } catch (error) {
@@ -109,7 +112,10 @@ async function toggleCalendar() {
       );
       toast.success("A hónap sikeresen megnyitva!");
     }
-    isOpen.value = !isOpen.value;
+
+    await checkCalendarStatus();
+
+    // isOpen.value = !isOpen.value;
   } catch (error) {
     toast.error("Hiba történt a naptár állapot módosítása közben.");
     console.error(error);
@@ -117,6 +123,8 @@ async function toggleCalendar() {
     loading.value = false;
   }
 }
+
+
 
 // Automatikus állapotlekérdezés a komponens betöltésekor
 onMounted(() => {

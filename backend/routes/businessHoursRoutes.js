@@ -2,6 +2,7 @@ const express = require('express');
 const businessHoursController = require('../controllers/businessHoursController');
 const authenticateToken = require('../middlewares/authenticateToken');
 const isAdmin = require('../middlewares/isAdmin');
+const db = require('../models/db');
 
 const router = express.Router();
 

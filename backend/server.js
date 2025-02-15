@@ -8,6 +8,7 @@ const serviceRoutes = require('./routes/serviceRoutes');
 const authRoutes = require('./routes/authRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const businessHoursRoutes = require('./routes/businessHoursRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,6 +27,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/events', appointmentRoutes);
 app.use('/api/business-hours', businessHoursRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 
 app.listen(PORT, () => {

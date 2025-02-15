@@ -13,6 +13,9 @@ import huLocale from "@fullcalendar/core/locales/hu";
 import { useToast } from "vue-toastification";
 import { useDisplay } from "vuetify";
 import ConfirmDeleteModal from "./ConfirmDeleteModal.vue";
+import { useSlotDateTimeFormatter } from "@/composables/dashboard/useSlotDateTimeFormatter";
+import { useDialogDateTimeFormatter } from "@/composables/dashboard/useDialogDateTimeFormatter";
+
 
 // i18n and toast
 const { locale, t } = useI18n();
@@ -45,6 +48,8 @@ const showModificationDialog = ref(false);
 const showFirstDialog = ref(false);
 const showConfirmationDialog = ref(false);
 const selectedSlot = ref({ date: "", time: "" });
+const { formattedDate, formattedTime } = useSlotDateTimeFormatter(selectedSlot);
+const { formatDate, formatTime } = useDialogDateTimeFormatter();
 const services = ref([]);
 const selectedService = ref(null);
 const userId = ref(null);
@@ -157,60 +162,6 @@ const calendarOptions = reactive({
 });
 
 // Computed Properties
-const formattedDate = computed(() => {
-  return selectedSlot.value.date
-    ? new Intl.DateTimeFormat("hu-HU", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        timeZone: "UTC",
-      }).format(new Date(selectedSlot.value.date))
-    : "";
-});
-
-const formattedTime = computed(() => {
-  return selectedSlot.value.time
-    ? new Intl.DateTimeFormat("hu-HU", {
-        hour: "2-digit",
-        minute: "2-digit",
-        timeZone: "UTC",
-      }).format(new Date(selectedSlot.value.time))
-    : "";
-});
-
-function formatDate(date) {
-  if (!date) return "";
-
-  const parsedDate = new Date(date);
-  if (isNaN(parsedDate)) {
-    console.error("Invalid date provided:", date);
-    return ""; // Return a fallback if the date is invalid
-  }
-
-  return new Intl.DateTimeFormat("hu-HU", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: "UTC",
-  }).format(parsedDate);
-}
-
-function formatTime(time, timeZone = "UTC") {
-  if (!time) return "";
-
-  const parsedTime = new Date(time);
-  if (isNaN(parsedTime)) {
-    console.error("Invalid time provided:", time);
-    return ""; // Return a fallback if the time is invalid
-  }
-
-  return new Intl.DateTimeFormat("hu-HU", {
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone,
-  }).format(parsedTime);
-}
-
 async function confirmEvent() {
   loading.value = true; // Start loading indicator
   try {
@@ -409,9 +360,12 @@ async function fetchUserId() {
 
   loading.value = true;
   try {
-    const response = await apiClient.get("http://localhost:5000/api/users/loggedInUser", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.get(
+      "http://localhost:5000/api/users/loggedInUser",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     // Assuming the API response returns user details in response.data
     userId.value = response.data.userId;
@@ -551,7 +505,10 @@ function showModificationModal() {
 async function confirmModifications() {
   loading.value = true;
   if (!token) {
-    showToast("Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.", "error");
+    showToast(
+      "Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.",
+      "error"
+    );
     loading.value = false;
     return;
   }
@@ -693,9 +650,13 @@ async function finalizeBooking() {
   loading.value = true;
   try {
     // Make the API request to book the event
-    await apiClient.post("http://localhost:5000/api/events/requestAppointment", newEvent, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await apiClient.post(
+      "http://localhost:5000/api/events/requestAppointment",
+      newEvent,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     // Add the new event to the calendar
     calendarOptions.events.push(newEvent);
@@ -1147,4 +1108,3 @@ p {
   font-size: larger;
 }
 </style>
-  
