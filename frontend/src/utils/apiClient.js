@@ -1,52 +1,67 @@
-import axios from 'axios';
-import { useRouter } from 'vue-router';
+import axios from "axios";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
-// Create Axios instance with base settings
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000', // Your backend API URL
-  withCredentials: true, // Include cookies for refresh token
+    baseURL: "http://localhost:5000",
+    withCredentials: true, // 🔹 Engedélyezi a cookie-k küldését
 });
 
-// Intercept response errors
+// **✅ Axios Response Interceptor**
 apiClient.interceptors.response.use(
-  response => response, // Pass through successful responses
-  async error => {
-    const originalRequest = error.config;
+    response => {
+        console.log("✅ API response received:", response);
+        return response;
+    },
+    async error => {
+        console.log("❌ API request error:", error);
 
-    // If the error is a 403 (Forbidden) and the request hasn't been retried
-    if (error.response.status === 403 && !originalRequest._retry) {
-      originalRequest._retry = true; // Mark the request to prevent an infinite loop
+        const originalRequest = error.config;
 
-      try {
-        // Attempt to refresh the access token
-        const response = await axios.post('http://localhost:5000/api/auth/refresh-token');
+        // **🔹 Ha a válasz 403 Forbidden és még nem próbálkoztunk újratöltéssel**
+        if (error.response?.status === 403 && !originalRequest._retry) {
+            console.warn("🔄 Token expired, attempting to refresh token...");
+            originalRequest._retry = true;
 
-        // Store the new access token in session storage
-        sessionStorage.setItem('accessToken', response.data.accessToken);
+            try {
+                // **🔹 Küldünk egy kérést a refresh token endpoint-ra**
+                console.log("🟡 Sending refresh token request to /api/auth/refresh-token...");
+                const response = await axios.post(
+                    "http://localhost:5000/api/auth/refresh-token",
+                    {},
+                    { withCredentials: true } // **Szükséges a cookie-k küldéséhez**
+                );
 
-        // Update the original request Authorization header with the new token
-        originalRequest.headers['Authorization'] = `Bearer ${response.data.accessToken}`;
+                console.log("✅ Refresh token request successful:", response.data);
 
-        // Retry the original request with the updated token
-        return apiClient(originalRequest);
-      } catch (err) {
-        console.error('Token refresh failed:', err);
+                const newAccessToken = response.data.accessToken;
+                console.log("🟢 New access token received:", newAccessToken);
 
-        // Clear stored tokens and redirect to the login page if refresh fails
-        sessionStorage.removeItem('accessToken');
-        sessionStorage.removeItem('role');
+                // **🔹 Új access token elmentése**
+                sessionStorage.setItem("accessToken", newAccessToken);
 
-        // Redirect to the login page using Vue Router
-        router.push('/login');
+                // **🔹 Az eredeti kérés frissítése az új access tokennel**
+                originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
 
-        return Promise.reject(err);
-      }
+                console.log("🔄 Retrying the failed request with the new access token...");
+                return apiClient(originalRequest); // **🔹 Újraküldjük az eredeti kérést**
+            } catch (err) {
+                console.error("❌ Refresh token request failed:", err);
+
+                console.warn("🚨 Logging out user due to failed token refresh...");
+                sessionStorage.removeItem("accessToken");
+                sessionStorage.removeItem("role");
+
+                router.push("/login");
+
+                return Promise.reject(err);
+            }
+        }
+
+        console.warn("❌ Request failed without token expiration, rejecting...");
+        return Promise.reject(error);
     }
-
-    return Promise.reject(error); // Reject other errors
-  }
 );
 
 export default apiClient;

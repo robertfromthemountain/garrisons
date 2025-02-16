@@ -3,13 +3,13 @@ import theme from './theme';
 
 const store = createStore({
   modules: {
-    theme // Register the theme module here
+    theme, // 🔹 A témamodul regisztrálása
   },
   state: {
     accessToken: sessionStorage.getItem('accessToken') || null,
     role: sessionStorage.getItem('role') || null,
-    isLoggedIn: !!sessionStorage.getItem('accessToken'), // Derived from token presence
-    categories: new Set() // Make sure this is used appropriately elsewhere in your code
+    isLoggedIn: !!sessionStorage.getItem('accessToken'),
+    categories: new Set(), // 🔹 Ellenőrizd, hogy valóban szükséged van-e erre
   },
   mutations: {
     setAccessToken(state, token) {
@@ -32,31 +32,26 @@ const store = createStore({
   actions: {
     login({ commit }, { token, role }) {
       commit('setAccessToken', token);
-      commit('setRole', role); // Set the role on login
+      commit('setRole', role);
     },
     logout({ commit }) {
       commit('clearAccessToken');
-      commit('clearRole'); // Clear the role on logout
+      commit('clearRole');
     },
     initializeStore({ commit }) {
+      console.log("Initializing store...");
       const token = sessionStorage.getItem('accessToken');
       const role = sessionStorage.getItem('role');
-      if (token) {
-        commit('setAccessToken', token);
-      }
-      if (role) {
-        commit('setRole', role);
-      }
-    }
+      if (token) commit('setAccessToken', token);
+      if (role) commit('setRole', role);
+    },
   },
   getters: {
     isLoggedIn: state => !!state.accessToken,
     accessToken: state => state.accessToken,
-    userRole: state => state.role,
-    getCategories(state) {
-      return Array.from(state.categories);
-    }
-  }
+    userRole: state => state.role || "guest", // 🔹 Ha a `role` null, akkor "guest"-ként kezeljük
+    getCategories: state => Array.from(state.categories),
+  },
 });
 
 export default store;

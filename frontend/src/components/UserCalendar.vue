@@ -199,7 +199,7 @@ function handleDateClick(arg) {
   if (!isMonthOpen) {
     showToast(
       "Ez a hónap le van zárva, nem foglalható!\n Aktuális nyitott hónap: " +
-      formattedOpenMonth.value,
+        formattedOpenMonth.value,
       "error"
     );
     return;
@@ -250,22 +250,13 @@ onMounted(async () => {
 
 // Methods
 async function fetchUserId() {
+  const token = sessionStorage.getItem("accessToken");
+
   if (!token) {
     showToast("Nem vagy bejelentkezve. Kérlek lépj be a folytatáshoz.", "info");
     return;
   }
 
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  const currentTime = Math.floor(Date.now() / 1000);
-
-  if (payload.exp < currentTime) {
-    showToast("Munkamenet lejárt. Kérlek lépj be újra.", "info");
-    sessionStorage.removeItem("accessToken"); // Clear token on expiration
-    sessionStorage.removeItem("role"); // Clear user role as well if needed
-    return;
-  }
-
-  loading.value = true;
   try {
     const response = await apiClient.get(
       "http://localhost:5000/api/users/loggedInUser",
@@ -274,15 +265,22 @@ async function fetchUserId() {
       }
     );
 
-    // Assuming the API response returns user details in response.data
+    // **🔹 Ha a kérés sikeres, beállítjuk a user adatait**
     userId.value = response.data.userId;
     email.value = response.data.email;
     firstName.value = response.data.firstName;
     lastName.value = response.data.lastName;
     phoneNumber.value = response.data.phoneNumber;
   } catch (error) {
-    console.log("Error fetching user ID: " + error.message);
-    handleError("Error fetching user ID: " + error.message);
+    console.error("Error fetching user ID:", error);
+
+    if (error.response?.status === 403) {
+      showToast("Munkamenet lejárt. Kérlek lépj be újra.", "info");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("role");
+    } else {
+      handleError("Hiba történt a felhasználói adatok lekérésekor.");
+    }
   } finally {
     loading.value = false;
   }

@@ -49,22 +49,29 @@ exports.login = async (req, res) => {
                     } else if (user.status === 'banned') {
                         return res.status(604).json({ message: 'Your account has been banned. Contact support for further assistance.' });
                     } else if (user.status === 'confirmed') {
-                        // Generate JWT token
-                        const token = jwt.sign(
-                            {
-                                userId: user.id,
-                                email: user.email,
-                                firstName: user.firstName,
-                                lastName: user.lastName,
-                                phoneNumber: user.phoneNumber,
-                                role: user.role,
-                            },
+                        // **🔹 Generate Access Token (Short-lived)**
+                        const accessToken = jwt.sign(
+                            { userId: user.id, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName, phoneNumber: user.phoneNumber },
                             process.env.JWT_SECRET,
-                            { expiresIn: '1h' }
+                            { expiresIn: "1m" } // 🔹 Rövidebb időre állítjuk
                         );
 
-                        console.log('User logged in with role:', user.role);
-                        return res.json({ token, role: user.role });
+                        // **🔹 Generate Refresh Token (Long-lived)**
+                        const refreshToken = jwt.sign(
+                            { userId: user.id },
+                            process.env.REFRESH_TOKEN_SECRET,
+                            { expiresIn: "7d" } // 🔹 Hosszabb érvényességi idő
+                        );
+
+                        // **🔹 Store refresh token in HTTP-only cookie**
+                        res.cookie("refreshToken", refreshToken, {
+                            httpOnly: true,
+                            secure: process.env.NODE_ENV === "production", // Secure only in production
+                            sameSite: "Strict",
+                            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 nap
+                        });
+
+                        return res.json({ accessToken, role: user.role });
                     } else {
                         // Unexpected account status
                         return res.status(400).json({ message: 'Unexpected account status. Please contact support.' });
@@ -203,48 +210,86 @@ exports.verifyEmail = (req, res) => {
 };
 
 exports.refreshToken = (req, res) => {
-    // Get refresh token from Authorization header or request body
-    const authHeader = req.headers['authorization'];
-    const refreshToken = authHeader && authHeader.split(' ')[1];
+    const refreshToken = req.cookies.refreshToken;
 
-    // If no refresh token, return an error
     if (!refreshToken) {
-        return res.status(403).json({ message: 'No refresh token provided' });
+        console.log("❌ No refresh token provided");
+        return res.status(403).json({ message: "No refresh token provided" });
     }
 
-    // Verify the refresh token
-    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(403).json({ message: 'Invalid refresh token' });
+            console.log("❌ Invalid refresh token:", err.message);
+            return res.status(403).json({ message: "Invalid refresh token" });
         }
 
-        // Generate a new access token
-        const accessToken = jwt.sign(
-            { id: user.id, role: user.role },
-            process.env.JWT_SECRET, // Access token secret
-            { expiresIn: '15m' } // Set expiration time
-        );
+        const userId = decoded.userId;
 
-        // Send the new access token back to the client
-        res.json({ accessToken });
+        // **🔹 Lekérjük a felhasználó adatait az adatbázisból**
+        db.query("SELECT id, email, role, firstName, lastName, phoneNumber FROM users WHERE id = ?",
+            [userId],
+            (error, results) => {
+                if (error || results.length === 0) {
+                    console.log("❌ Error fetching user data:", error);
+                    return res.status(403).json({ message: "User not found" });
+                }
+
+                const user = results[0];
+
+                // **🔹 Új access token generálása a teljes user adatokkal**
+                const newAccessToken = jwt.sign(
+                    {
+                        userId: user.id,
+                        email: user.email,
+                        role: user.role,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        phoneNumber: user.phoneNumber
+                    },
+                    process.env.JWT_SECRET,
+                    { expiresIn: "15m" }
+                );
+
+                console.log("✅ New access token generated with full user data");
+
+                res.json({ accessToken: newAccessToken });
+            }
+        );
     });
 };
 
+// **🔹 Logout - Törli a refresh tokent**
+exports.logout = (req, res) => {
+    res.clearCookie("refreshToken");
+    res.json({ message: "Logout successful" });
+};
+
 exports.verifyToken = (req, res) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Bearer token
+    try {
+        const authHeader = req.headers.authorization;
 
-    if (!token) {
-        return res.status(401).json({ message: 'Authentication required' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid token' });
+        // Ellenőrizzük, hogy van-e token a fejlécben
+        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return res.status(401).json({ message: "Authentication required" });
         }
 
-        // Return the user's role securely
-        return res.json({ role: decoded.role });
-    });
+        // Token kivétele a fejlécből
+        const token = authHeader.split(" ")[1];
+
+        // Token ellenőrzése
+        jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+            if (err) {
+                console.error("Token verification failed verifytokenben:", err.message);
+                return res.status(403).json({ message: "Invalid or expired token" });
+            }
+
+            // 🔹 Sikeres ellenőrzés után visszaküldjük a szerepkört és azonosítót
+            return res.json({ userId: decoded.userId, role: decoded.role });
+        });
+    } catch (error) {
+        console.error("Error in verifyToken:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
 };
 
 exports.forgotPassword = (req, res) => {

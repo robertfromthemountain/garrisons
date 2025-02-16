@@ -1,22 +1,36 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers["authorization"];
 
-    if (!token) {
-        console.log("No token provided"); // Log this
-        return res.sendStatus(401); // No token, Unauthorized
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        console.log("No token provided or invalid format");
+        return res.status(401).json({ message: "Authentication required" });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.log("Token verification failed:", err.message); // Log token errors
-            return res.status(403).send('Forbidden: Invalid token');
+            if (err.name === "TokenExpiredError") {
+                console.log("Token expired:", err.message);
+                return res.status(403).json({ message: "Token expired" });
+            } else {
+                console.log("Token verification failed:", err.message);
+                return res.status(403).json({ message: "Invalid token" });
+            }
         }
 
-        req.user = user; // Attach user data to req.user
-        console.log("Token successfully decoded. User:", user);
+        req.user = {
+            userId: decoded.userId,
+            email: decoded.email,
+            role: decoded.role,
+            firstName: decoded.firstName,
+            lastName: decoded.lastName,
+            phoneNumber: decoded.phoneNumber,
+        };
+
+        console.log("Token successfully decoded. User:", req.user);
         next();
     });
 }

@@ -197,23 +197,17 @@ onMounted(async () => {
 
 // Methods
 async function fetchUserId() {
+  const token = sessionStorage.getItem("accessToken");
+  console.log(token);
   if (!token) {
     showToast("You are not logged in. Please log in again.", "info");
     return;
   }
 
-  const payload = JSON.parse(atob(token.split(".")[1]));
-  const currentTime = Math.floor(Date.now() / 1000);
-
-  if (payload.exp < currentTime) {
-    showToast("Session expired. Please log in again.", "info");
-    sessionStorage.removeItem("accessToken"); // Clear token on expiration
-    sessionStorage.removeItem("role"); // Clear user role as well if needed
-    return;
-  }
-
   startLoading();
+
   try {
+    // **🔹 Token érvényességének ellenőrzése API-n keresztül (Axios elvégzi a refresh-t, ha szükséges)**
     const response = await apiClient.get(
       "http://localhost:5000/api/users/loggedInUser",
       {
@@ -221,15 +215,23 @@ async function fetchUserId() {
       }
     );
 
-    // Assuming the API response returns user details in response.data
+    console.log("userid: ", response.data);
+    // **🔹 Ha a kérés sikeres, frissítjük a felhasználói adatokat**
     userId.value = response.data.userId;
     email.value = response.data.email;
     firstName.value = response.data.firstName;
     lastName.value = response.data.lastName;
     phoneNumber.value = response.data.phoneNumber;
   } catch (error) {
-    console.log("Error fetching user ID: " + error.message);
-    showToast("Error fetching user ID: " + error.message, "error");
+    console.error("Error fetching user ID:", error);
+
+    if (error.response?.status === 403) {
+      showToast("Session expired. Please log in again.", "info");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("role");
+    } else {
+      showToast("Error fetching user ID: " + error.message, "error");
+    }
   } finally {
     stopLoading();
   }

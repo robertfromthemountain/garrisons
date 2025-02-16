@@ -28,7 +28,6 @@ export function useLogin() {
     ];
 
     const loginUser = async () => {
-        // Check if email and password are not empty before making the request
         if (!email.value || !password.value) {
             toast.error(t("login.toasts.missingFields"));
             return;
@@ -38,37 +37,42 @@ export function useLogin() {
         showForgotPassword.value = false; // Reset before making the request
 
         try {
-            const response = await apiClient.post('http://localhost:5000/api/auth/login', {
-                email: email.value,
-                password: password.value,
-            });
+            const response = await apiClient.post(
+                "http://localhost:5000/api/auth/login",
+                {
+                    email: email.value,
+                    password: password.value,
+                },
+                { withCredentials: true } // 🔹 Szükséges a refresh tokenhez
+            );
 
-            console.log('Server response:', response.data);
+            console.log("Server response:", response.data);
 
-            // Check if token and role are received
-            if (response.data.token && response.data.role) {
+            // Ellenőrizzük, hogy a token és a szerepkör érkezett-e
+            if (response.data.accessToken && response.data.role) {
+                sessionStorage.setItem("accessToken", response.data.accessToken);
+                sessionStorage.setItem("role", response.data.role);
 
-                sessionStorage.setItem('accessToken', response.data.token);
-                console.log("Received token:", response.data.token);
-                sessionStorage.setItem('role', response.data.role);
+                console.log("Received accessToken:", response.data.accessToken);
                 console.log("Received role:", response.data.role);
 
-                store.dispatch('login', { token: response.data.token, role: response.data.role });
+                store.dispatch("login", { token: response.data.accessToken, role: response.data.role });
                 toast.success(t("login.toasts.success"));
-                // Role-based redirection
-                if (response.data.role === 'admin') {
-                    router.push('/dashboard'); // Redirect admin to dashboard
-                } else if (response.data.role === 'user') {
-                    router.push('/'); // Redirect user to homepage or wherever it is now
+
+                // Szerepkör alapú átirányítás
+                if (response.data.role === "admin") {
+                    router.push("/dashboard");
+                } else if (response.data.role === "user") {
+                    router.push("/");
                 } else {
-                    router.push('/login'); // Fallback for any unexpected roles
+                    router.push("/login");
                     toast.error("Unexpected role error");
                 }
             } else {
-                throw new Error('No token or role received');
+                throw new Error("No accessToken or role received");
             }
         } catch (error) {
-            console.error('Login failed:', error.response ? error.response.data : error.message || "No response");
+            console.error("Login failed:", error.response ? error.response.data : error.message || "No response");
 
             if (error.response) {
                 showForgotPassword.value = true;
@@ -118,7 +122,7 @@ export function useLogin() {
                 // Server responded with a status code other than 2xx
                 const status = error.response.status;
                 const errorMessage = error.response.data;
-    
+
                 switch (status) {
                     case 404:
                         toast.error(t("login.toasts.userNotFound")); // User not found
